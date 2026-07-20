@@ -1,0 +1,21 @@
+{
+  "providers": {
+    "lm-studio": {
+      "baseUrl": "http://127.0.0.1:1234/v1",
+      "api": "openai-completions",
+      "apiKey": "lm-studio",
+      "models": [
+        {
+          "id": "nvidia/nemotron-3-nano",
+          "input": ["text"]
+
+        },
+        {
+          "id": "qwen/qwen3-coder-next",
+          "input": ["text"]
+
+        }
+      ]
+    }
+  }
+}

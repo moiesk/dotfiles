@@ -1,0 +1,15 @@
+{
+  // Global markdownlint defaults, tuned for prose rather than code-adjacent
+  // markdown. Project-level .markdownlint-cli2.jsonc files override this.
+  "config": {
+    // Prose wraps at whatever width the author chose. Not a defect.
+    "MD013": false,
+
+    // Requires table pipes padded to equal column width. Hand-written
+    // tables never satisfy this and rendering does not care.
+    "MD060": false,
+
+    // Bold text used as a sub-label is a deliberate convention.
+    "MD036": false
+  }
+}

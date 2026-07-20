@@ -1,0 +1,19 @@
+.DS_Store
+.lavish/
+.direnv/
+result
+result-*
+
+# Credentials and mutable agent state never belong in this repository.
+**/auth.json
+**/credentials.json
+**/*.log
+**/*.sock
+**/history.jsonl
+**/sessions/
+**/projects/
+**/cache/
+**/node_modules/
+
+# Local overrides stay machine-specific.
+home/.gitconfig.local

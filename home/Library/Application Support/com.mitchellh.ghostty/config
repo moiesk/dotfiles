@@ -1,0 +1,3 @@
+theme = light:Catppuccin Latte Herdr,dark:Catppuccin Mocha
+keybind = shift+enter=text:\n
+shell-integration-features = ssh-terminfo,ssh-env
