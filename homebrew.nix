@@ -18,6 +18,12 @@
     ];
 
     brews = [
+      # Runtime dependencies for mise's precompiled Ruby binaries.
+      "gmp"
+      "libyaml"
+      "openssl@3"
+      "readline"
+      # End of Runtime dependencies for mise' precompiled Ruby binaries
       "herdr"
       "scummvm"
       {
