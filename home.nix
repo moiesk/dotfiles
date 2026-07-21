@@ -96,7 +96,7 @@ in
     starship
     tabiew
     tmux
-    inputs.treehouse.packages.${pkgs.system}.default
+    inputs.treehouse.packages.${pkgs.stdenv.hostPlatform.system}.default
     uv
     wget
     (agentHelper "gh-axi" "gh-axi" "dist/bin/gh-axi.js")
