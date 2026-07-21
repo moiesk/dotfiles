@@ -3,12 +3,18 @@
 set -euo pipefail
 
 say() { printf '\033[1;34m==>\033[0m %s\n' "$*"; }
-export PATH="$HOME/.asdf/shims:$HOME/.local/bin:$HOME/.bun/bin:/opt/homebrew/bin:$PATH"
+export PATH="$HOME/.nix-profile/bin:/etc/profiles/per-user/$USER/bin:$HOME/.asdf/shims:$HOME/.local/bin:$HOME/.bun/bin:/opt/homebrew/bin:$PATH"
 
-say "installing asdf runtimes from .tool-versions"
+say "refreshing asdf fallback runtimes"
 asdf plugin add nodejs https://github.com/asdf-vm/asdf-nodejs.git 2>/dev/null || true
 asdf plugin add ruby https://github.com/asdf-vm/asdf-ruby.git 2>/dev/null || true
 (cd "$HOME" && asdf install)
+
+say "installing mise runtimes"
+if ! mise install --jobs=1; then
+  say "retrying mise runtime installation after a transient failure"
+  mise install --jobs=1
+fi
 
 say "installing Pi with Bun"
 bun add --global @earendil-works/pi-coding-agent@0.78.0

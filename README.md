@@ -7,8 +7,8 @@ configuration and macOS preferences here are derived from my own machine.
 One repository manages:
 
 - Codex, Claude Code, Pi, and OpenCode, all using the same global `AGENTS.md`
-- Ghostty, Herdr, zsh, Starship, fzf, asdf, and Neovim/LazyVim
-- Homebrew formulae, casks, taps, and the OpenAI editor extension
+- Ghostty, Herdr, zsh, Starship, fzf, mise, and Neovim/LazyVim
+- Portable CLI tools with Nix and native macOS apps with Homebrew
 - Dock auto-hide, automatic light/dark appearance, and Finder tabs
 
 ## Fresh Mac
@@ -75,6 +75,58 @@ Check the live result:
 ./scripts/doctor.sh
 ```
 
+## Package ownership
+
+Portable command-line tools are declared in `home.packages` and pinned by the
+flake lock. Homebrew is reserved for macOS app bundles, fonts, native window
+management, Herdr, ScummVM, and the Borders tap. The Homebrew list contains only
+direct installs; dependencies are allowed to converge automatically.
+
+Remove tap-backed packages in two rebuilds: first remove the formula or cask
+while leaving its tap declared, then remove the now-unused tap in the following
+rebuild. Homebrew cannot uninstall a package after its defining tap is gone.
+
+Apify CLI is intentionally absent from the global environment. Before applying
+this cleanup, pin the currently used version inside the `cc4pm` project:
+
+```sh
+cd /Users/moiesk/Developer/cc4pm
+npm init -y
+npm install --save-dev --save-exact apify-cli@1.7.1
+npx apify --version
+```
+
+Use `npx apify ...` from that project thereafter. Existing Apify authentication
+continues to live in `~/.apify`.
+
+## mise migration
+
+The asdf-to-mise migration is intentionally split across two rebuilds.
+
+Generation A is represented by the current configuration: Home Manager enables
+mise, pins Node 24.6.0 and Ruby 3.4.5, and activates mise in new Zsh sessions.
+Runtime installation is serialized and retried once because parallel first-run
+GPG key imports can race. Ruby uses mise's precompiled Apple Silicon binaries,
+falling back to a source build when no binary is available.
+asdf, its shim path, plugins, and runtime install step remain temporarily as
+rollback insurance. After rebuilding, open a new shell and run:
+
+```sh
+mise current
+mise exec -- node --version
+mise exec -- ruby --version
+./scripts/doctor.sh
+```
+
+Exercise npm, Bun, Neovim, and the agent tools during normal work. If mise causes
+a regression, roll back the nix-darwin generation; the previous asdf installs
+remain intact.
+
+Generation B removes `asdf` from `homebrew.nix`, removes its shim/completion setup
+from `home.nix`, and deletes the asdf plugin/install block from
+`scripts/post-switch.sh`. Delete `~/.asdf` only later, after the cleanup rebuild
+has been stable.
+
 Update pinned Nix inputs:
 
 ```sh
@@ -96,7 +148,7 @@ nix flake update
 | `bootstrap.sh` | One-time fresh-machine setup |
 | `rebuild.sh` | Normal apply workflow |
 | `scripts/homebrew-preflight.sh` | First-run destructive cleanup preview |
-| `scripts/post-switch.sh` | Pinned Pi, helper CLI, uv tool, OpenCode, and asdf setup |
+| `scripts/post-switch.sh` | Pinned agents/tools plus the temporary mise/asdf runtime transition |
 | `scripts/doctor.sh` | Read-only outcome checks |
 | `scripts/check-secrets.sh` | Repository credential guard |
 

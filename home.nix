@@ -1,4 +1,4 @@
-{ config, user, ... }:
+{ config, pkgs, user, ... }:
 let
   dotfiles = "${config.home.homeDirectory}/.dotfiles";
   link = path: config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/${path}";
@@ -8,6 +8,49 @@ in
   home.username = user;
   home.homeDirectory = "/Users/${user}";
   home.stateVersion = "24.11";
+
+  # Home Manager 26.05 currently generates its manpage through an options.json
+  # derivation that drops Nix store-path context and warns on every rebuild.
+  manual.manpages.enable = false;
+
+  home.packages = with pkgs; [
+    android-tools
+    btop
+    bun
+    colima
+    docker-client
+    doctl
+    eza
+    fd
+    ffmpeg
+    fx
+    fzf
+    gh
+    git-lfs
+    gnupg
+    go
+    httpie
+    jq
+    jujutsu
+    lazydocker
+    lazygit
+    lazyjj
+    llmfit
+    macmon
+    markdownlint-cli2
+    neovim
+    opencode
+    p7zip
+    pinentry_mac
+    ripgrep
+    silver-searcher
+    smartmontools
+    starship
+    tabiew
+    tmux
+    uv
+    wget
+  ];
 
   home.sessionVariables = {
     EDITOR = "nvim";
@@ -54,6 +97,20 @@ in
 
       [ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
     '';
+  };
+
+  # Generation A: mise owns new shells and installs the same pinned runtimes,
+  # while the existing asdf installation remains available for rollback.
+  programs.mise = {
+    enable = true;
+    enableZshIntegration = true;
+    globalConfig = {
+      settings.ruby.compile = false;
+      tools = {
+        node = "24.6.0";
+        ruby = "3.4.5";
+      };
+    };
   };
 
   programs.git = {
