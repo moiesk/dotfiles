@@ -95,6 +95,10 @@
     },
     "root": {
       "inputs": {
+        "brew-src": [
+          "nix-homebrew",
+          "brew-src"
+        ],
         "home-manager": "home-manager",
         "nix-darwin": "nix-darwin",
         "nix-homebrew": "nix-homebrew",

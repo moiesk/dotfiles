@@ -16,6 +16,12 @@ for command_name in nix brew git gh codex claude pi opencode ghostty herdr nvim 
   fi
 done
 
+if [[ -r /opt/homebrew/share/zsh/site-functions/_brew ]]; then
+  pass "Homebrew zsh completion is readable"
+else
+  fail "Homebrew zsh completion is missing or points to a missing target"
+fi
+
 for target in \
   "$HOME/.codex/AGENTS.md" \
   "$HOME/.claude/CLAUDE.md" \

@@ -148,8 +148,6 @@
       "zkondor/dist/znotch"
     ];
 
-    vscode = [ "openai.chatgpt" ];
-
     onActivation = {
       autoUpdate = true;
       upgrade = true;

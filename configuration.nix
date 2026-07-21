@@ -1,4 +1,4 @@
-{ user, ... }:
+{ brew-src, user, ... }:
 {
   imports = [ ./homebrew.nix ];
 
@@ -26,8 +26,17 @@
 
   nix-homebrew = {
     enable = true;
+    autoMigrate = true;
     inherit user;
   };
+
+  # nix-homebrew keeps Homebrew's source in the Nix store, outside the mutable
+  # prefix. Restore the completion target expected by Homebrew's standard
+  # share/zsh/site-functions/_brew symlink.
+  system.activationScripts.homebrewZshCompletion.text = ''
+    mkdir -p /opt/homebrew/completions/zsh
+    ln -sfn ${brew-src}/completions/zsh/_brew /opt/homebrew/completions/zsh/_brew
+  '';
 
   system.stateVersion = 6;
 }

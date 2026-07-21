@@ -11,12 +11,14 @@
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
     nix-homebrew.url = "github:zhaofengli/nix-homebrew";
+    brew-src.follows = "nix-homebrew/brew-src";
   };
 
   outputs = inputs@{
     self,
     nix-darwin,
     nix-homebrew,
+    brew-src,
     home-manager,
     nixpkgs,
   }:
@@ -25,7 +27,7 @@
       user = "moiesk";
     in {
       darwinConfigurations.mac = nix-darwin.lib.darwinSystem {
-        specialArgs = { inherit inputs user; };
+        specialArgs = { inherit brew-src inputs user; };
         modules = [
           ./configuration.nix
           nix-homebrew.darwinModules.nix-homebrew
