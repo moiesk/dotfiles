@@ -9,6 +9,7 @@ One repository manages:
 - Codex, Claude Code, Pi, and OpenCode, all using the same global `AGENTS.md`
 - Ghostty, Herdr, zsh, Starship, fzf, mise, and Neovim/LazyVim
 - Portable CLI tools with Nix and native macOS apps with Homebrew
+- Matt Pocock's agent skills plus Treehouse, Firstmate, no-mistakes, and Lavish
 - Dock auto-hide, automatic light/dark appearance, and Finder tabs
 
 ## Fresh Mac
@@ -147,6 +148,25 @@ nix flake update
 - `~/.claude/CLAUDE.md`
 - `~/.pi/agent/AGENTS.md`
 - `~/.config/opencode/AGENTS.md`
+
+The `gh-axi`, `chrome-devtools-axi`, and `lavish-axi` commands are installed at
+pinned versions by `scripts/post-switch.sh`. Nix-managed wrappers run them with
+the pinned Node runtime, so they do not depend on an agent session's inherited
+shell initialization or Node shim state. Treehouse and no-mistakes are pinned
+through Nix. Matt Pocock's engineering, productivity, misc, and personal skills
+and the Lavish skill are pinned as flake inputs, exposed from
+`~/.agents/skills`, and linked into Claude and Pi. Deprecated and in-progress
+Matt Pocock skills are deliberately excluded. New skills in an included category
+are discovered automatically after `nix flake update matt-pocock-skills`.
+
+Firstmate is different: it is an agent distro whose clone contains mutable
+configuration and state. Bootstrap creates `~/firstmate` once, then leaves that
+clone under Firstmate's own update workflow instead of replacing it on every
+rebuild. Per-project setup remains explicit: run `/setup-matt-pocock-skills` to
+configure Matt's workflow and `no-mistakes init` to add a validation gate.
+
+`scripts/doctor.sh` verifies the commands, skills, and Firstmate clone rather
+than checking only that command names exist.
 
 Tool-specific portable preferences remain separate:
 

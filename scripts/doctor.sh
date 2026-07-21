@@ -8,11 +8,35 @@ FAILURES=0
 pass() { printf '\033[1;32m✓\033[0m %s\n' "$*"; }
 fail() { printf '\033[1;31m✗\033[0m %s\n' "$*"; FAILURES=$((FAILURES + 1)); }
 
-for command_name in nix brew git gh codex claude pi opencode ghostty herdr nvim starship fzf mise uv bun; do
+for command_name in nix brew git gh codex claude pi opencode ghostty herdr nvim starship fzf mise uv bun gh-axi chrome-devtools-axi lavish-axi treehouse no-mistakes; do
   if command -v "$command_name" >/dev/null 2>&1; then
     pass "$command_name is available"
   else
     fail "$command_name is missing"
+  fi
+done
+
+for agent_helper in gh-axi chrome-devtools-axi lavish-axi; do
+  if "$agent_helper" --help >/dev/null 2>&1; then
+    pass "$agent_helper runs successfully"
+  else
+    fail "$agent_helper is installed but cannot run"
+  fi
+done
+
+if [[ -d "$HOME/firstmate/.git" ]] &&
+  git -C "$HOME/firstmate" remote get-url origin 2>/dev/null | rg -q '(^|[:/])kunchenguid/firstmate(?:\.git)?$'; then
+  pass "Firstmate agent distro is installed"
+else
+  fail "Firstmate agent distro is missing or has an unexpected origin"
+fi
+
+for skill_name in setup-matt-pocock-skills lavish; do
+  skill_path="$HOME/.agents/skills/$skill_name/SKILL.md"
+  if [[ -r "$skill_path" ]]; then
+    pass "$skill_name skill is available"
+  else
+    fail "$skill_name skill is missing"
   fi
 done
 

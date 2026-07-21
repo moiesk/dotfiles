@@ -12,6 +12,26 @@
 
     nix-homebrew.url = "github:zhaofengli/nix-homebrew";
     brew-src.follows = "nix-homebrew/brew-src";
+
+    treehouse = {
+      url = "github:kunchenguid/treehouse/v2.1.0";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    no-mistakes = {
+      url = "github:kunchenguid/no-mistakes/v1.40.2";
+      flake = false;
+    };
+
+    matt-pocock-skills = {
+      url = "github:mattpocock/skills";
+      flake = false;
+    };
+
+    lavish-axi = {
+      url = "github:kunchenguid/lavish-axi/lavish-axi-v0.1.42";
+      flake = false;
+    };
   };
 
   outputs = inputs@{
@@ -21,6 +41,7 @@
     brew-src,
     home-manager,
     nixpkgs,
+    ...
   }:
     let
       # bootstrap.sh offers to update this when the local macOS user differs.
@@ -36,7 +57,7 @@
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
             home-manager.backupFileExtension = "dotfiles-backup";
-            home-manager.extraSpecialArgs = { inherit user; };
+            home-manager.extraSpecialArgs = { inherit inputs user; };
             home-manager.users.${user} = import ./home.nix;
           }
         ];

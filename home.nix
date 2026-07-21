@@ -1,8 +1,55 @@
-{ config, pkgs, user, ... }:
+{ config, inputs, pkgs, user, ... }:
 let
   dotfiles = "${config.home.homeDirectory}/.dotfiles";
   link = path: config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/${path}";
   rootLink = path: config.lib.file.mkOutOfStoreSymlink "${dotfiles}/${path}";
+  agentHelper = name: package: entrypoint: pkgs.writeShellScriptBin name ''
+    exec ${pkgs.nodejs_24}/bin/node \
+      "$HOME/.local/share/agent-tools/lib/node_modules/${package}/${entrypoint}" \
+      "$@"
+  '';
+  noMistakes = pkgs.buildGoModule {
+    pname = "no-mistakes";
+    version = "1.40.2";
+    src = inputs.no-mistakes;
+    vendorHash = "sha256-NZOYxNYvt4192uqKBdKRxdgrKFvWx3585psdCnRdPSM=";
+    subPackages = [ "cmd/no-mistakes" ];
+    ldflags = [
+      "-s"
+      "-w"
+      "-X github.com/kunchenguid/no-mistakes/internal/buildinfo.Version=v1.40.2"
+    ];
+  };
+  mattSkillGroups = [ "engineering" "productivity" "misc" "personal" ];
+  mattSkillPathsForGroup = group:
+    let
+      groupRoot = "${inputs.matt-pocock-skills}/skills/${group}";
+      entries = builtins.readDir groupRoot;
+      skillNames = builtins.filter (name:
+        entries.${name} == "directory" &&
+        builtins.pathExists "${groupRoot}/${name}/SKILL.md"
+      ) (builtins.attrNames entries);
+    in
+    map (name: "${group}/${name}") skillNames;
+  mattSkillPaths = pkgs.lib.concatMap mattSkillPathsForGroup mattSkillGroups;
+  managedSkills = map (path: {
+    name = builtins.baseNameOf path;
+    source = "${inputs.matt-pocock-skills}/skills/${path}";
+  }) mattSkillPaths ++ [
+    {
+      name = "lavish";
+      source = "${inputs.lavish-axi}/skills/lavish";
+    }
+  ];
+  canonicalSkillFiles = builtins.listToAttrs (map (skill: {
+    name = ".agents/skills/${skill.name}";
+    value.source = skill.source;
+  }) managedSkills);
+  harnessSkillFiles = builtins.listToAttrs (pkgs.lib.concatMap (skill: map (prefix: {
+    name = "${prefix}/${skill.name}";
+    value.source = config.lib.file.mkOutOfStoreSymlink
+      "${config.home.homeDirectory}/.agents/skills/${skill.name}";
+  }) [ ".claude/skills" ".pi/agent/skills" ]) managedSkills);
 in
 {
   home.username = user;
@@ -39,6 +86,7 @@ in
     macmon
     markdownlint-cli2
     neovim
+    noMistakes
     opencode
     p7zip
     pinentry_mac
@@ -48,8 +96,12 @@ in
     starship
     tabiew
     tmux
+    inputs.treehouse.packages.${pkgs.system}.default
     uv
     wget
+    (agentHelper "gh-axi" "gh-axi" "dist/bin/gh-axi.js")
+    (agentHelper "chrome-devtools-axi" "chrome-devtools-axi" "dist/bin/chrome-devtools-axi.js")
+    (agentHelper "lavish-axi" "lavish-axi" "dist/cli.mjs")
   ];
 
   home.sessionVariables = {
@@ -57,6 +109,8 @@ in
     SUDO_EDITOR = "nvim";
     GDRIVE_CREDS_DIR = "$HOME/.config/mcp-gdrive";
     BUN_INSTALL = "$HOME/.bun";
+    # Nix owns the binary; self-update cannot replace a store path.
+    NO_MISTAKES_NO_UPDATE_CHECK = "1";
   };
 
   home.sessionPath = [
@@ -167,5 +221,5 @@ in
     ".gitignore".source = link ".gitignore";
     ".markdownlint-cli2.jsonc".source = link ".markdownlint-cli2.jsonc";
     ".tool-versions".source = link ".tool-versions";
-  };
+  } // canonicalSkillFiles // harnessSkillFiles;
 }

@@ -15,9 +15,33 @@ say "installing Pi with Bun"
 bun add --global @earendil-works/pi-coding-agent@0.78.0
 
 say "installing shared agent helper CLIs"
-mise exec -- npm install --global --prefix "$HOME/.local" \
+AGENT_TOOLS_PREFIX="$HOME/.local/share/agent-tools"
+mise exec -- npm install --global --prefix "$AGENT_TOOLS_PREFIX" \
   gh-axi@0.1.27 \
-  chrome-devtools-axi@0.1.26
+  chrome-devtools-axi@0.1.26 \
+  lavish-axi@0.1.42
+
+# Older revisions installed npm's Node-dependent bin links directly in
+# ~/.local/bin, where they shadow the Nix-managed, pinned-Node wrappers.
+for legacy_link in \
+  "$HOME/.local/bin/gh-axi" \
+  "$HOME/.local/bin/chrome-devtools-axi" \
+  "$HOME/.local/bin/lavish-axi"; do
+  if [[ -L "$legacy_link" ]]; then
+    rm "$legacy_link"
+  fi
+done
+
+say "installing Firstmate agent distro"
+FIRSTMATE_DIR="$HOME/firstmate"
+if [[ ! -e "$FIRSTMATE_DIR" ]]; then
+  (cd "$HOME" && gh-axi repo clone kunchenguid/firstmate)
+elif [[ -d "$FIRSTMATE_DIR/.git" ]] &&
+  git -C "$FIRSTMATE_DIR" remote get-url origin 2>/dev/null | rg -q '(^|[:/])kunchenguid/firstmate(?:\.git)?$'; then
+  say "Firstmate already exists; leaving its mutable clone unchanged"
+else
+  printf '%s\n' "warning: $FIRSTMATE_DIR exists but is not the expected Firstmate clone; leaving it unchanged" >&2
+fi
 
 say "installing uv tools"
 if ! uv tool list | rg -q '^batrachian-toad v0\.5\.35$'; then
