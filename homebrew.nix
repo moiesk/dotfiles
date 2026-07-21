@@ -18,9 +18,6 @@
     ];
 
     brews = [
-      # Generation A of the mise migration keeps asdf as rollback insurance.
-      # Remove it after mise passes the smoke tests documented in README.md.
-      "asdf"
       "herdr"
       "scummvm"
       {

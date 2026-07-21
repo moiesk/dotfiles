@@ -8,7 +8,7 @@ FAILURES=0
 pass() { printf '\033[1;32m✓\033[0m %s\n' "$*"; }
 fail() { printf '\033[1;31m✗\033[0m %s\n' "$*"; FAILURES=$((FAILURES + 1)); }
 
-for command_name in nix brew git gh codex claude pi opencode ghostty herdr nvim starship fzf mise asdf uv bun; do
+for command_name in nix brew git gh codex claude pi opencode ghostty herdr nvim starship fzf mise uv bun; do
   if command -v "$command_name" >/dev/null 2>&1; then
     pass "$command_name is available"
   else

@@ -62,7 +62,6 @@ in
   home.sessionPath = [
     "$HOME/.local/bin"
     "$HOME/.bun/bin"
-    "$HOME/.asdf/shims"
     "$HOME/.cache/lm-studio/bin"
     "$HOME/.antigravity/antigravity/bin"
   ];
@@ -79,7 +78,6 @@ in
     initContent = ''
       eval "$(starship init zsh)"
 
-      fpath=($HOME/.asdf/completions $fpath)
       autoload -Uz compinit && compinit
 
       if command -v fzf >/dev/null 2>&1; then
@@ -99,8 +97,7 @@ in
     '';
   };
 
-  # Generation A: mise owns new shells and installs the same pinned runtimes,
-  # while the existing asdf installation remains available for rollback.
+  # mise owns the pinned language runtimes and activates them in new shells.
   programs.mise = {
     enable = true;
     enableZshIntegration = true;

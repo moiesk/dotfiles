@@ -99,17 +99,13 @@ npx apify --version
 Use `npx apify ...` from that project thereafter. Existing Apify authentication
 continues to live in `~/.apify`.
 
-## mise migration
+## mise runtimes
 
-The asdf-to-mise migration is intentionally split across two rebuilds.
-
-Generation A is represented by the current configuration: Home Manager enables
-mise, pins Node 24.6.0 and Ruby 3.4.5, and activates mise in new Zsh sessions.
-Runtime installation is serialized and retried once because parallel first-run
-GPG key imports can race. Ruby uses mise's precompiled Apple Silicon binaries,
-falling back to a source build when no binary is available.
-asdf, its shim path, plugins, and runtime install step remain temporarily as
-rollback insurance. After rebuilding, open a new shell and run:
+Home Manager enables mise, pins Node 24.6.0 and Ruby 3.4.5, and activates mise
+in new Zsh sessions. Runtime installation is serialized and retried once because
+parallel first-run GPG key imports can race. Ruby uses mise's precompiled Apple
+Silicon binaries, falling back to a source build when no binary is available.
+After rebuilding, open a new shell and run:
 
 ```sh
 mise current
@@ -117,15 +113,6 @@ mise exec -- node --version
 mise exec -- ruby --version
 ./scripts/doctor.sh
 ```
-
-Exercise npm, Bun, Neovim, and the agent tools during normal work. If mise causes
-a regression, roll back the nix-darwin generation; the previous asdf installs
-remain intact.
-
-Generation B removes `asdf` from `homebrew.nix`, removes its shim/completion setup
-from `home.nix`, and deletes the asdf plugin/install block from
-`scripts/post-switch.sh`. Delete `~/.asdf` only later, after the cleanup rebuild
-has been stable.
 
 Update pinned Nix inputs:
 
@@ -148,7 +135,7 @@ nix flake update
 | `bootstrap.sh` | One-time fresh-machine setup |
 | `rebuild.sh` | Normal apply workflow |
 | `scripts/homebrew-preflight.sh` | First-run destructive cleanup preview |
-| `scripts/post-switch.sh` | Pinned agents/tools plus the temporary mise/asdf runtime transition |
+| `scripts/post-switch.sh` | Pinned agents/tools plus mise runtime installation |
 | `scripts/doctor.sh` | Read-only outcome checks |
 | `scripts/check-secrets.sh` | Repository credential guard |
 

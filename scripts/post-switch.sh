@@ -3,12 +3,7 @@
 set -euo pipefail
 
 say() { printf '\033[1;34m==>\033[0m %s\n' "$*"; }
-export PATH="$HOME/.nix-profile/bin:/etc/profiles/per-user/$USER/bin:$HOME/.asdf/shims:$HOME/.local/bin:$HOME/.bun/bin:/opt/homebrew/bin:$PATH"
-
-say "refreshing asdf fallback runtimes"
-asdf plugin add nodejs https://github.com/asdf-vm/asdf-nodejs.git 2>/dev/null || true
-asdf plugin add ruby https://github.com/asdf-vm/asdf-ruby.git 2>/dev/null || true
-(cd "$HOME" && asdf install)
+export PATH="$HOME/.nix-profile/bin:/etc/profiles/per-user/$USER/bin:$HOME/.local/bin:$HOME/.bun/bin:/opt/homebrew/bin:$PATH"
 
 say "installing mise runtimes"
 if ! mise install --jobs=1; then
@@ -20,7 +15,7 @@ say "installing Pi with Bun"
 bun add --global @earendil-works/pi-coding-agent@0.78.0
 
 say "installing shared agent helper CLIs"
-npm install --global --prefix "$HOME/.local" \
+mise exec -- npm install --global --prefix "$HOME/.local" \
   gh-axi@0.1.27 \
   chrome-devtools-axi@0.1.26
 
