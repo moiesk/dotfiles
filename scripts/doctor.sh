@@ -8,7 +8,7 @@ FAILURES=0
 pass() { printf '\033[1;32m✓\033[0m %s\n' "$*"; }
 fail() { printf '\033[1;31m✗\033[0m %s\n' "$*"; FAILURES=$((FAILURES + 1)); }
 
-for command_name in nix brew git gh codex claude pi opencode ghostty herdr nvim starship fzf mise uv bun gh-axi chrome-devtools-axi lavish-axi quota-axi treehouse no-mistakes; do
+for command_name in nix brew git gh codex claude pi opencode ghostty herdr nvim starship fzf mise uv bun vips gh-axi chrome-devtools-axi lavish-axi quota-axi treehouse no-mistakes; do
   if command -v "$command_name" >/dev/null 2>&1; then
     pass "$command_name is available"
   else
@@ -46,10 +46,10 @@ else
   fail "mise does not provide Node 24.6.0"
 fi
 
-if mise exec -- ruby --version 2>/dev/null | rg -q '^ruby 3\.4\.5'; then
-  pass "mise provides Ruby 3.4.5"
+if mise exec -- ruby --version 2>/dev/null | rg -q '^ruby 4\.0\.6'; then
+  pass "mise provides Ruby 4.0.6"
 else
-  fail "mise does not provide Ruby 3.4.5"
+  fail "mise does not provide Ruby 4.0.6"
 fi
 
 if [[ -r /opt/homebrew/share/zsh/site-functions/_brew ]]; then

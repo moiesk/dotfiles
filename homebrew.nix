@@ -23,6 +23,8 @@
       "libyaml"
       "openssl@3"
       "readline"
+      # Native image processing for Rails applications using ruby-vips.
+      "vips"
       # End of Runtime dependencies for mise' precompiled Ruby binaries
       "herdr"
       "scummvm"

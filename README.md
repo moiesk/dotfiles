@@ -109,10 +109,12 @@ continues to live in `~/.apify`.
 
 ## mise runtimes
 
-Home Manager enables mise, pins Node 24.6.0 and Ruby 3.4.5, and activates mise
+Home Manager enables mise, pins Node 24.6.0 and Ruby 4.0.6, and activates mise
 in new Zsh sessions. Runtime installation is serialized and retried once because
 parallel first-run GPG key imports can race. Ruby uses mise's precompiled Apple
 Silicon binaries, falling back to a source build when no binary is available.
+Homebrew provides the native `vips` library used by Rails applications with the
+`ruby-vips` gem.
 After rebuilding, open a new shell and run:
 
 ```sh

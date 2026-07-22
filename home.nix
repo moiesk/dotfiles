@@ -159,7 +159,7 @@ in
       settings.ruby.compile = false;
       tools = {
         node = "24.6.0";
-        ruby = "3.4.5";
+        ruby = "4.0.6";
       };
     };
   };
