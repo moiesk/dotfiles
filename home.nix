@@ -235,7 +235,6 @@ in
     ".config/opencode/package.json".source = link ".config/opencode/package.json";
 
     ".markdownlint-cli2.jsonc".source = link ".markdownlint-cli2.jsonc";
-    ".tool-versions".source = link ".tool-versions";
   } // canonicalSkillFiles // harnessSkillFiles;
 
   # Harnesses write selections and state back to their user configuration.

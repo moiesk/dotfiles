@@ -17,3 +17,4 @@ result-*
 
 # Local overrides stay machine-specific.
 home/.gitconfig.local
+home/.tool-versions
