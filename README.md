@@ -157,8 +157,8 @@ nix flake update
 - `~/.config/opencode/AGENTS.md`
 
 Pi is updated to the latest registry release by `scripts/post-switch.sh`. The
-`gh-axi`, `chrome-devtools-axi`, and `lavish-axi` commands are installed at
-pinned versions by that script. Nix-managed wrappers run them with
+`gh-axi`, `chrome-devtools-axi`, `lavish-axi`, and `quota-axi` commands are
+installed at pinned versions by that script. Nix-managed wrappers run them with
 the pinned Node runtime, so they do not depend on an agent session's inherited
 shell initialization or Node shim state. Treehouse and no-mistakes are pinned
 through Nix. Matt Pocock's engineering, productivity, misc, and personal skills

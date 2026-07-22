@@ -101,6 +101,7 @@ in
     (agentHelper "gh-axi" "gh-axi" "dist/bin/gh-axi.js")
     (agentHelper "chrome-devtools-axi" "chrome-devtools-axi" "dist/bin/chrome-devtools-axi.js")
     (agentHelper "lavish-axi" "lavish-axi" "dist/cli.mjs")
+    (agentHelper "quota-axi" "quota-axi" "dist/bin/quota-axi.js")
   ];
 
   home.sessionVariables = {

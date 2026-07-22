@@ -1,1 +1,2 @@
-Use `gh-axi` for GitHub and `chrome-devtools-axi` for browser automation.
+Use `gh-axi` for GitHub, `chrome-devtools-axi` for browser automation, and
+`quota-axi` for querying quotas and usage.

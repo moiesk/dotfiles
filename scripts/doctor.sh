@@ -8,7 +8,7 @@ FAILURES=0
 pass() { printf '\033[1;32m✓\033[0m %s\n' "$*"; }
 fail() { printf '\033[1;31m✗\033[0m %s\n' "$*"; FAILURES=$((FAILURES + 1)); }
 
-for command_name in nix brew git gh codex claude pi opencode ghostty herdr nvim starship fzf mise uv bun gh-axi chrome-devtools-axi lavish-axi treehouse no-mistakes; do
+for command_name in nix brew git gh codex claude pi opencode ghostty herdr nvim starship fzf mise uv bun gh-axi chrome-devtools-axi lavish-axi quota-axi treehouse no-mistakes; do
   if command -v "$command_name" >/dev/null 2>&1; then
     pass "$command_name is available"
   else
@@ -16,7 +16,7 @@ for command_name in nix brew git gh codex claude pi opencode ghostty herdr nvim 
   fi
 done
 
-for agent_helper in gh-axi chrome-devtools-axi lavish-axi; do
+for agent_helper in gh-axi chrome-devtools-axi lavish-axi quota-axi; do
   if "$agent_helper" --help >/dev/null 2>&1; then
     pass "$agent_helper runs successfully"
   else

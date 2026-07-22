@@ -22,14 +22,16 @@ AGENT_TOOLS_PREFIX="$HOME/.local/share/agent-tools"
 mise exec -- npm install --global --prefix "$AGENT_TOOLS_PREFIX" \
   gh-axi@0.1.27 \
   chrome-devtools-axi@0.1.26 \
-  lavish-axi@0.1.42
+  lavish-axi@0.1.42 \
+  quota-axi@0.1.11
 
 # Older revisions installed npm's Node-dependent bin links directly in
 # ~/.local/bin, where they shadow the Nix-managed, pinned-Node wrappers.
 for legacy_link in \
   "$HOME/.local/bin/gh-axi" \
   "$HOME/.local/bin/chrome-devtools-axi" \
-  "$HOME/.local/bin/lavish-axi"; do
+  "$HOME/.local/bin/lavish-axi" \
+  "$HOME/.local/bin/quota-axi"; do
   if [[ -L "$legacy_link" ]]; then
     rm "$legacy_link"
   fi
