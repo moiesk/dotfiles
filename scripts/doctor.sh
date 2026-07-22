@@ -58,6 +58,15 @@ else
   fail "Homebrew zsh completion is missing or points to a missing target"
 fi
 
+homebrew_outdated=""
+if ! homebrew_outdated="$(HOMEBREW_NO_AUTO_UPDATE=1 brew outdated 2>&1)"; then
+  fail "Homebrew could not check for outdated packages: $homebrew_outdated"
+elif [[ -n "$homebrew_outdated" ]]; then
+  fail "Homebrew packages remain outdated: $(printf '%s' "$homebrew_outdated" | tr '\n' ' ')"
+else
+  pass "Homebrew packages are current"
+fi
+
 for target in \
   "$HOME/.codex/AGENTS.md" \
   "$HOME/.claude/CLAUDE.md" \

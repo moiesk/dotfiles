@@ -55,6 +55,11 @@ exact confirmation phrase `WIPE UNDECLARED`. Stop there and edit
 Later `./rebuild.sh` runs are not interactive. Add new packages to
 `homebrew.nix` before rebuilding.
 
+Rebuilds update Homebrew metadata and greedily upgrade every declared cask.
+This intentionally favors the latest available release, including for
+self-updating or unversioned apps such as agent harnesses. The final doctor
+check fails if any Homebrew formula or cask is still outdated.
+
 ## Daily use
 
 Edit the repository in place, then apply:

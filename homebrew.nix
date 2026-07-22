@@ -57,6 +57,10 @@
       "zed"
     ];
 
+    # Always converge casks to Homebrew's latest available version, including
+    # self-updating and unversioned apps that normal upgrades may skip.
+    greedyCasks = true;
+
     onActivation = {
       autoUpdate = true;
       upgrade = true;
