@@ -73,7 +73,6 @@ in
     fx
     fzf
     gh
-    git-lfs
     gnupg
     go
     httpie
@@ -166,6 +165,20 @@ in
 
   programs.git = {
     enable = true;
+    lfs.enable = true;
+    # Repository build output belongs in each project's own .gitignore.
+    ignores = [
+      ".DS_Store"
+      "*.sw[nop]"
+      ".idea/"
+      ".bundle/"
+      ".byebug_history"
+      ".env"
+      "/tags"
+      "rerun.txt"
+      "**/.beads/"
+      "**/.claude/settings.local.json"
+    ];
     settings = {
       init.defaultBranch = "main";
       push.default = "current";
@@ -178,11 +191,19 @@ in
         co = "checkout";
         pf = "push --force-with-lease";
         st = "status";
+        br = "branch";
+        type = "cat-file -t";
+        dump = "cat-file -p";
+        alias = "config --get-regexp ^alias\\.";
+        hist = "log --pretty=format:\"%h %ad | %s%d [%an]\" --graph --date=short";
+        ls = "log -n 16 --pretty=format:\"%C(yellow)%h %C(cyan)[%cn] %C(reset)%s %C(red)%d\" --decorate";
+        ll = "log -n 6 --pretty=format:\"%C(yellow)%h %C(cyan)[%cn] %C(reset)%s %C(red)%ad\" --decorate --date=short --stat";
+        tree = "log -n 16 --pretty=format:\"%C(yellow)%h %C(cyan)[%cn] %C(reset)%s %C(red)%d\" --decorate --graph";
+        assume = "update-index --assume-unchanged";
+        unassume = "update-index --no-assume-unchanged";
+        assumed = "!git ls-files -v | grep '^h' | cut -c 3-";
       };
-      core = {
-        excludesfile = "~/.gitignore";
-        autocrlf = "input";
-      };
+      core.autocrlf = "input";
       merge.ff = "only";
       fetch.prune = true;
       rebase.autosquash = true;
@@ -190,9 +211,8 @@ in
       user = {
         name = "Moises Eskinazi";
         email = "moiesk@gmail.com";
-        signingkey = "E3F28AFA0C09C844";
+        useConfigOnly = true;
       };
-      include.path = "~/.gitconfig.local";
     };
   };
 
@@ -214,7 +234,6 @@ in
     ".config/opencode/AGENTS.md".source = rootLink "AGENTS.md";
     ".config/opencode/package.json".source = link ".config/opencode/package.json";
 
-    ".gitignore".source = link ".gitignore";
     ".markdownlint-cli2.jsonc".source = link ".markdownlint-cli2.jsonc";
     ".tool-versions".source = link ".tool-versions";
   } // canonicalSkillFiles // harnessSkillFiles;
