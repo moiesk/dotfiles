@@ -35,6 +35,7 @@
     casks = [
       "nikitabobko/tap/aerospace"
       "anki"
+      "kunchenguid/tap/baby-menu"
       "claude-code"
       "codex"
       "comfy"
