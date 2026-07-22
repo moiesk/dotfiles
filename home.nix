@@ -205,15 +205,11 @@ in
     ".config/herdr/config.toml".source = link ".config/herdr/config.toml";
 
     ".codex/AGENTS.md".source = rootLink "AGENTS.md";
-    ".codex/config.toml".source = link ".codex/config.toml";
 
     ".claude/CLAUDE.md".source = rootLink "AGENTS.md";
-    ".claude/settings.json".source = link ".claude/settings.json";
     ".claude/hooks/statusline.js".source = link ".claude/hooks/statusline.js";
 
     ".pi/agent/AGENTS.md".source = rootLink "AGENTS.md";
-    ".pi/agent/settings.json".source = link ".pi/agent/settings.json";
-    ".pi/agent/models.json".source = link ".pi/agent/models.json";
 
     ".config/opencode/AGENTS.md".source = rootLink "AGENTS.md";
     ".config/opencode/package.json".source = link ".config/opencode/package.json";
@@ -222,4 +218,15 @@ in
     ".markdownlint-cli2.jsonc".source = link ".markdownlint-cli2.jsonc";
     ".tool-versions".source = link ".tool-versions";
   } // canonicalSkillFiles // harnessSkillFiles;
+
+  # Harnesses write selections and state back to their user configuration.
+  # Materialize ordinary files after the old Home Manager links are removed,
+  # preserving existing local keys while reapplying tracked portable defaults.
+  home.activation.materializeAgentConfigs =
+    config.lib.dag.entryAfter [ "linkGeneration" ] ''
+      ${pkgs.bash}/bin/bash \
+        "${dotfiles}/scripts/materialize-agent-configs.sh" \
+        "${dotfiles}" \
+        "${pkgs.jq}/bin/jq"
+    '';
 }

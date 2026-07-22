@@ -1,5 +1,5 @@
 {
-  "model": "opus[1m]",
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "statusLine": {
     "type": "command",
     "command": "node ~/.claude/hooks/statusline.js"
@@ -64,6 +64,5 @@
     ]
   },
   "tui": "fullscreen",
-  "theme": "auto",
-  "effortLevel": "medium"
+  "theme": "auto"
 }

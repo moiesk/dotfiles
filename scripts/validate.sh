@@ -13,9 +13,34 @@ if rg -n '^[[:space:]]*npm[[:space:]]' bootstrap.sh rebuild.sh scripts/*.sh; the
   exit 1
 fi
 
-for json_file in home/.claude/settings.json home/.pi/agent/settings.json home/.pi/agent/models.json home/.config/opencode/package.json; do
+for json_file in home/.claude/settings.portable.json home/.config/opencode/package.json; do
   jq empty "$json_file"
 done
+
+if ! jq -e 'has("model") or has("effortLevel") | not' \
+  home/.claude/settings.portable.json >/dev/null; then
+  printf '%s\n' 'error: Claude portable settings contain machine-local model or effort' >&2
+  exit 1
+fi
+
+if rg -n '^(model|model_reasoning_effort)[[:space:]]*=|^\[projects(?:\.|\])' \
+  home/.codex/config.defaults.toml; then
+  printf '%s\n' 'error: Codex portable defaults contain machine-local settings' >&2
+  exit 1
+fi
+
+for mutable_config in \
+  home/.claude/settings.json \
+  home/.codex/config.toml \
+  home/.pi/agent/settings.json \
+  home/.pi/agent/models.json; do
+  if [[ -e "$mutable_config" ]]; then
+    printf 'error: mutable agent config is stored in the repository: %s\n' "$mutable_config" >&2
+    exit 1
+  fi
+done
+
+"$DOTFILES_DIR/scripts/test-materialize-agent-configs.sh"
 
 "$DOTFILES_DIR/scripts/check-secrets.sh"
 

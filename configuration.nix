@@ -12,6 +12,12 @@
     home = "/Users/${user}";
   };
 
+  # Codex's system layer supplies portable defaults. The higher-precedence
+  # ~/.codex/config.toml remains mutable for machine-specific model, effort,
+  # and project trust choices.
+  environment.etc."codex/config.toml".text =
+    builtins.readFile ./home/.codex/config.defaults.toml;
+
   # These are Moises' requested settings. They are intentionally not copied
   # from the reference dotfiles repository.
   system.defaults = {

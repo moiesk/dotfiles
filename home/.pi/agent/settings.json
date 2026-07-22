@@ -1,6 +1,0 @@
-{
-  "lastChangelogVersion": "0.78.0",
-  "defaultProvider": "lm-studio",
-  "defaultModel": "qwen/qwen3-coder-next",
-  "defaultThinkingLevel": "medium"
-}

@@ -173,23 +173,38 @@ configure Matt's workflow and `no-mistakes init` to add a validation gate.
 `scripts/doctor.sh` verifies the commands, skills, and Firstmate clone rather
 than checking only that command names exist.
 
-Tool-specific portable preferences remain separate:
+Tool-specific portable preferences remain separate from mutable harness state:
 
-- Codex: personality, model/effort, enabled plugins, and desktop preferences
-- Claude: model, status line, theme, effort, plugins, and spinner verbs
-- Pi: LM Studio provider and model defaults
-- OpenCode: plugin package manifest
+- Codex: `/etc/codex/config.toml` supplies the tracked personality, enabled
+  plugins, desktop preferences, and feature flags. The higher-precedence
+  `~/.codex/config.toml` is an ordinary machine-local file for model, effort,
+  and project trust choices.
+- Claude: `home/.claude/settings.portable.json` tracks the status line, theme,
+  TUI, plugins, marketplaces, and spinner verbs. Home Manager overlays those
+  keys onto the ordinary `~/.claude/settings.json`, preserving machine-local
+  model, effort, and other harness-written keys.
+- Pi: `settings.json` and `models.json` are entirely machine-local because the
+  current contents select a local provider, model catalog, and thinking level.
+- OpenCode: the plugin package manifest remains portable.
 
-Generated state is not tracked: auth files, histories, transcripts, caches,
-logs, sockets, jobs, project trust lists, installation IDs, and local app
-bundle paths.
+`scripts/materialize-agent-configs.sh` performs the migration after Home
+Manager removes legacy links. It accepts missing files, so first bootstrap does
+not require Claude, Codex, or Pi to have run. An existing regular file is
+preserved, and an existing readable managed symlink is converted to a regular
+file before its local values are merged.
+
+Generated state is not tracked: model and effort selections, local provider
+catalogs, auth files, histories, transcripts, caches, logs, sockets, jobs,
+project trust lists, installation IDs, and local app bundle paths.
 
 ## Editing linked configs
 
-Home Manager uses out-of-store symlinks for app configuration. Editing Neovim,
-Ghostty, Herdr, or agent settings through their normal paths edits this
-checkout directly. Run `./rebuild.sh` when changing Nix files, package lists,
-shell configuration, or link declarations.
+Home Manager uses out-of-store symlinks for most app configuration. Editing
+Neovim, Ghostty, or Herdr through their normal paths edits this checkout
+directly. Agent harness settings are the exception: edit portable Claude and
+Codex defaults in this checkout, while model, effort, project trust, and Pi
+settings remain local under the harness's normal home-directory paths. Run
+`./rebuild.sh` to apply portable-default or Nix changes.
 
 ## Rollback and recovery
 

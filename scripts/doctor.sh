@@ -79,6 +79,38 @@ for target in \
   fi
 done
 
+if [[ -f "$HOME/.claude/settings.json" ]] &&
+  [[ ! -L "$HOME/.claude/settings.json" ]] &&
+  jq -s -e '.[0] * .[1] == .[0]' \
+    "$HOME/.claude/settings.json" \
+    "$DOTFILES_DIR/home/.claude/settings.portable.json" >/dev/null 2>&1; then
+  pass "Claude settings are mutable and include portable defaults"
+else
+  fail "Claude settings are missing, linked, invalid, or lack portable defaults"
+fi
+
+if [[ -r /etc/codex/config.toml ]] &&
+  cmp -s /etc/codex/config.toml "$DOTFILES_DIR/home/.codex/config.defaults.toml"; then
+  pass "Codex system defaults are installed"
+else
+  fail "Codex system defaults are missing or stale"
+fi
+
+for mutable_config in \
+  "$HOME/.codex/config.toml" \
+  "$HOME/.pi/agent/settings.json" \
+  "$HOME/.pi/agent/models.json"; do
+  if [[ ! -e "$mutable_config" ]]; then
+    pass "$mutable_config is absent and may be created by its harness"
+  elif [[ -L "$mutable_config" ]]; then
+    fail "$mutable_config is still linked into the dotfiles repository"
+  elif [[ "$mutable_config" == *.json ]] && ! jq empty "$mutable_config" >/dev/null 2>&1; then
+    fail "$mutable_config is not valid JSON"
+  else
+    pass "$mutable_config is machine-local"
+  fi
+done
+
 check_default() {
   local label="$1" expected="$2"
   shift 2
