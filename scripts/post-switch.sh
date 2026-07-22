@@ -11,8 +11,11 @@ if ! mise install --jobs=1; then
   mise install --jobs=1
 fi
 
-say "installing Pi with Bun"
-bun add --global @earendil-works/pi-coding-agent@0.78.0
+say "installing the latest Pi with Bun"
+# Pi is an agent harness, so keep it current on every rebuild just like the
+# Homebrew-managed Claude Code and Codex harnesses. --force makes Bun refresh
+# registry metadata instead of accepting a cached resolution of the latest tag.
+bun add --global --force @earendil-works/pi-coding-agent@latest
 
 say "installing shared agent helper CLIs"
 AGENT_TOOLS_PREFIX="$HOME/.local/share/agent-tools"

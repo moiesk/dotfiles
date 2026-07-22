@@ -13,6 +13,12 @@ if rg -n '^[[:space:]]*npm[[:space:]]' bootstrap.sh rebuild.sh scripts/*.sh; the
   exit 1
 fi
 
+if ! rg -q 'bun add --global --force @earendil-works/pi-coding-agent@latest' \
+  scripts/post-switch.sh; then
+  printf '%s\n' 'error: Pi must track the latest Bun release during rebuilds' >&2
+  exit 1
+fi
+
 for json_file in home/.claude/settings.portable.json home/.config/opencode/package.json; do
   jq empty "$json_file"
 done

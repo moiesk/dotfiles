@@ -36,7 +36,7 @@ cd dotfiles
 4. Evaluates the locked flake without applying it.
 5. Shows any Homebrew items that strict cleanup would remove.
 6. Applies the first nix-darwin/Home Manager build.
-7. Installs pinned user-scoped agent tools and runs the doctor.
+7. Installs user-scoped agent tools and runs the doctor.
 
 Open a new terminal after it finishes. Applications still require their normal
 interactive sign-ins; credentials and sessions are deliberately not stored
@@ -58,7 +58,9 @@ Later `./rebuild.sh` runs are not interactive. Add new packages to
 Rebuilds update Homebrew metadata and greedily upgrade every declared cask.
 This intentionally favors the latest available release, including for
 self-updating or unversioned apps such as agent harnesses. The final doctor
-check fails if any Homebrew formula or cask is still outdated.
+check fails if any Homebrew formula or cask is still outdated. Pi follows the
+same policy: its Bun package is resolved from the latest registry release on
+every rebuild, and the doctor verifies the installed version.
 
 ## Daily use
 
@@ -154,8 +156,9 @@ nix flake update
 - `~/.pi/agent/AGENTS.md`
 - `~/.config/opencode/AGENTS.md`
 
-The `gh-axi`, `chrome-devtools-axi`, and `lavish-axi` commands are installed at
-pinned versions by `scripts/post-switch.sh`. Nix-managed wrappers run them with
+Pi is updated to the latest registry release by `scripts/post-switch.sh`. The
+`gh-axi`, `chrome-devtools-axi`, and `lavish-axi` commands are installed at
+pinned versions by that script. Nix-managed wrappers run them with
 the pinned Node runtime, so they do not depend on an agent session's inherited
 shell initialization or Node shim state. Treehouse and no-mistakes are pinned
 through Nix. Matt Pocock's engineering, productivity, misc, and personal skills

@@ -67,6 +67,19 @@ else
   pass "Homebrew packages are current"
 fi
 
+pi_installed_version="$(pi --version 2>/dev/null || true)"
+pi_latest_version="$(
+  bun pm view @earendil-works/pi-coding-agent version \
+    --cwd "$HOME/.bun/install/global" 2>/dev/null || true
+)"
+if [[ -z "$pi_latest_version" ]]; then
+  fail "Bun could not determine the latest Pi version"
+elif [[ "$pi_installed_version" == "$pi_latest_version" ]]; then
+  pass "Pi is current ($pi_installed_version)"
+else
+  fail "Pi is outdated: installed ${pi_installed_version:-<unknown>}, latest $pi_latest_version"
+fi
+
 for target in \
   "$HOME/.codex/AGENTS.md" \
   "$HOME/.claude/CLAUDE.md" \
