@@ -183,7 +183,7 @@ Tool-specific portable preferences remain separate from mutable harness state:
   `~/.codex/config.toml` is an ordinary machine-local file for model, effort,
   and project trust choices.
 - Claude: `home/.claude/settings.portable.json` tracks the status line, theme,
-  TUI, plugins, marketplaces, and spinner verbs. Home Manager overlays those
+  TUI, plugins, and marketplaces. Home Manager overlays those
   keys onto the ordinary `~/.claude/settings.json`, preserving machine-local
   model, effort, and other harness-written keys.
 - Pi: `settings.json` and `models.json` are entirely machine-local because the
