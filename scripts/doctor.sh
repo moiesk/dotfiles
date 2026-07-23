@@ -40,10 +40,10 @@ for skill_name in setup-matt-pocock-skills lavish tasks-axi; do
   fi
 done
 
-if [[ "$(mise exec -- node --version 2>/dev/null)" == "v24.6.0" ]]; then
-  pass "mise provides Node 24.6.0"
+if [[ "$(mise exec -- node --version 2>/dev/null)" == "v24.18.0" ]]; then
+  pass "mise provides Node 24.18.0"
 else
-  fail "mise does not provide Node 24.6.0"
+  fail "mise does not provide Node 24.18.0"
 fi
 
 if mise exec -- ruby --version 2>/dev/null | rg -q '^ruby 4\.0\.6'; then
@@ -67,17 +67,13 @@ else
   pass "Homebrew packages are current"
 fi
 
+pi_expected_version="$(jq -r '.dependencies["@earendil-works/pi-coding-agent"]' \
+  "$DOTFILES_DIR/agent-tools/package.json")"
 pi_installed_version="$(pi --version 2>/dev/null || true)"
-pi_latest_version="$(
-  bun pm view @earendil-works/pi-coding-agent version \
-    --cwd "$HOME/.bun/install/global" 2>/dev/null || true
-)"
-if [[ -z "$pi_latest_version" ]]; then
-  fail "Bun could not determine the latest Pi version"
-elif [[ "$pi_installed_version" == "$pi_latest_version" ]]; then
-  pass "Pi is current ($pi_installed_version)"
+if [[ "$pi_installed_version" == "$pi_expected_version" ]]; then
+  pass "Pi matches the reviewed lock ($pi_installed_version)"
 else
-  fail "Pi is outdated: installed ${pi_installed_version:-<unknown>}, latest $pi_latest_version"
+  fail "Pi does not match the reviewed lock: installed ${pi_installed_version:-<unknown>}, expected $pi_expected_version"
 fi
 
 for target in \

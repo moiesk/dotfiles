@@ -158,12 +158,31 @@ nix flake update
 - `~/.pi/agent/AGENTS.md`
 - `~/.config/opencode/AGENTS.md`
 
-Pi is updated to the latest registry release by `scripts/post-switch.sh`. The
-`gh-axi`, `chrome-devtools-axi`, `lavish-axi`, `quota-axi`, and `tasks-axi`
-commands are installed at pinned versions by that script. Nix-managed wrappers
-run them with the pinned Node runtime, so they do not depend on an agent
-session's inherited shell initialization or Node shim state. Treehouse and
-no-mistakes are pinned through Nix. Matt Pocock's engineering, productivity,
+Pi, `gh-axi`, `chrome-devtools-axi`, `lavish-axi`, `quota-axi`, and `tasks-axi`
+are exact-pinned in `agent-tools/package.json`, with their complete dependency
+tree and registry integrity hashes committed in `package-lock.json`.
+`scripts/post-switch.sh` installs that reviewed tree with `npm ci`, rejects any
+known production vulnerability, and verifies npm registry signatures. A
+vulnerability without a compatible fix must have a documented, expiring entry
+in `security/npm-audit-exceptions.json`; the audit gate fails again when that
+exception expires.
+Nix-managed wrappers invoke the exact mise-pinned Node runtime directly, so
+they do not depend on an agent session's inherited shell initialization or Node
+shim state.
+Dependabot proposes delayed minor and patch updates weekly, while security
+updates bypass the delay and target the minimum patched version. Major routine
+updates remain manual.
+
+Treehouse and no-mistakes use the equivalent Go/Nix policy. Their release tags,
+source revisions, and NAR hashes are pinned through `flake.lock`. Daily CI scans
+the exact locked source commits with pinned `govulncheck`, compiles and smoke
+tests both commands using a current Go security patch, and reports a newer
+stable release only after a seven-day cooldown. The pinned nixpkgs toolchain is
+kept on a security-patched Go release as well. Go findings, including
+module-only findings outside a reachable call path, fail unless they have a
+scoped, expiring entry in `security/go-vulnerability-exceptions.json`.
+
+Matt Pocock's engineering, productivity,
 misc, and personal skills plus the Lavish and tasks-axi skills are pinned as
 flake inputs, exposed from
 `~/.agents/skills`, and linked into Claude and Pi. Deprecated and in-progress

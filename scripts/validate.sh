@@ -8,20 +8,94 @@ for script in bootstrap.sh rebuild.sh scripts/*.sh; do
   bash -n "$script"
 done
 
+jq -e '
+  to_entries
+  | all(
+      .key | test("^GHSA-[a-z0-9-]+$")
+    ) and all(
+      .value.expires | test("^[0-9]{4}-[0-9]{2}-[0-9]{2}$")
+    ) and all(
+      (.value.projects | type == "array" and length > 0) and
+      (.value.reason | length > 0) and
+      (.value.compensatingControl | length > 0)
+    )
+' security/npm-audit-exceptions.json >/dev/null
+
+jq -e '
+  to_entries
+  | all(
+      .key | test("^GO-[0-9]{4}-[0-9]+$")
+    ) and all(
+      .value.expires | test("^[0-9]{4}-[0-9]{2}-[0-9]{2}$")
+    ) and all(
+      (.value.projects | type == "array" and length > 0) and
+      (.value.reason | length > 0) and
+      (.value.compensatingControl | length > 0)
+    )
+' security/go-vulnerability-exceptions.json >/dev/null
+
 if rg -n '^[[:space:]]*npm[[:space:]]' bootstrap.sh rebuild.sh scripts/*.sh; then
   printf '%s\n' 'error: scripted npm calls must run through mise exec' >&2
   exit 1
 fi
 
-if ! rg -q 'bun add --global --force @earendil-works/pi-coding-agent@latest' \
-  scripts/post-switch.sh; then
-  printf '%s\n' 'error: Pi must track the latest Bun release during rebuilds' >&2
-  exit 1
-fi
+for install_script in bootstrap.sh rebuild.sh scripts/*.sh; do
+  [[ "$install_script" == "scripts/validate.sh" ]] && continue
+  if rg -n '@latest|npm install[^#]*--global|bun add[^#]*--global' \
+    "$install_script"; then
+    printf '%s\n' 'error: agent tools must use exact versions and locked local installs' >&2
+    exit 1
+  fi
+done
 
-for json_file in home/.claude/settings.portable.json home/.config/opencode/package.json; do
+for json_file in \
+  agent-tools/package.json \
+  agent-tools/package-lock.json \
+  home/.claude/settings.portable.json \
+  home/.config/opencode/package.json \
+  home/.config/opencode/package-lock.json; do
   jq empty "$json_file"
 done
+
+for npm_project in agent-tools home/.config/opencode; do
+  if ! jq -e \
+    '(.packages[""].dependencies // {}) == (. as $lock | input.dependencies)' \
+    "$npm_project/package-lock.json" "$npm_project/package.json" >/dev/null; then
+    printf 'error: %s/package.json does not match its lockfile\n' "$npm_project" >&2
+    exit 1
+  fi
+
+  if jq -e \
+    '[.dependencies // {} | to_entries[] | select(.value | test("^[0-9]+\\.[0-9]+\\.[0-9]+$") | not)] | length > 0' \
+    "$npm_project/package.json" >/dev/null; then
+    printf 'error: %s contains a non-exact npm dependency version\n' "$npm_project/package.json" >&2
+    exit 1
+  fi
+done
+
+for input_package_prefix in \
+  'lavish-axi lavish-axi lavish-axi-v' \
+  'tasks-axi tasks-axi tasks-axi-v'; do
+  read -r flake_input npm_package tag_prefix <<<"$input_package_prefix"
+  npm_version="$(jq -er --arg package "$npm_package" \
+    '.dependencies[$package]' agent-tools/package.json)"
+  flake_ref="$(jq -er --arg input "$flake_input" \
+    '.nodes[$input].original.ref' flake.lock)"
+  if [[ "$flake_ref" != "${tag_prefix}${npm_version}" ]]; then
+    printf 'error: %s npm version %s does not match flake ref %s\n' \
+      "$npm_package" "$npm_version" "$flake_ref" >&2
+    exit 1
+  fi
+done
+
+no_mistakes_version="$(sed -nE \
+  's/^[[:space:]]*noMistakesVersion = "([^"]+)";/\1/p' home.nix)"
+no_mistakes_ref="$(jq -er '.nodes["no-mistakes"].original.ref' flake.lock)"
+if [[ "$no_mistakes_ref" != "v${no_mistakes_version}" ]]; then
+  printf 'error: no-mistakes build version %s does not match flake ref %s\n' \
+    "$no_mistakes_version" "$no_mistakes_ref" >&2
+  exit 1
+fi
 
 if ! jq -e 'has("model") or has("effortLevel") | not' \
   home/.claude/settings.portable.json >/dev/null; then

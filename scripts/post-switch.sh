@@ -2,29 +2,37 @@
 # Install user-scoped tools that nix-darwin's Homebrew module does not model.
 set -euo pipefail
 
+DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 say() { printf '\033[1;34m==>\033[0m %s\n' "$*"; }
+refresh_gpg_keybox() {
+  command -v gpgconf >/dev/null 2>&1 || return 0
+  gpgconf --kill keyboxd 2>/dev/null || true
+  gpgconf --launch keyboxd 2>/dev/null || true
+}
 export PATH="$HOME/.nix-profile/bin:/etc/profiles/per-user/$USER/bin:$HOME/.local/bin:$HOME/.bun/bin:/opt/homebrew/bin:$PATH"
 
 say "installing mise runtimes"
 if ! mise install --jobs=1; then
-  say "retrying mise runtime installation after a transient failure"
+  say "refreshing the GPG public-key service before retrying mise"
+  refresh_gpg_keybox
   mise install --jobs=1
 fi
 
-say "installing the latest Pi with Bun"
-# Pi is an agent harness, so keep it current on every rebuild just like the
-# Homebrew-managed Claude Code and Codex harnesses. --force makes Bun refresh
-# registry metadata instead of accepting a cached resolution of the latest tag.
-bun add --global --force @earendil-works/pi-coding-agent@latest
-
-say "installing shared agent helper CLIs"
+say "installing locked npm agent tools"
 AGENT_TOOLS_PREFIX="$HOME/.local/share/agent-tools"
-mise exec -- npm install --global --prefix "$AGENT_TOOLS_PREFIX" \
-  gh-axi@0.1.27 \
-  chrome-devtools-axi@0.1.27 \
-  lavish-axi@0.1.42 \
-  quota-axi@0.1.11 \
-  tasks-axi@0.2.3
+mkdir -p "$AGENT_TOOLS_PREFIX"
+cp "$DOTFILES_DIR/agent-tools/package.json" "$AGENT_TOOLS_PREFIX/package.json"
+cp "$DOTFILES_DIR/agent-tools/package-lock.json" "$AGENT_TOOLS_PREFIX/package-lock.json"
+cp "$DOTFILES_DIR/agent-tools/.npmrc" "$AGENT_TOOLS_PREFIX/.npmrc"
+mise exec -- npm ci --prefix "$AGENT_TOOLS_PREFIX"
+"$DOTFILES_DIR/scripts/npm-audit.sh" "$AGENT_TOOLS_PREFIX"
+mise exec -- npm audit signatures --prefix "$AGENT_TOOLS_PREFIX"
+
+# Pi used to be installed separately by Bun. Remove the stale copy after the
+# locked npm installation succeeds so it cannot shadow the Nix-managed wrapper.
+if [[ -d "$HOME/.bun/install/global/node_modules/@earendil-works/pi-coding-agent" ]]; then
+  bun remove --global @earendil-works/pi-coding-agent
+fi
 
 # Older revisions installed npm's Node-dependent bin links directly in
 # ~/.local/bin, where they shadow the Nix-managed, pinned-Node wrappers.
@@ -58,7 +66,9 @@ if ! uv tool list | rg -q '^interrogate v1\.7\.0$'; then
   uv tool install --force interrogate==1.7.0
 fi
 
-say "installing OpenCode plugin dependencies"
-bun install --cwd "$HOME/.config/opencode"
+say "installing locked OpenCode plugin dependencies"
+mise exec -- npm ci --prefix "$HOME/.config/opencode"
+"$DOTFILES_DIR/scripts/npm-audit.sh" "$HOME/.config/opencode"
+mise exec -- npm audit signatures --prefix "$HOME/.config/opencode"
 
 say "user-scoped tools are current"

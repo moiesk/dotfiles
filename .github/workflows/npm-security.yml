@@ -1,0 +1,71 @@
+name: npm security
+
+on:
+  pull_request:
+    paths:
+      - ".github/dependabot.yml"
+      - ".github/workflows/npm-security.yml"
+      - "agent-tools/**"
+      - "home/.config/opencode/**"
+      - "scripts/npm-audit.sh"
+      - "security/npm-audit-exceptions.json"
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/dependabot.yml"
+      - ".github/workflows/npm-security.yml"
+      - "agent-tools/**"
+      - "home/.config/opencode/**"
+      - "scripts/npm-audit.sh"
+      - "security/npm-audit-exceptions.json"
+  schedule:
+    - cron: "17 13 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        project:
+          - agent-tools
+          - home/.config/opencode
+    defaults:
+      run:
+        working-directory: ${{ matrix.project }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24.18.0
+          cache: npm
+          cache-dependency-path: ${{ matrix.project }}/package-lock.json
+      - run: npm ci
+      - run: |
+          "$GITHUB_WORKSPACE/scripts/npm-audit.sh" "$PWD"
+      - run: npm audit signatures
+
+  smoke-test-agent-tools:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: agent-tools
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24.18.0
+          cache: npm
+          cache-dependency-path: agent-tools/package-lock.json
+      - run: npm ci
+      - run: node_modules/.bin/pi --version
+      - run: node_modules/.bin/gh-axi --help
+      - run: node_modules/.bin/chrome-devtools-axi --help
+      - run: node_modules/.bin/lavish-axi --help
+      - run: node_modules/.bin/quota-axi --help
+      - run: node_modules/.bin/tasks-axi --help

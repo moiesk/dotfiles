@@ -1,0 +1,14 @@
+{
+  "GHSA-frvp-7c67-39w9": {
+    "projects": ["agent-tools"],
+    "expires": "2026-08-22",
+    "reason": "Pi currently resolves @modelcontextprotocol/sdk to a release that requires the vulnerable @hono/node-server 1.x line; no compatible patched release is available.",
+    "compensatingControl": "The advisory's encoded-backslash path traversal affects Windows only. These dotfiles deploy on macOS, and dependency CI runs on Linux."
+  },
+  "GHSA-j3f2-48v5-ccww": {
+    "projects": ["agent-tools"],
+    "expires": "2026-08-22",
+    "reason": "Pi's published npm-shrinkwrap pins protobufjs 7.6.4, so the root project cannot apply the available 7.6.5 patch until Pi republishes its dependency tree.",
+    "compensatingControl": "The vulnerable parser is reached when parsing attacker-controlled .proto option syntax; this Pi installation does not accept .proto files as agent input."
+  }
+}

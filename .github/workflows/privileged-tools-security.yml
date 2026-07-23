@@ -1,0 +1,83 @@
+name: privileged tool security
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/privileged-tools-security.yml"
+      - "flake.lock"
+      - "flake.nix"
+      - "home.nix"
+      - "scripts/check-privileged-tool-releases.sh"
+      - "scripts/govulncheck-policy.sh"
+      - "security/go-vulnerability-exceptions.json"
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/privileged-tools-security.yml"
+      - "flake.lock"
+      - "flake.nix"
+      - "home.nix"
+      - "scripts/check-privileged-tool-releases.sh"
+      - "scripts/govulncheck-policy.sh"
+      - "security/go-vulnerability-exceptions.json"
+  schedule:
+    - cron: "41 13 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  go-security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - id: pins
+        run: |
+          echo "treehouse=$(jq -r '.nodes.treehouse.locked.rev' flake.lock)" >> "$GITHUB_OUTPUT"
+          echo "no_mistakes=$(jq -r '.nodes["no-mistakes"].locked.rev' flake.lock)" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          repository: kunchenguid/treehouse
+          ref: ${{ steps.pins.outputs.treehouse }}
+          path: upstream/treehouse
+          persist-credentials: false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          repository: kunchenguid/no-mistakes
+          ref: ${{ steps.pins.outputs.no_mistakes }}
+          path: upstream/no-mistakes
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version: 1.25.12
+          cache-dependency-path: |
+            upstream/treehouse/go.sum
+            upstream/no-mistakes/go.sum
+      - run: go install golang.org/x/vuln/cmd/govulncheck@v1.6.0
+      - run: ./scripts/govulncheck-policy.sh treehouse upstream/treehouse
+      - run: ./scripts/govulncheck-policy.sh no-mistakes upstream/no-mistakes
+      - run: go build -trimpath -o "$RUNNER_TEMP/treehouse" .
+        working-directory: upstream/treehouse
+      - run: go build -trimpath -o "$RUNNER_TEMP/no-mistakes" ./cmd/no-mistakes
+        working-directory: upstream/no-mistakes
+      - run: |
+          "$RUNNER_TEMP/treehouse" --help
+      - run: |
+          "$RUNNER_TEMP/no-mistakes" --help
+
+  stable-release-policy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24.18.0
+          cache: npm
+          cache-dependency-path: agent-tools/package-lock.json
+      - run: npm ci
+        working-directory: agent-tools
+      - run: ./scripts/check-privileged-tool-releases.sh
+        env:
+          GH_AXI_BIN: ${{ github.workspace }}/agent-tools/node_modules/.bin/gh-axi

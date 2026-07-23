@@ -4,20 +4,21 @@ let
   link = path: config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/${path}";
   rootLink = path: config.lib.file.mkOutOfStoreSymlink "${dotfiles}/${path}";
   agentHelper = name: package: entrypoint: pkgs.writeShellScriptBin name ''
-    exec ${pkgs.nodejs_24}/bin/node \
-      "$HOME/.local/share/agent-tools/lib/node_modules/${package}/${entrypoint}" \
+    exec ${pkgs.mise}/bin/mise exec -- node \
+      "$HOME/.local/share/agent-tools/node_modules/${package}/${entrypoint}" \
       "$@"
   '';
+  noMistakesVersion = "1.40.2";
   noMistakes = pkgs.buildGoModule {
     pname = "no-mistakes";
-    version = "1.40.2";
+    version = noMistakesVersion;
     src = inputs.no-mistakes;
     vendorHash = "sha256-NZOYxNYvt4192uqKBdKRxdgrKFvWx3585psdCnRdPSM=";
     subPackages = [ "cmd/no-mistakes" ];
     ldflags = [
       "-s"
       "-w"
-      "-X github.com/kunchenguid/no-mistakes/internal/buildinfo.Version=v1.40.2"
+      "-X github.com/kunchenguid/no-mistakes/internal/buildinfo.Version=v${noMistakesVersion}"
     ];
   };
   mattSkillGroups = [ "engineering" "productivity" "misc" "personal" ];
@@ -102,6 +103,7 @@ in
     inputs.treehouse.packages.${pkgs.stdenv.hostPlatform.system}.default
     uv
     wget
+    (agentHelper "pi" "@earendil-works/pi-coding-agent" "dist/cli.js")
     (agentHelper "gh-axi" "gh-axi" "dist/bin/gh-axi.js")
     (agentHelper "chrome-devtools-axi" "chrome-devtools-axi" "dist/bin/chrome-devtools-axi.js")
     (agentHelper "lavish-axi" "lavish-axi" "dist/cli.mjs")
@@ -163,7 +165,7 @@ in
     globalConfig = {
       settings.ruby.compile = false;
       tools = {
-        node = "24.6.0";
+        node = "24.18.0";
         ruby = "4.0.6";
       };
     };
@@ -238,7 +240,9 @@ in
     ".pi/agent/AGENTS.md".source = rootLink "AGENTS.md";
 
     ".config/opencode/AGENTS.md".source = rootLink "AGENTS.md";
+    ".config/opencode/.npmrc".source = link ".config/opencode/.npmrc";
     ".config/opencode/package.json".source = link ".config/opencode/package.json";
+    ".config/opencode/package-lock.json".source = link ".config/opencode/package-lock.json";
 
     ".markdownlint-cli2.jsonc".source = link ".markdownlint-cli2.jsonc";
   } // canonicalSkillFiles // harnessSkillFiles;
