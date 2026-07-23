@@ -21,7 +21,7 @@ say "installing shared agent helper CLIs"
 AGENT_TOOLS_PREFIX="$HOME/.local/share/agent-tools"
 mise exec -- npm install --global --prefix "$AGENT_TOOLS_PREFIX" \
   gh-axi@0.1.27 \
-  chrome-devtools-axi@0.1.26 \
+  chrome-devtools-axi@0.1.27 \
   lavish-axi@0.1.42 \
   quota-axi@0.1.11 \
   tasks-axi@0.2.3
