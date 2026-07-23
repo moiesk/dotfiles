@@ -11,9 +11,19 @@ check_release() {
   local input_name="$1" repository="$2"
   local pinned metadata latest published published_epoch now age_seconds cooldown_seconds
 
-  pinned="$(jq -er --arg input "$input_name" \
-    '.nodes[$input].original.ref' "$DOTFILES_DIR/flake.lock")"
-  metadata="$("$GH_AXI_BIN" api GET "/repos/$repository/releases/latest")"
+  if ! pinned="$(jq -er --arg input "$input_name" \
+    '.nodes[$input].original.ref' "$DOTFILES_DIR/flake.lock")"; then
+    printf 'error: could not read pinned release for %s from flake.lock\n' "$input_name" >&2
+    FAILURES=$((FAILURES + 1))
+    return
+  fi
+
+  if ! metadata="$("$GH_AXI_BIN" api GET "/repos/$repository/releases/latest")"; then
+    printf 'error: could not fetch latest release metadata for %s with %s\n' \
+      "$repository" "$GH_AXI_BIN" >&2
+    FAILURES=$((FAILURES + 1))
+    return
+  fi
   latest="$(awk -F': ' '/^tag_name:/ { print $2; exit }' <<<"$metadata")"
   published="$(awk -F': ' '/^published_at:/ { print $2; exit }' <<<"$metadata")"
   published="${published%\"}"

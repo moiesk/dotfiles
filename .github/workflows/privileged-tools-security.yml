@@ -81,3 +81,4 @@ jobs:
       - run: ./scripts/check-privileged-tool-releases.sh
         env:
           GH_AXI_BIN: ${{ github.workspace }}/agent-tools/node_modules/.bin/gh-axi
+          GH_TOKEN: ${{ github.token }}
