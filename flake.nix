@@ -32,6 +32,11 @@
       url = "github:kunchenguid/lavish-axi/lavish-axi-v0.1.42";
       flake = false;
     };
+
+    tasks-axi = {
+      url = "github:kunchenguid/tasks-axi/tasks-axi-v0.2.3";
+      flake = false;
+    };
   };
 
   outputs = inputs@{

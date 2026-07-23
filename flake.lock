@@ -156,7 +156,25 @@
         "nix-homebrew": "nix-homebrew",
         "nixpkgs": "nixpkgs",
         "no-mistakes": "no-mistakes",
+        "tasks-axi": "tasks-axi",
         "treehouse": "treehouse"
+      }
+    },
+    "tasks-axi": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1783983389,
+        "narHash": "sha256-ziQJdRYtMsJW9xhRtrBiTjDe/5PcECXrBU9Wt9Tn7Vg=",
+        "owner": "kunchenguid",
+        "repo": "tasks-axi",
+        "rev": "0e2cf5904cc227bb66fed66bddac23da6ee449db",
+        "type": "github"
+      },
+      "original": {
+        "owner": "kunchenguid",
+        "ref": "tasks-axi-v0.2.3",
+        "repo": "tasks-axi",
+        "type": "github"
       }
     },
     "treehouse": {

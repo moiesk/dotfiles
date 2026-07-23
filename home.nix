@@ -40,6 +40,10 @@ let
       name = "lavish";
       source = "${inputs.lavish-axi}/skills/lavish";
     }
+    {
+      name = "tasks-axi";
+      source = "${inputs.tasks-axi}/skills/tasks-axi";
+    }
   ];
   canonicalSkillFiles = builtins.listToAttrs (map (skill: {
     name = ".agents/skills/${skill.name}";
@@ -102,6 +106,7 @@ in
     (agentHelper "chrome-devtools-axi" "chrome-devtools-axi" "dist/bin/chrome-devtools-axi.js")
     (agentHelper "lavish-axi" "lavish-axi" "dist/cli.mjs")
     (agentHelper "quota-axi" "quota-axi" "dist/bin/quota-axi.js")
+    (agentHelper "tasks-axi" "tasks-axi" "dist/bin/tasks-axi.js")
   ];
 
   home.sessionVariables = {
