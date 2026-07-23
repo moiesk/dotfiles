@@ -28,8 +28,23 @@
       flake = false;
     };
 
+    chrome-devtools-axi = {
+      url = "github:kunchenguid/chrome-devtools-axi/chrome-devtools-axi-v0.1.27";
+      flake = false;
+    };
+
+    gh-axi = {
+      url = "github:kunchenguid/gh-axi/gh-axi-v0.1.27";
+      flake = false;
+    };
+
     lavish-axi = {
       url = "github:kunchenguid/lavish-axi/lavish-axi-v0.1.42";
+      flake = false;
+    };
+
+    quota-axi = {
+      url = "github:kunchenguid/quota-axi/quota-axi-v0.1.11";
       flake = false;
     };
 

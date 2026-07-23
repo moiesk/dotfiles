@@ -31,7 +31,7 @@ else
   fail "Firstmate agent distro is missing or has an unexpected origin"
 fi
 
-for skill_name in setup-matt-pocock-skills lavish tasks-axi; do
+for skill_name in setup-matt-pocock-skills chrome-devtools-axi gh-axi lavish-axi quota-axi tasks-axi; do
   skill_path="$HOME/.agents/skills/$skill_name/SKILL.md"
   if [[ -r "$skill_path" ]]; then
     pass "$skill_name skill is available"
