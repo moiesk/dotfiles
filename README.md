@@ -183,11 +183,14 @@ module-only findings outside a reachable call path, fail unless they have a
 scoped, expiring entry in `security/go-vulnerability-exceptions.json`.
 
 Matt Pocock's engineering, productivity,
-misc, and personal skills plus the Lavish and tasks-axi skills are pinned as
-flake inputs, exposed from
+misc, and personal skills plus every installable skill bundled with the pinned
+npm agent tools are pinned as flake inputs, exposed from
 `~/.agents/skills`, and linked into Claude and Pi. Deprecated and in-progress
 Matt Pocock skills are deliberately excluded. New skills in an included category
 are discovered automatically after `nix flake update matt-pocock-skills`.
+The package skills use their npm package names: `chrome-devtools-axi`, `gh-axi`,
+`lavish-axi`, `quota-axi`, and `tasks-axi`. Pi's example-only dynamic-resources
+skill is deliberately excluded.
 
 Firstmate is different: it is an agent distro whose clone contains mutable
 configuration and state. Bootstrap creates `~/firstmate` once, then leaves that

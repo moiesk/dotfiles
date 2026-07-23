@@ -33,18 +33,24 @@ let
     in
     map (name: "${group}/${name}") skillNames;
   mattSkillPaths = pkgs.lib.concatMap mattSkillPathsForGroup mattSkillGroups;
+  packageSkill = name: source: {
+    inherit name source;
+  };
+  renamedPackageSkill = name: declaredName: source: packageSkill name (pkgs.runCommand "${name}-skill" { } ''
+    mkdir -p "$out"
+    cp -R ${source}/. "$out"
+    substituteInPlace "$out/SKILL.md" \
+      --replace-fail "name: ${declaredName}" "name: ${name}"
+  '');
   managedSkills = map (path: {
     name = builtins.baseNameOf path;
     source = "${inputs.matt-pocock-skills}/skills/${path}";
   }) mattSkillPaths ++ [
-    {
-      name = "lavish";
-      source = "${inputs.lavish-axi}/skills/lavish";
-    }
-    {
-      name = "tasks-axi";
-      source = "${inputs.tasks-axi}/skills/tasks-axi";
-    }
+    (packageSkill "chrome-devtools-axi" "${inputs.chrome-devtools-axi}/skills/chrome-devtools-axi")
+    (packageSkill "gh-axi" "${inputs.gh-axi}/skills/gh-axi")
+    (renamedPackageSkill "lavish-axi" "lavish" "${inputs.lavish-axi}/skills/lavish")
+    (packageSkill "quota-axi" "${inputs.quota-axi}/skills/quota-axi")
+    (packageSkill "tasks-axi" "${inputs.tasks-axi}/skills/tasks-axi")
   ];
   canonicalSkillFiles = builtins.listToAttrs (map (skill: {
     name = ".agents/skills/${skill.name}";
