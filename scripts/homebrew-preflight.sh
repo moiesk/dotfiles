@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Guard the first strict Homebrew cleanup with an explicit delta preview.
+# Guard the strict Homebrew cleanup with an explicit delta preview.
+# Invoked by bootstrap.sh and by rebuild.sh before each darwin-rebuild switch.
 set -euo pipefail
 
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"

@@ -148,7 +148,7 @@ nix flake update
 | `home/.*` | Portable app configurations copied from the working Mac |
 | `bootstrap.sh` | One-time fresh-machine setup |
 | `rebuild.sh` | Normal apply workflow |
-| `scripts/homebrew-preflight.sh` | First-run destructive cleanup preview |
+| `scripts/homebrew-preflight.sh` | Destructive cleanup preview for bootstrap and rebuild |
 | `scripts/post-switch.sh` | Pinned agents/tools plus mise runtime installation |
 | `scripts/doctor.sh` | Read-only outcome checks |
 | `scripts/check-secrets.sh` | Repository credential guard |
