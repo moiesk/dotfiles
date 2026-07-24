@@ -156,7 +156,10 @@ tree and registry integrity hashes committed in `package-lock.json`.
 known production vulnerability, and verifies npm registry signatures. A
 vulnerability without a compatible fix must have a documented, expiring entry
 in `security/npm-audit-exceptions.json`; the audit gate fails again when that
-exception expires.
+exception expires. The privileged `gh-axi`, `chrome-devtools-axi`, and
+`quota-axi` pins additionally carry the same release-cooldown hold as Treehouse
+and no-mistakes below: the daily CI gate holds a newer npm release through the
+cooldown, then fails until the pin is deliberately advanced.
 Nix-managed wrappers invoke the exact mise-pinned Node runtime directly, so
 they do not depend on an agent session's inherited shell initialization or Node
 shim state.
