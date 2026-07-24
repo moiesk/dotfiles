@@ -52,8 +52,12 @@ The first bootstrap is guarded: it prints the undeclared delta and requires the
 exact confirmation phrase `WIPE UNDECLARED`. Stop there and edit
 `homebrew.nix` if the preview contains anything you want to keep.
 
-Later `./rebuild.sh` runs are not interactive. Add new packages to
-`homebrew.nix` before rebuilding.
+`./rebuild.sh` runs the same preview before every switch and stops for the
+`WIPE UNDECLARED` confirmation when it finds undeclared items. Add new packages
+to `homebrew.nix` before rebuilding. Pass `--yes` (or set `REBUILD_YES=1`) to
+skip the preview once the declared state is already correct; without an opt-out
+and without an interactive terminal the rebuild refuses to zap rather than doing
+it silently.
 
 Rebuilds update Homebrew metadata and greedily upgrade every declared cask.
 This intentionally favors the latest available release, including for
@@ -144,7 +148,7 @@ nix flake update
 | `home/.*` | Portable app configurations copied from the working Mac |
 | `bootstrap.sh` | One-time fresh-machine setup |
 | `rebuild.sh` | Normal apply workflow |
-| `scripts/homebrew-preflight.sh` | First-run destructive cleanup preview |
+| `scripts/homebrew-preflight.sh` | Destructive cleanup preview for bootstrap and rebuild |
 | `scripts/post-switch.sh` | Pinned agents/tools plus mise runtime installation |
 | `scripts/doctor.sh` | Read-only outcome checks |
 | `scripts/check-secrets.sh` | Repository credential guard |

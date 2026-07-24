@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Guard the first strict Homebrew cleanup with an explicit delta preview.
+# Guard the strict Homebrew cleanup with an explicit delta preview.
+# Invoked by bootstrap.sh and by rebuild.sh before each darwin-rebuild switch.
 set -euo pipefail
 
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
@@ -45,7 +46,7 @@ if [[ ! -s "$TMP_DIR/extra-formulae" && ! -s "$TMP_DIR/extra-casks" && ! -s "$TM
   exit 0
 fi
 
-printf '%s\n' "WARNING: the first activation uses cleanup = zap and will remove undeclared items."
+printf '%s\n' "WARNING: the strict Homebrew cleanup (cleanup = zap) will remove undeclared items."
 if [[ -s "$TMP_DIR/extra-formulae" ]]; then
   printf '\nUndeclared formulae:\n'
   sed 's/^/  - /' "$TMP_DIR/extra-formulae"
