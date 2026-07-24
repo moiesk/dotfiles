@@ -95,17 +95,17 @@ while leaving its tap declared, then remove the now-unused tap in the following
 rebuild. Homebrew cannot uninstall a package after its defining tap is gone.
 
 Apify CLI is intentionally absent from the global environment. Before applying
-this cleanup, pin the currently used version inside the `cc4pm` project:
+this cleanup, pin the currently used version inside whichever project needs it:
 
 ```sh
-cd /Users/moiesk/Developer/cc4pm
+cd <your-project>
 npm init -y
 npm install --save-dev --save-exact apify-cli@1.7.1
 npx apify --version
 ```
 
 Use `npx apify ...` from that project thereafter. Existing Apify authentication
-continues to live in `~/.apify`.
+continues to live in the Apify CLI's own config directory.
 
 ## mise runtimes
 
