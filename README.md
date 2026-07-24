@@ -180,8 +180,9 @@ Matt Pocock's engineering, productivity,
 misc, and personal skills plus every installable skill bundled with the pinned
 npm agent tools are pinned as flake inputs, exposed from
 `~/.agents/skills`, and linked into Claude and Pi. Deprecated and in-progress
-Matt Pocock skills are deliberately excluded. New skills in an included category
-are discovered automatically after `nix flake update matt-pocock-skills`.
+Matt Pocock skills are deliberately excluded. The `matt-pocock-skills` input is
+pinned to a tagged release in `flake.nix`; new skills in an included category are
+discovered automatically after bumping that tag in a reviewed `flake.nix` edit.
 The package skills use their npm package names: `chrome-devtools-axi`, `gh-axi`,
 `lavish-axi`, `quota-axi`, and `tasks-axi`. Pi's example-only dynamic-resources
 skill is deliberately excluded.
