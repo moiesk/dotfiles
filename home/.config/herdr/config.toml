@@ -6,4 +6,4 @@ dark_name = "catppuccin"
 light_name = "catppuccin-latte"
 
 [ui.toast]
-delivery = "system"
+delivery = "terminal"
