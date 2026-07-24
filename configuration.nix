@@ -18,8 +18,9 @@
   environment.etc."codex/config.toml".text =
     builtins.readFile ./home/.codex/config.defaults.toml;
 
-  # These are Moises' requested settings. They are intentionally not copied
-  # from the reference dotfiles repository.
+  # ADOPTERS: these are the repo owner's preferred macOS defaults. They are
+  # intentionally not copied from the reference dotfiles repository; adjust them
+  # to taste.
   system.defaults = {
     dock.autohide = true;
     NSGlobalDomain.AppleInterfaceStyleSwitchesAutomatically = true;

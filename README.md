@@ -98,19 +98,6 @@ Remove tap-backed packages in two rebuilds: first remove the formula or cask
 while leaving its tap declared, then remove the now-unused tap in the following
 rebuild. Homebrew cannot uninstall a package after its defining tap is gone.
 
-Apify CLI is intentionally absent from the global environment. Before applying
-this cleanup, pin the currently used version inside the `cc4pm` project:
-
-```sh
-cd /Users/moiesk/Developer/cc4pm
-npm init -y
-npm install --save-dev --save-exact apify-cli@1.7.1
-npx apify --version
-```
-
-Use `npx apify ...` from that project thereafter. Existing Apify authentication
-continues to live in `~/.apify`.
-
 ## mise runtimes
 
 Home Manager enables mise, pins Node 24.6.0 and Ruby 4.0.6, and activates mise

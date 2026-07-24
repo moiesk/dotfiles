@@ -1,5 +1,5 @@
 {
-  description = "Moises' repeatable macOS development environment";
+  description = "A repeatable macOS development environment";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-26.05-darwin";
@@ -64,7 +64,9 @@
     ...
   }:
     let
-      # bootstrap.sh offers to update this when the local macOS user differs.
+      # ADOPTERS: change this to your macOS username.
+      # bootstrap.sh offers to rewrite it automatically when the local macOS
+      # user differs from the value below.
       user = "moiesk";
     in {
       darwinConfigurations.mac = nix-darwin.lib.darwinSystem {

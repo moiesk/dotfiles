@@ -222,6 +222,12 @@ in
       fetch.prune = true;
       rebase.autosquash = true;
       diff.colorMoved = "zebra";
+      # ADOPTERS: change these to your own name and email before rebuilding, so
+      # you do not author commits under the repo owner's identity. Unlike the
+      # flake `user`, bootstrap.sh does not rewrite these automatically.
+      # useConfigOnly = true keeps Git from falling back to a guessed
+      # user.name/user.email, so a blank here fails loudly rather than silently
+      # committing under the wrong identity.
       user = {
         name = "Moises Eskinazi";
         email = "moiesk@gmail.com";
