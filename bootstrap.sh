@@ -46,7 +46,10 @@ say "Step 5/7: preview strict Homebrew cleanup"
 "$DOTFILES_DIR/scripts/homebrew-preflight.sh"
 
 say "Step 6/7: apply the first nix-darwin build"
-sudo "$NIX_BIN" run github:nix-darwin/nix-darwin/nix-darwin-26.05#darwin-rebuild -- \
+# Build darwin-rebuild from this flake's flake.lock-pinned nix-darwin input
+# (the same reviewed source every later rebuild.sh uses) rather than fetching
+# an unpinned branch ref live as root.
+sudo "$NIX_BIN" run "$DOTFILES_DIR#darwinConfigurations.mac.config.system.build.darwin-rebuild" -- \
   switch --flake "$DOTFILES_DIR#mac"
 
 say "Step 7/7: install user-scoped agent tools and verify"
