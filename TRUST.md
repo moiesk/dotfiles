@@ -1,0 +1,130 @@
+# Trust inventory
+
+This repository wires third-party tooling directly into the agent harnesses and
+the macOS build. This file names **every** third-party upstream, records the
+capability each one is granted, and states why it is trusted. It exists so an
+adopter can see — at a glance — how much power flows from where before applying
+any of this to their own machine.
+
+## The overarching stance: a consciously accepted single point of failure
+
+Nine of the upstreams below are published by a **single** account,
+[`kunchenguid`](https://github.com/kunchenguid). That includes the most
+privileged tools in the stack (GitHub write, browser control, git push + PR)
+**and** the agent distro that supervises the whole system (`firstmate`). This
+concentration is a **deliberate, accepted** single point of failure. If that one
+account were compromised or turned hostile, it could reach a large share of what
+runs here.
+
+The chosen mitigation is **tiered gating + disclosure, not de-concentration.**
+There is **no vendoring** and no attempt to spread trust across more publishers.
+Instead:
+
+- Everything except `firstmate` is **pinned** to an exact release/commit in
+  [`flake.lock`](flake.lock) (and, for the npm agent tools, exact versions in
+  [`agent-tools/package.json`](agent-tools/package.json)). A new upstream release
+  does nothing until the pin is moved on purpose.
+- The privileged and code-exec/workflow tiers (A and B below) sit behind a
+  **cooldown + review gate**: `scripts/check-privileged-tool-releases.sh` only
+  surfaces a newer stable release after a **seven-day cooldown**
+  (`TOOL_UPDATE_COOLDOWN_DAYS`, default 7), so a freshly-published — possibly
+  malicious — release is never adopted on the day it drops.
+- This document is the disclosure half: the trust is written down, tiered, and
+  reviewable rather than implicit.
+
+`firstmate` is the one exception to the pinning discipline — it is
+**accept-as-rolling** (see its section). That exception is the loudest single
+fact in this file.
+
+---
+
+## Tier A — Privileged
+
+Wired into **every** agent harness. These can act on GitHub, drive a real
+browser, or read local provider auth. A compromised Tier A tool is the highest-
+impact failure in the stack, so all three sit **behind the cooldown/review
+gate** and are pinned to exact releases.
+
+| Upstream | Pinned at | Capability granted | Why it is trusted |
+|---|---|---|---|
+| [`kunchenguid/gh-axi`](https://github.com/kunchenguid/gh-axi) | `gh-axi-v0.1.27` (flake input + npm `gh-axi@0.1.27`) | **GitHub write** — files/edits issues and PRs, merges, triggers workflows, manages Actions secrets/variables, raw API access, all under the local `gh` auth. | Pinned to an exact release; behind the cooldown/review gate. It is the sanctioned GitHub path for every agent, so its behavior is exercised constantly and any regression surfaces fast. |
+| [`kunchenguid/chrome-devtools-axi`](https://github.com/kunchenguid/chrome-devtools-axi) | `chrome-devtools-axi-v0.1.27` (flake input + npm `chrome-devtools-axi@0.1.27`) | **Browser control** — navigates, clicks, fills forms, runs arbitrary JavaScript, and reads console/network in a real Chrome session. | Pinned to an exact release; behind the cooldown/review gate. Scoped to a driven browser session rather than the whole machine. |
+| [`kunchenguid/quota-axi`](https://github.com/kunchenguid/quota-axi) | `quota-axi-v0.1.11` (flake input + npm `quota-axi@0.1.11`) | **Reads local provider auth sources** — inspects Claude/Codex/Cursor/Copilot/Grok/Kimi quota windows from on-disk auth. Read-only: no routing, no provider mutation. | Pinned to an exact release; behind the cooldown/review gate. Documented as read-only, but it touches local credential material, which is why it is rated privileged rather than low-capability. |
+
+## Tier B — Code-exec / workflow
+
+Can execute code and move commits into the world (git push + PR). Pinned and
+**behind the cooldown/review gate** — `scripts/check-privileged-tool-releases.sh`
+is written specifically around these two.
+
+| Upstream | Pinned at | Capability granted | Why it is trusted |
+|---|---|---|---|
+| [`kunchenguid/treehouse`](https://github.com/kunchenguid/treehouse) | `v2.1.0` (flake input) | **Code-exec / workflow** — provides disposable git worktrees that agents build and run code inside. | Pinned to an exact release; explicitly covered by the cooldown/review gate (`check_release treehouse …`). |
+| [`kunchenguid/no-mistakes`](https://github.com/kunchenguid/no-mistakes) | `v1.40.2` (flake input, `flake = false`) | **git push + PR** — the validation pipeline that runs review/tests/lint and then pushes branches and opens pull requests. | Pinned to an exact release; explicitly covered by the cooldown/review gate (`check_release no-mistakes …`). It is the mandatory gate every change passes through, so its output is reviewed on every run. |
+
+## Tier C — Low-capability
+
+No GitHub write, no push, no browser, no credential access. Low blast radius, so
+these are pinned but not placed behind the release cooldown.
+
+| Upstream | Pinned at | Capability granted | Why it is trusted |
+|---|---|---|---|
+| [`kunchenguid/lavish-axi`](https://github.com/kunchenguid/lavish-axi) | `lavish-axi-v0.1.42` (flake input + npm `lavish-axi@0.1.42`) | Renders agent responses into reviewable HTML artifacts. | Pinned to an exact release; output-only presentation, no privileged capability. |
+| [`kunchenguid/tasks-axi`](https://github.com/kunchenguid/tasks-axi) | `tasks-axi-v0.2.3` (flake input + npm `tasks-axi@0.2.3`) | Manages a local, hand-editable `backlog.md` task list. | Pinned to an exact release; operates on a local text backlog, no privileged capability. |
+| [`kunchenguid/tap/baby-menu`](https://github.com/kunchenguid/homebrew-tap) | Homebrew cask (unversioned; `greedyCasks` converges to latest) | Native macOS menu-bar app installed via Homebrew. | From the same `kunchenguid` tap. Rated low-capability as an ordinary user-space menu-bar app. Note: as a `greedyCask` it is **not** pinned to a version and self-updates to Homebrew's latest — the concentration risk applies, but the capability is low. |
+
+## firstmate — accept-as-rolling ⚠️
+
+> **This is the one upstream that is NOT pinned.**
+
+[`kunchenguid/firstmate`](https://github.com/kunchenguid/firstmate) is an agent
+**distro** — the supervisor that dispatches and manages the crewmate agents doing
+work in this repo. Unlike every tool above, it is **not** a pinned flake input or
+a pinned npm version:
+
+- `scripts/post-switch.sh` **clones** `kunchenguid/firstmate` into `~/firstmate`
+  **once**, then deliberately leaves that clone in place on every subsequent
+  rebuild (it only verifies the origin remote; it never replaces the checkout).
+- The clone contains **mutable configuration and state** and updates itself
+  **under firstmate's own update workflow**, on firstmate's own cadence.
+
+The practical consequence: **trust in firstmate is continuous, not a pinned
+snapshot.** There is no `flake.lock` line that freezes which firstmate code runs
+here. Whatever firstmate's own workflow pulls in becomes what supervises this
+machine — and firstmate holds the most reach of anything in the stack, because it
+orchestrates the agents that wield the Tier A and Tier B tools. An adopter must
+accept that ongoing, rolling trust in the `kunchenguid` account explicitly; the
+pinning + cooldown protections above **do not apply to firstmate.**
+
+Why it is nonetheless trusted: it is the intended supervisor for this exact
+setup, its clone/update behavior is verified by `scripts/doctor.sh`, and its
+state is kept separate from the tracked, pinned portable configuration.
+
+---
+
+## Other third-party upstreams (non-`kunchenguid`)
+
+| Upstream | Pinned at | Capability granted | Why it is trusted |
+|---|---|---|---|
+| [`mattpocock/skills`](https://github.com/mattpocock/skills) | flake input (locked to a commit in `flake.lock`; tracks the default branch — advanced only when `nix flake update matt-pocock-skills` is run) | Supplies agent **skills** (instructions/workflows) exposed from `~/.agents/skills` and linked into Claude and Pi. Skills are prompts/workflows, not independently privileged binaries, but they can *instruct* the privileged tools above. | Well-known author (Matt Pocock); locked in `flake.lock` so updates are explicit. Deprecated and in-progress skills are deliberately excluded. |
+| [`@earendil-works/pi-coding-agent`](https://www.npmjs.com/package/@earendil-works/pi-coding-agent) | npm `0.81.1` (exact, in `agent-tools/package.json`) | The **Pi coding agent** runtime — a full agent harness that can read/write files and run commands locally. | Pinned to an exact npm version. High capability as an agent runtime, but adopted as a named, pinned dependency rather than a rolling one. |
+
+## Foundational Nix inputs (community infrastructure)
+
+For completeness, the build also depends on standard, widely-used Nix community
+inputs, all locked in `flake.lock`: `nixpkgs` (`nixpkgs-26.05-darwin`),
+[`nix-darwin`](https://github.com/nix-darwin/nix-darwin) (`nix-darwin-26.05`),
+[`home-manager`](https://github.com/nix-community/home-manager)
+(`release-26.05`), and [`nix-homebrew`](https://github.com/zhaofengli/nix-homebrew)
+(plus its `brew-src`). These are the ecosystem's foundational infrastructure —
+high-trust, broadly reviewed, and outside the `kunchenguid` concentration that is
+this document's concern — but they are named here so the trust inventory is
+complete.
+
+---
+
+*Maintaining this file: when a third-party upstream is added, removed, or moved
+between capability tiers, update the matching table here in the same change.
+Version pins in the tables are illustrative of the pinning discipline — the
+authoritative pins live in [`flake.lock`](flake.lock) and
+[`agent-tools/package.json`](agent-tools/package.json).*
