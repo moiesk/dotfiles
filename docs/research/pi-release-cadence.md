@@ -4,6 +4,15 @@
 **Date:** 2026-07-24
 **Current pin:** `@earendil-works/pi-coding-agent@0.81.1` (exact, in `agent-tools/package.json`; recorded in `TRUST.md` Tier D)
 
+> **Decision of record: [#36](https://github.com/moiesk/dotfiles/issues/36).** This is a
+> point-in-time research artifact; the actual posture decision superseded parts of it. #36 decided
+> Pi is treated as a **first-party harness and rolls to latest _unconditionally_ — no pin, no
+> cooldown** — and is **removed from `TRUST.md`** (joining the `claude-code`/`codex` casks). In
+> particular, this doc's closing suggestion to keep Pi behind the npm-release cooldown gate was
+> **considered and rejected**: on a fix-heavy, high-velocity package a cooldown only delays the
+> fixes it exists to deliver, and with the vendor trusted like a lab the supply-chain rationale for
+> it falls away. The findings below (cadence, semver mix, vendor signals) stand as-measured.
+
 ## Question
 
 Does Pi behave like the first-party harnesses (claude-code / codex) — frequent, fix-heavy
@@ -111,3 +120,7 @@ breaking, and it is a **full local agent runtime** (Tier D capability). If Pi ro
 recommendation is to keep it behind the same npm-release **cooldown / review gate** the other Tier-A/D
 tools use (see `TRUST.md` and #31) rather than tracking `latest` unconditionally — capturing the
 "don't wait on fixes" benefit while bounding the pre-1.0 breakage / blast-radius risk.
+
+> **Superseded by [#36](https://github.com/moiesk/dotfiles/issues/36):** this cooldown-gate
+> recommendation was rejected — Pi rolls to latest unconditionally (no cooldown). See the note at
+> the top of this file.
