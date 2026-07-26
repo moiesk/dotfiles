@@ -27,7 +27,7 @@ exact pin costs little? Needed to decide whether Pi should roll-to-latest or kee
 - GitHub releases: `gh release list -R earendil-works/pi`
 - GitHub repo metadata: `gh repo view earendil-works/pi --json ...`
 - Upstream CHANGELOG: `packages/coding-agent/CHANGELOG.md` in `earendil-works/pi`
-  (https://raw.githubusercontent.com/earendil-works/pi/main/packages/coding-agent/CHANGELOG.md)
+  (<https://raw.githubusercontent.com/earendil-works/pi/main/packages/coding-agent/CHANGELOG.md>)
 
 All figures below are pulled directly from the npm registry and the upstream repo; no secondary write-ups.
 
