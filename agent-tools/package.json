@@ -2,7 +2,6 @@
   "name": "agent-tools",
   "private": true,
   "dependencies": {
-    "@earendil-works/pi-coding-agent": "0.81.1",
     "chrome-devtools-axi": "0.1.27",
     "gh-axi": "0.1.27",
     "lavish-axi": "0.1.42",

@@ -20,10 +20,12 @@ The chosen mitigation is **tiered gating + disclosure, not de-concentration.**
 There is **no vendoring** and no attempt to spread trust across more publishers.
 Instead:
 
-- Everything except `firstmate` is **pinned** to an exact release/commit in
-  [`flake.lock`](flake.lock) (and, for the npm agent tools, exact versions in
-  [`agent-tools/package.json`](agent-tools/package.json)). A new upstream release
-  does nothing until the pin is moved on purpose.
+- Every third-party upstream **except `firstmate`** is **pinned** to an exact
+  release/commit in [`flake.lock`](flake.lock) (and, for the npm agent tools,
+  exact versions in [`agent-tools/package.json`](agent-tools/package.json)). A
+  new upstream release does nothing until the pin is moved on purpose. (The
+  first-party harnesses — the `claude-code`/`codex` casks and Pi — deliberately
+  roll to latest instead; see the stance footnote below.)
 - The privileged and code-exec/workflow tiers (A and B below) sit behind a
   **cooldown + review gate**: `scripts/check-privileged-tool-releases.sh` only
   surfaces a newer stable release after a **seven-day cooldown**
@@ -32,9 +34,26 @@ Instead:
 - This document is the disclosure half: the trust is written down, tiered, and
   reviewable rather than implicit.
 
-`firstmate` is the one exception to the pinning discipline — it is
-**accept-as-rolling** (see its section). That exception is the loudest single
-fact in this file.
+`firstmate` is the one *third-party* upstream that escapes the pinning
+discipline — it is **accept-as-rolling** (see its section). That exception is the
+loudest single fact in this file.
+
+### First-party harnesses — deliberately rolling ⚠️
+
+The agent harnesses this repo treats as **first-party** — the `claude-code` and
+`codex` Homebrew casks and the Pi npm runtime
+(`@earendil-works/pi-coding-agent`) — are **deliberately not pinned**. They roll
+to the latest published release on every rebuild, with **no pin and no cooldown**
+(decisions #34/#36). Pi is therefore **absent from the third-party inventory
+below** — it carries no row; it joins the casks.
+
+The asymmetry is intentional, not an oversight. These are first-party /
+lab-grade vendors shipping frequent bug-fixes to daily-driver tools, so holding a
+new release through a cooldown would mostly *delay the fixes the cooldown exists
+to deliver* — for these upstreams rolling is the safer path. The pinned +
+cooldown-gated discipline is reserved for the **third-party** `kunchenguid` +
+`mattpocock` surface, whose larger blast radius and lower familiarity justify the
+hold. (`firstmate` also rolls, but for the distinct reason in its own section.)
 
 ---
 
@@ -75,7 +94,9 @@ these are pinned but not placed behind the release cooldown.
 
 ## firstmate — accept-as-rolling ⚠️
 
-> **This is the one upstream that is NOT pinned.**
+> **Among the third-party upstreams inventoried here, this is the one that is
+> NOT pinned.** (The first-party harnesses roll too, but by the separate,
+> deliberate decision described in the stance above.)
 
 [`kunchenguid/firstmate`](https://github.com/kunchenguid/firstmate) is an agent
 **distro** — the supervisor that dispatches and manages the crewmate agents doing
@@ -107,7 +128,6 @@ state is kept separate from the tracked, pinned portable configuration.
 | Upstream | Pinned at | Capability granted | Why it is trusted |
 |---|---|---|---|
 | [`mattpocock/skills`](https://github.com/mattpocock/skills) | flake input (locked to a commit in `flake.lock`; tracks the default branch — advanced only when `nix flake update matt-pocock-skills` is run) | Supplies agent **skills** (instructions/workflows) exposed from `~/.agents/skills` and linked into Claude and Pi. Skills are prompts/workflows, not independently privileged binaries, but they can *instruct* the privileged tools above. | Well-known author (Matt Pocock); locked in `flake.lock` so updates are explicit. Deprecated and in-progress skills are deliberately excluded. |
-| [`@earendil-works/pi-coding-agent`](https://www.npmjs.com/package/@earendil-works/pi-coding-agent) | npm `0.81.1` (exact, in `agent-tools/package.json`) | The **Pi coding agent** runtime — a full agent harness that can read/write files and run commands locally. | Pinned to an exact npm version. High capability as an agent runtime, but adopted as a named, pinned dependency rather than a rolling one. |
 
 ## Foundational Nix inputs (community infrastructure)
 

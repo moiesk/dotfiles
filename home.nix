@@ -8,6 +8,13 @@ let
       "$HOME/.local/share/agent-tools/node_modules/${package}/${entrypoint}" \
       "$@"
   '';
+  # Activation runs this reviewed script from the store, not from the mutable
+  # working tree. shellcheck runs at build time; jq/coreutils come from the store.
+  materializeAgentConfigsApp = pkgs.writeShellApplication {
+    name = "materialize-agent-configs";
+    runtimeInputs = [ pkgs.jq pkgs.coreutils ];
+    text = builtins.readFile ./scripts/materialize-agent-configs.sh;
+  };
   noMistakesVersion = "1.40.2";
   noMistakes = pkgs.buildGoModule {
     pname = "no-mistakes";
@@ -262,11 +269,12 @@ in
   # Harnesses write selections and state back to their user configuration.
   # Materialize ordinary files after the old Home Manager links are removed,
   # preserving existing local keys while reapplying tracked portable defaults.
+  #
+  # Activation-time code runs from the store (reviewed, immutable); runtime
+  # data/config stays out-of-store in ~/.dotfiles. Do not "simplify" this back
+  # to running the script straight from the mutable working tree.
   home.activation.materializeAgentConfigs =
     config.lib.dag.entryAfter [ "linkGeneration" ] ''
-      ${pkgs.bash}/bin/bash \
-        "${dotfiles}/scripts/materialize-agent-configs.sh" \
-        "${dotfiles}" \
-        "${pkgs.jq}/bin/jq"
+      ${materializeAgentConfigsApp}/bin/materialize-agent-configs "${dotfiles}"
     '';
 }
