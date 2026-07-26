@@ -25,6 +25,15 @@ cp "$DOTFILES_DIR/agent-tools/package.json" "$AGENT_TOOLS_PREFIX/package.json"
 cp "$DOTFILES_DIR/agent-tools/package-lock.json" "$AGENT_TOOLS_PREFIX/package-lock.json"
 cp "$DOTFILES_DIR/agent-tools/.npmrc" "$AGENT_TOOLS_PREFIX/.npmrc"
 mise exec -- npm ci --prefix "$AGENT_TOOLS_PREFIX"
+
+# Pi is a first-party harness (decisions #34/#36): it deliberately rolls to the
+# latest published release on every rebuild, like the claude-code/codex casks —
+# no pin, no cooldown. It is therefore installed on top of the pinned,
+# lockfile-driven tools above rather than being listed in package.json/-lock.
+# This is the one sanctioned latest-install; validate.sh exempts exactly it.
+mise exec -- npm install --prefix "$AGENT_TOOLS_PREFIX" \
+  @earendil-works/pi-coding-agent@latest
+
 "$DOTFILES_DIR/scripts/npm-audit.sh" "$AGENT_TOOLS_PREFIX"
 mise exec -- npm audit signatures --prefix "$AGENT_TOOLS_PREFIX"
 

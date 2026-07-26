@@ -62,9 +62,13 @@ it silently.
 Rebuilds update Homebrew metadata and greedily upgrade every declared cask.
 This intentionally favors the latest available release, including for
 self-updating or unversioned apps such as agent harnesses. The final doctor
-check fails if any Homebrew formula or cask is still outdated. Pi follows the
-same policy: its Bun package is resolved from the latest registry release on
-every rebuild, and the doctor verifies the installed version.
+check fails if any Homebrew formula or cask is still outdated. The first-party
+agent harnesses roll to latest by the same deliberate policy — no pin, no
+cooldown: the `claude-code`/`codex` casks upgrade greedily, and Pi
+(`@earendil-works/pi-coding-agent`) is installed from its latest npm release on
+every rebuild by `scripts/post-switch.sh`, with the doctor confirming it is
+present. The third-party `kunchenguid` and `mattpocock` upstreams stay pinned
+and gated instead (see `TRUST.md`); the asymmetry is intentional.
 
 ## Daily use
 
@@ -149,11 +153,15 @@ nix flake update
 - `~/.pi/agent/AGENTS.md`
 - `~/.config/opencode/AGENTS.md`
 
-Pi, `gh-axi`, `chrome-devtools-axi`, `lavish-axi`, `quota-axi`, and `tasks-axi`
+`gh-axi`, `chrome-devtools-axi`, `lavish-axi`, `quota-axi`, and `tasks-axi`
 are exact-pinned in `agent-tools/package.json`, with their complete dependency
 tree and registry integrity hashes committed in `package-lock.json`.
-`scripts/post-switch.sh` installs that reviewed tree with `npm ci`, rejects any
-known production vulnerability, and verifies npm registry signatures. A
+`scripts/post-switch.sh` installs that reviewed tree with `npm ci`, then installs
+Pi (`@earendil-works/pi-coding-agent`) at its latest release on top: Pi is a
+deliberately rolling first-party harness (no pin, no cooldown — see `TRUST.md`),
+so it is intentionally absent from `package.json`/`package-lock.json`. The
+npm-audit and registry-signature gates then cover the whole installed tree, Pi
+included, rejecting any known production vulnerability. A
 vulnerability without a compatible fix must have a documented, expiring entry
 in `security/npm-audit-exceptions.json`; the audit gate fails again when that
 exception expires. The privileged `gh-axi`, `chrome-devtools-axi`, and

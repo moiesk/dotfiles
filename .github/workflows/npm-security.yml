@@ -63,6 +63,11 @@ jobs:
           cache: npm
           cache-dependency-path: agent-tools/package-lock.json
       - run: npm ci
+      # Pi is a first-party harness (decisions #34/#36): it rolls to @latest on
+      # top of the pinned, lockfile-driven tools rather than living in
+      # package.json/-lock, matching scripts/post-switch.sh. Install it here so
+      # the smoke test exercises the same rolling install.
+      - run: npm install @earendil-works/pi-coding-agent@latest
       - run: node_modules/.bin/pi --version
       - run: node_modules/.bin/gh-axi --help
       - run: node_modules/.bin/chrome-devtools-axi --help

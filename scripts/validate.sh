@@ -41,8 +41,11 @@ fi
 
 for install_script in bootstrap.sh rebuild.sh scripts/*.sh; do
   [[ "$install_script" == "scripts/validate.sh" ]] && continue
+  # Pi is a deliberately rolling first-party harness (decisions #34/#36): its
+  # single sanctioned `@latest` install in post-switch.sh is exempt. Every other
+  # agent tool must still use an exact version and a locked local install.
   if rg -n '@latest|npm install[^#]*--global|bun add[^#]*--global' \
-    "$install_script"; then
+    "$install_script" | rg -v '@earendil-works/pi-coding-agent@latest'; then
     printf '%s\n' 'error: agent tools must use exact versions and locked local installs' >&2
     exit 1
   fi

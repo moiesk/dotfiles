@@ -67,13 +67,15 @@ else
   pass "Homebrew packages are current"
 fi
 
-pi_expected_version="$(jq -r '.dependencies["@earendil-works/pi-coding-agent"]' \
-  "$DOTFILES_DIR/agent-tools/package.json")"
+# Pi is a deliberately rolling first-party harness (decisions #34/#36): it is
+# unpinned and installed at the latest release each rebuild, like the greedy
+# casks, so the doctor only confirms it is present and reporting a version, not
+# that it equals a pin.
 pi_installed_version="$(pi --version 2>/dev/null || true)"
-if [[ "$pi_installed_version" == "$pi_expected_version" ]]; then
-  pass "Pi matches the reviewed lock ($pi_installed_version)"
+if [[ -n "$pi_installed_version" ]]; then
+  pass "Pi is installed and rolling to latest ($pi_installed_version)"
 else
-  fail "Pi does not match the reviewed lock: installed ${pi_installed_version:-<unknown>}, expected $pi_expected_version"
+  fail "Pi is not installed or cannot report a version"
 fi
 
 for target in \
