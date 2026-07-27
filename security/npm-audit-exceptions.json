@@ -10,5 +10,11 @@
     "expires": "2026-08-22",
     "reason": "Pi's published npm-shrinkwrap pins protobufjs 7.6.4, so the root project cannot apply the available 7.6.5 patch until Pi republishes its dependency tree.",
     "compensatingControl": "The vulnerable parser is reached when parsing attacker-controlled .proto option syntax; this Pi installation does not accept .proto files as agent input."
+  },
+  "GHSA-mh99-v99m-4gvg": {
+    "projects": ["agent-tools"],
+    "expires": "2026-08-22",
+    "reason": "Pi's published npm-shrinkwrap pins brace-expansion 5.0.7, so the root project cannot apply the available 5.0.8 patch until Pi republishes its dependency tree.",
+    "compensatingControl": "The vulnerable expansion is reached through glob patterns from user settings, installed package manifests, or trusted project configuration; this local CLI does not expose those patterns to unauthenticated network input."
   }
 }

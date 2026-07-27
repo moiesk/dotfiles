@@ -15,6 +15,11 @@
         name = "nikitabobko/tap";
         trusted = true;
       }
+      {
+        # Home of the kunchenguid/tap/baby-menu cask declared below.
+        name = "kunchenguid/tap";
+        trusted = true;
+      }
     ];
 
     brews = [

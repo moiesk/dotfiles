@@ -33,7 +33,12 @@ nix eval --json "$DOTFILES_DIR#darwinConfigurations.mac.config.homebrew.taps" \
   | sort -u > "$TMP_DIR/declared-taps"
 
 brew bundle dump --force --file="$TMP_DIR/current.Brewfile"
-sed -nE 's/^brew "([^"]+)".*/\1/p' "$TMP_DIR/current.Brewfile" | sed -E 's#^.*/##' | sort -u > "$TMP_DIR/installed-formulae"
+# Use `brew leaves` rather than the Brewfile's full formula list: zap only
+# removes top-level formulae, never dependencies of declared casks/brews (e.g.
+# gnupg for the gpgfrontend cask, ripgrep for the codex cask). Comparing the
+# full installed closure would flag those cask dependencies as "undeclared"
+# forever, since zap keeps them and they can never be removed.
+brew leaves 2>/dev/null | sed -E 's#^.*/##' | sort -u > "$TMP_DIR/installed-formulae"
 sed -nE 's/^cask "([^"]+)".*/\1/p' "$TMP_DIR/current.Brewfile" | sed -E 's#^.*/##' | sort -u > "$TMP_DIR/installed-casks"
 sed -nE 's/^tap "([^"]+)".*/\1/p' "$TMP_DIR/current.Brewfile" | sort -u > "$TMP_DIR/installed-taps"
 
