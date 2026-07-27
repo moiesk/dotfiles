@@ -11,6 +11,18 @@ refresh_gpg_keybox() {
 }
 export PATH="$HOME/.nix-profile/bin:/etc/profiles/per-user/$USER/bin:$HOME/.local/bin:$HOME/.bun/bin:/opt/homebrew/bin:$PATH"
 
+# nix-darwin's `onActivation.upgrade` runs `brew bundle --upgrade`, which only
+# upgrades declared leaves and casks. Transitive dependencies (e.g. sqlite and
+# pkgconf under vips, fluid-synth under scummvm) are left behind whenever the
+# declared leaf is not itself outdated, so `brew outdated` keeps flagging them
+# and doctor.sh fails forever. Converge the whole installed closure to latest
+# here, matching homebrew.nix's greedy/upgrade/zap intent.
+if command -v brew >/dev/null 2>&1; then
+  say "upgrading Homebrew dependency closure to latest"
+  HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_ANALYTICS=1 HOMEBREW_NO_ENV_HINTS=1 \
+    brew upgrade
+fi
+
 say "installing mise runtimes"
 if ! mise install --jobs=1; then
   say "refreshing the GPG public-key service before retrying mise"
