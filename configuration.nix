@@ -1,6 +1,9 @@
 { brew-src, user, ... }:
 {
-  imports = [ ./homebrew.nix ];
+  imports = [
+    ./homebrew.nix
+    ./nix-gc.nix
+  ];
 
   # Determinate manages the Nix daemon installed by bootstrap.sh.
   nix.enable = false;

@@ -134,6 +134,7 @@ nix flake update
 | `flake.nix` / `flake.lock` | Pinned nix-darwin, Home Manager, nix-homebrew, and nixpkgs inputs |
 | `configuration.nix` | Platform, user, and the three requested macOS behaviors |
 | `homebrew.nix` | Complete reviewed Homebrew inventory and strict convergence policy |
+| `nix-gc.nix` | Weekly `launchd` garbage-collection daemon (30-day retention + store optimise) |
 | `home.nix` | Shell, Git, environment variables, and out-of-store symlinks |
 | `AGENTS.md` | Canonical global instruction file shared by all four coding agents |
 | `home/.*` | Portable app configurations copied from the working Mac |
@@ -236,6 +237,26 @@ directly. Agent harness settings are the exception: edit portable Claude and
 Codex defaults in this checkout, while model, effort, project trust, and Pi
 settings remain local under the harness's normal home-directory paths. Run
 `./rebuild.sh` to apply portable-default or Nix changes.
+
+## Nix store garbage collection
+
+A weekly `launchd` system daemon (`nix-gc`, defined in `nix-gc.nix`) keeps the
+Nix store from growing unbounded. Every Sunday at 03:15 local time it runs
+`nix-collect-garbage --delete-older-than 30d` and then `nix store optimise`,
+reclaiming space while keeping 30 days of generations so rollback stays
+available. If the laptop is asleep at that time, launchd runs the job on next
+wake. Output is appended to `/var/log/nix-gc.log`.
+
+nix-darwin's own `nix.gc` / `nix.optimise` options are deliberately not used:
+they require `nix.enable`, which is off because Determinate owns the daemon. The
+retention window and cadence are `let` bindings at the top of `nix-gc.nix`;
+adjust them there and rebuild.
+
+Trigger a collection manually at any time:
+
+```sh
+nix-collect-garbage --delete-older-than 30d
+```
 
 ## Rollback and recovery
 
