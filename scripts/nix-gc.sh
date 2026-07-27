@@ -70,13 +70,17 @@ say "collecting Nix garbage older than ${GC_RETENTION} (user profile)"
 # hangs on a password prompt; prompt only when a TTY is present, otherwise warn
 # and leave the system generations for the next interactive rebuild. The
 # resolved absolute path is passed through so sudo's secure_path cannot hide it.
+system_gc_deferred=0
 if sudo -n true 2>/dev/null; then
   say "collecting Nix garbage older than ${GC_RETENTION} (system profile)"
-  sudo -n "$NIX_COLLECT_GARBAGE" --delete-older-than "$GC_RETENTION"
+  sudo -n "$NIX_COLLECT_GARBAGE" --delete-older-than "$GC_RETENTION" ||
+    printf '%s\n' "warning: system-profile GC failed; continuing" >&2
 elif [[ -t 0 ]]; then
   say "collecting Nix garbage older than ${GC_RETENTION} (system profile, sudo)"
-  sudo "$NIX_COLLECT_GARBAGE" --delete-older-than "$GC_RETENTION"
+  sudo "$NIX_COLLECT_GARBAGE" --delete-older-than "$GC_RETENTION" ||
+    printf '%s\n' "warning: system-profile GC failed; continuing" >&2
 else
+  system_gc_deferred=1
   printf '%s\n' "warning: no cached sudo credentials and no TTY; skipped system-profile GC" >&2
 fi
 
@@ -89,6 +93,13 @@ else
 fi
 
 # Record success so the interval gate above skips the next several rebuilds.
-mkdir -p "$STATE_DIR"
-printf '%s\n' "$now" > "$STAMP_FILE"
-say "Nix garbage collection complete"
+# If system-profile GC was deferred for want of sudo credentials and a TTY,
+# leave the timestamp untouched so the next rebuild retries it instead of the
+# interval gate skipping the collection entirely.
+if (( system_gc_deferred )); then
+  say "Nix garbage collection complete (system profile deferred; will retry next rebuild)"
+else
+  mkdir -p "$STATE_DIR"
+  printf '%s\n' "$now" > "$STAMP_FILE"
+  say "Nix garbage collection complete"
+fi
