@@ -141,6 +141,7 @@ nix flake update
 | `rebuild.sh` | Normal apply workflow |
 | `scripts/homebrew-preflight.sh` | Destructive cleanup preview for bootstrap and rebuild |
 | `scripts/post-switch.sh` | Pinned agents/tools plus mise runtime installation |
+| `scripts/nix-gc.sh` | Interval-gated Nix garbage collection after a successful switch |
 | `scripts/doctor.sh` | Read-only outcome checks |
 | `scripts/check-secrets.sh` | Repository credential guard |
 
@@ -236,6 +237,32 @@ directly. Agent harness settings are the exception: edit portable Claude and
 Codex defaults in this checkout, while model, effort, project trust, and Pi
 settings remain local under the harness's normal home-directory paths. Run
 `./rebuild.sh` to apply portable-default or Nix changes.
+
+## Nix garbage collection
+
+`./rebuild.sh` reclaims Nix store space through `scripts/nix-gc.sh` after a
+switch succeeds, so cleanup rides along with the rebuild you already run instead
+of a scheduled job a powered-off laptop would silently miss. The behavior:
+
+- **At most once every 7 days.** The last successful cleanup is timestamped in
+  `${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles/nix-gc-last-run` (outside this
+  repository); a rebuild within the interval skips collection.
+- **Keeps a 30-day rollback window.** Collection uses
+  `nix-collect-garbage --delete-older-than 30d` for both the user and the
+  root-owned system profile, so every generation from the last 30 days —
+  including the current one — survives and the rollback commands below keep
+  working. It never uses a bare `-d`, which would delete every older generation.
+- **Deduplicates the store.** `nix store optimise` runs afterward (best-effort).
+- **Skippable.** Set `REBUILD_SKIP_GC=1` to skip collection for a single
+  rebuild.
+
+The interval, the 30-day retention window, and the skip variable are named
+constants at the top of `scripts/nix-gc.sh`. To collect manually at any time:
+
+```sh
+nix-collect-garbage --delete-older-than 30d       # user generations
+sudo nix-collect-garbage --delete-older-than 30d  # system generations
+```
 
 ## Rollback and recovery
 

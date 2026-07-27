@@ -25,6 +25,10 @@ switch mutates the running system. --yes never skips it.
 
 With no opt-out and no interactive terminal, the preflight refuses to proceed
 when undeclared items are present rather than silently zapping them.
+
+After a successful switch, scripts/nix-gc.sh reclaims Nix store space at most
+once every 7 days, keeping a 30-day rollback window. Set REBUILD_SKIP_GC=1 to
+skip garbage collection for a single rebuild.
 EOF
 }
 
@@ -76,4 +80,5 @@ printf '==> applying nix-darwin configuration\n'
 sudo darwin-rebuild switch --flake "$DOTFILES_DIR#mac"
 
 "$DOTFILES_DIR/scripts/post-switch.sh"
+"$DOTFILES_DIR/scripts/nix-gc.sh"
 "$DOTFILES_DIR/scripts/doctor.sh"
