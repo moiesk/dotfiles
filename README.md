@@ -251,6 +251,24 @@ Roll back to the previous system generation:
 sudo darwin-rebuild --rollback
 ```
 
+Switch to a specific known-good generation from the list above:
+
+```sh
+sudo darwin-rebuild --switch-generation <N>
+```
+
+If the shell or login itself is broken and `darwin-rebuild` will not run,
+activate a known-good generation directly from its system profile link:
+
+```sh
+sudo /nix/var/nix/profiles/system-<N>-link/bin/switch-to-configuration switch
+```
+
+`./rebuild.sh` builds the system closure (`darwin-rebuild build`) before it
+switches, so a configuration that fails to evaluate or build aborts without
+touching the running system. The rollback commands above recover when a switch
+that did activate turns out to be broken.
+
 Home Manager uses the suffix `.dotfiles-backup` when an existing file blocks
 the first activation. Review those backups after a successful migration and
 remove them manually when no longer needed.

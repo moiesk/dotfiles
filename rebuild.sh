@@ -14,6 +14,10 @@ Before switching, the strict Homebrew cleanup (cleanup = "zap") is previewed via
 scripts/homebrew-preflight.sh, which lists undeclared formulae, casks, and taps
 that the rebuild would remove and requires confirmation before proceeding.
 
+The system closure is then built without activating it (darwin-rebuild build).
+This build gate always runs and needs no sudo; a build failure aborts before the
+switch mutates the running system. --yes never skips it.
+
   --yes, -y   Skip the Homebrew delta preview and confirmation. Only use this
               when homebrew.nix already declares everything you want to keep.
               Equivalent to setting REBUILD_YES=1.
@@ -60,6 +64,12 @@ if [[ "$REBUILD_YES" == "1" ]]; then
 else
   printf '==> previewing strict Homebrew cleanup\n'
   "$DOTFILES_DIR/scripts/homebrew-preflight.sh"
+fi
+
+printf '==> building system closure (no activation)\n'
+if ! darwin-rebuild build --flake "$DOTFILES_DIR#mac"; then
+  printf 'error: the configuration failed to build; aborting before switch\n' >&2
+  exit 1
 fi
 
 printf '==> applying nix-darwin configuration\n'
