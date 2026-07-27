@@ -47,7 +47,10 @@
       "codex"
       "comfy"
       "font-fira-code"
-      "font-fira-mono"
+      {
+        name = "font-fira-mono";
+        greedy = false;
+      }
       "font-jetbrains-mono"
       "font-jetbrains-mono-nerd-font"
       "ghostty"
