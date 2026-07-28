@@ -6,7 +6,7 @@ configuration and macOS preferences here are derived from my own machine.
 
 One repository manages:
 
-- Codex, Claude Code, Pi, and OpenCode, all using the same global `AGENTS.md`
+- Codex, Claude Code, Pi, and OpenCode with shared tools and portable settings
 - Ghostty, Herdr, zsh, Starship, fzf, mise, and Neovim/LazyVim
 - Portable CLI tools with Nix and native macOS apps with Homebrew
 - Matt Pocock's agent skills plus Treehouse, Firstmate, no-mistakes, and Lavish
@@ -135,7 +135,7 @@ nix flake update
 | `configuration.nix` | Platform, user, and the three requested macOS behaviors |
 | `homebrew.nix` | Complete reviewed Homebrew inventory and strict convergence policy |
 | `home.nix` | Shell, Git, environment variables, and out-of-store symlinks |
-| `AGENTS.md` | Canonical global instruction file shared by all four coding agents |
+| `AGENTS.md` / `CLAUDE.md` | Project-local instructions (`CLAUDE.md` links to `AGENTS.md`) |
 | `home/.*` | Portable app configurations copied from the working Mac |
 | `bootstrap.sh` | One-time fresh-machine setup |
 | `rebuild.sh` | Normal apply workflow |
@@ -145,14 +145,15 @@ nix flake update
 | `scripts/doctor.sh` | Read-only outcome checks |
 | `scripts/check-secrets.sh` | Repository credential guard |
 
-## Shared agent instructions
+## Agent instructions
 
-`AGENTS.md` is the single source of truth. Home Manager links it to:
+The root `AGENTS.md` and its `CLAUDE.md` symlink contain instructions for this
+project only. Home Manager deliberately does not install them into any agent's
+top-level configuration directory.
 
-- `~/.codex/AGENTS.md`
-- `~/.claude/CLAUDE.md`
-- `~/.pi/agent/AGENTS.md`
-- `~/.config/opencode/AGENTS.md`
+If global instructions are added later, keep each source in its explicit path
+under `home/` (for example, `home/.codex/AGENTS.md`) and link that file from
+`home.nix`. Do not reuse the project instruction file as global configuration.
 
 `gh-axi`, `chrome-devtools-axi`, `lavish-axi`, `quota-axi`, and `tasks-axi`
 are exact-pinned in `agent-tools/package.json`, with their complete dependency

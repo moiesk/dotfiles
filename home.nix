@@ -2,7 +2,6 @@
 let
   dotfiles = "${config.home.homeDirectory}/.dotfiles";
   link = path: config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/${path}";
-  rootLink = path: config.lib.file.mkOutOfStoreSymlink "${dotfiles}/${path}";
   agentHelper = name: package: entrypoint: pkgs.writeShellScriptBin name ''
     exec ${pkgs.mise}/bin/mise exec -- node \
       "$HOME/.local/share/agent-tools/node_modules/${package}/${entrypoint}" \
@@ -251,14 +250,8 @@ in
 
     ".config/herdr/config.toml".source = link ".config/herdr/config.toml";
 
-    ".codex/AGENTS.md".source = rootLink "AGENTS.md";
-
-    ".claude/CLAUDE.md".source = rootLink "AGENTS.md";
     ".claude/hooks/statusline.js".source = link ".claude/hooks/statusline.js";
 
-    ".pi/agent/AGENTS.md".source = rootLink "AGENTS.md";
-
-    ".config/opencode/AGENTS.md".source = rootLink "AGENTS.md";
     ".config/opencode/.npmrc".source = link ".config/opencode/.npmrc";
     ".config/opencode/package.json".source = link ".config/opencode/package.json";
     ".config/opencode/package-lock.json".source = link ".config/opencode/package-lock.json";

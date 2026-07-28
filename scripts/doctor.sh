@@ -78,18 +78,6 @@ else
   fail "Pi is not installed or cannot report a version"
 fi
 
-for target in \
-  "$HOME/.codex/AGENTS.md" \
-  "$HOME/.claude/CLAUDE.md" \
-  "$HOME/.pi/agent/AGENTS.md" \
-  "$HOME/.config/opencode/AGENTS.md"; do
-  if [[ -L "$target" ]] && cmp -s "$target" "$DOTFILES_DIR/AGENTS.md"; then
-    pass "$target uses the canonical AGENTS.md"
-  else
-    fail "$target is not linked to the canonical AGENTS.md"
-  fi
-done
-
 if [[ -f "$HOME/.claude/settings.json" ]] &&
   [[ ! -L "$HOME/.claude/settings.json" ]] &&
   jq -s -e '.[0] * .[1] == .[0]' \
