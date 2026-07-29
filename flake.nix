@@ -10,8 +10,14 @@
     home-manager.url = "github:nix-community/home-manager/release-26.05";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
+    # Track Homebrew itself independently so rebuild.sh can refresh its DSL
+    # before current formulae and casks are evaluated during activation.
+    brew-src = {
+      url = "github:Homebrew/brew";
+      flake = false;
+    };
     nix-homebrew.url = "github:zhaofengli/nix-homebrew";
-    brew-src.follows = "nix-homebrew/brew-src";
+    nix-homebrew.inputs.brew-src.follows = "brew-src";
 
     treehouse = {
       url = "github:kunchenguid/treehouse/v2.1.0";

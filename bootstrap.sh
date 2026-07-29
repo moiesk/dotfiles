@@ -39,7 +39,8 @@ if [[ "$FLAKE_USER" != "$REAL_USER" ]]; then
   say "Updated flake.nix; review and commit the username change."
 fi
 
-say "Step 4/7: validate the flake"
+say "Step 4/7: update Homebrew and validate the flake"
+"$DOTFILES_DIR/scripts/update-homebrew.sh"
 "$NIX_BIN" flake check "$DOTFILES_DIR" --no-build
 
 say "Step 5/7: preview strict Homebrew cleanup"

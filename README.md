@@ -59,10 +59,15 @@ skip the preview once the declared state is already correct; without an opt-out
 and without an interactive terminal the rebuild refuses to zap rather than doing
 it silently.
 
-Rebuilds update Homebrew metadata and greedily upgrade every declared cask.
-This intentionally favors the latest available release, including for
-self-updating or unversioned apps such as agent harnesses. The final doctor
-check fails if any Homebrew formula or cask is still outdated. The first-party
+Rebuilds first advance Homebrew's own source revision in `flake.lock`, then
+update package metadata and greedily upgrade every declared cask. Updating the
+Homebrew interpreter first prevents new formula or cask DSL methods from
+breaking activation before an upgrade can run. The newly selected revision is
+still recorded in the lock file, so the applied system remains reproducible and
+the lock-file change should be committed with the next project change. This
+intentionally favors the latest available release, including for self-updating
+or unversioned apps such as agent harnesses. The final doctor check fails if any
+Homebrew formula or cask is still outdated. The first-party
 agent harnesses roll to latest by the same deliberate policy — no pin, no
 cooldown: the `claude-code`/`codex` casks upgrade greedily, and Pi
 (`@earendil-works/pi-coding-agent`) is installed from its latest npm release on
@@ -119,7 +124,8 @@ mise exec -- ruby --version
 ./scripts/doctor.sh
 ```
 
-Update pinned Nix inputs:
+Update all other pinned Nix inputs (Homebrew itself advances automatically on
+every `./rebuild.sh`):
 
 ```sh
 nix flake update
@@ -140,6 +146,7 @@ nix flake update
 | `bootstrap.sh` | One-time fresh-machine setup |
 | `rebuild.sh` | Normal apply workflow |
 | `scripts/homebrew-preflight.sh` | Destructive cleanup preview for bootstrap and rebuild |
+| `scripts/update-homebrew.sh` | Targeted Homebrew source update used by bootstrap and rebuild |
 | `scripts/post-switch.sh` | Pinned agents/tools plus mise runtime installation |
 | `scripts/nix-gc.sh` | Interval-gated Nix garbage collection after a successful switch |
 | `scripts/doctor.sh` | Read-only outcome checks |

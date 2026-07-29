@@ -63,6 +63,8 @@ if ! command -v darwin-rebuild >/dev/null 2>&1; then
   exit 1
 fi
 
+"$DOTFILES_DIR/scripts/update-homebrew.sh"
+
 if [[ "$REBUILD_YES" == "1" ]]; then
   printf '==> skipping Homebrew cleanup preview (opt-out set)\n'
 else

@@ -8,6 +8,29 @@ for script in bootstrap.sh rebuild.sh scripts/*.sh; do
   bash -n "$script"
 done
 
+for apply_script in bootstrap.sh rebuild.sh; do
+  if ! rg -Fq '"$DOTFILES_DIR/scripts/update-homebrew.sh"' "$apply_script"; then
+    printf 'error: %s must refresh the locked Homebrew source before activation\n' \
+      "$apply_script" >&2
+    exit 1
+  fi
+done
+
+if ! rg -Fq 'nix flake update brew-src --flake "$DOTFILES_DIR"' scripts/update-homebrew.sh; then
+  printf '%s\n' 'error: the Homebrew updater must advance only the brew-src input' >&2
+  exit 1
+fi
+
+if ! rg -Uq 'brew-src = \{\n[[:space:]]+url = "github:Homebrew/brew";\n[[:space:]]+flake = false;' flake.nix; then
+  printf '%s\n' 'error: brew-src must directly track Homebrew so its DSL can roll independently' >&2
+  exit 1
+fi
+
+if ! rg -Fq 'nix-homebrew.inputs.brew-src.follows = "brew-src";' flake.nix; then
+  printf '%s\n' 'error: nix-homebrew must use the independently updated brew-src input' >&2
+  exit 1
+fi
+
 jq -e '
   to_entries
   | all(

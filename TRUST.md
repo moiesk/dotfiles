@@ -132,11 +132,14 @@ state is kept separate from the tracked, pinned portable configuration.
 ## Foundational Nix inputs (community infrastructure)
 
 For completeness, the build also depends on standard, widely-used Nix community
-inputs, all locked in `flake.lock`: `nixpkgs` (`nixpkgs-26.05-darwin`),
+inputs, all recorded in `flake.lock`: `nixpkgs` (`nixpkgs-26.05-darwin`),
 [`nix-darwin`](https://github.com/nix-darwin/nix-darwin) (`nix-darwin-26.05`),
 [`home-manager`](https://github.com/nix-community/home-manager)
 (`release-26.05`), and [`nix-homebrew`](https://github.com/zhaofengli/nix-homebrew)
-(plus its `brew-src`). These are the ecosystem's foundational infrastructure —
+(plus Homebrew's `brew-src`). `brew-src` deliberately advances to the latest
+upstream revision at the start of every rebuild so Homebrew can parse the latest
+formula and cask DSL; the selected revision remains reproducible in
+`flake.lock`. These are the ecosystem's foundational infrastructure —
 high-trust, broadly reviewed, and outside the `kunchenguid` concentration that is
 this document's concern — but they are named here so the trust inventory is
 complete.
