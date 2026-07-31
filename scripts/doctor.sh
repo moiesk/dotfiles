@@ -58,13 +58,11 @@ else
   fail "Homebrew zsh completion is missing or points to a missing target"
 fi
 
-homebrew_outdated=""
-if ! homebrew_outdated="$(HOMEBREW_NO_AUTO_UPDATE=1 brew outdated 2>&1)"; then
-  fail "Homebrew could not check for outdated packages: $homebrew_outdated"
-elif [[ -n "$homebrew_outdated" ]]; then
-  fail "Homebrew packages remain outdated: $(printf '%s' "$homebrew_outdated" | tr '\n' ' ')"
-else
+homebrew_check=""
+if homebrew_check="$($DOTFILES_DIR/scripts/check-homebrew-current.sh)"; then
   pass "Homebrew packages are current"
+else
+  fail "$homebrew_check"
 fi
 
 # Pi is a deliberately rolling first-party harness (decisions #34/#36): it is
