@@ -20,6 +20,10 @@
         name = "kunchenguid/tap";
         trusted = true;
       }
+      {
+          name = "basecamp/tap";
+          trusted = true;
+      }
     ];
 
     brews = [
@@ -43,6 +47,7 @@
       "nikitabobko/tap/aerospace"
       "anki"
       "kunchenguid/tap/baby-menu"
+      "basecamp/tap/basecamp-cli"
       "claude-code"
       "codex"
       "comfy"
