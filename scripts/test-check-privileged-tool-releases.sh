@@ -9,7 +9,7 @@ cat >"$tmp_dir/gh-axi" <<'EOF'
 #!/usr/bin/env bash
 case "$*" in
   *treehouse*) tag=v2.1.0 ;;
-  *no-mistakes*) tag=v1.40.2 ;;
+  *no-mistakes*) tag=v1.41.2 ;;
   *) exit 1 ;;
 esac
 printf 'tag_name: %s\npublished_at: "2026-01-01T00:00:00Z"\n' "$tag"
