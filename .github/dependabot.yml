@@ -3,8 +3,7 @@ updates:
   - package-ecosystem: npm
     directory: /agent-tools
     schedule:
-      interval: weekly
-      day: monday
+      interval: daily
       time: "09:00"
       timezone: America/New_York
     cooldown:
@@ -39,8 +38,7 @@ updates:
   - package-ecosystem: npm
     directory: /home/.config/opencode
     schedule:
-      interval: weekly
-      day: monday
+      interval: daily
       time: "09:00"
       timezone: America/New_York
     cooldown:

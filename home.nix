@@ -14,7 +14,7 @@ let
     runtimeInputs = [ pkgs.jq pkgs.coreutils ];
     text = builtins.readFile ./scripts/materialize-agent-configs.sh;
   };
-  noMistakesVersion = "1.40.2";
+  noMistakesVersion = "1.41.2";
   noMistakes = pkgs.buildGoModule {
     pname = "no-mistakes";
     version = noMistakesVersion;

@@ -3,9 +3,9 @@
   "private": true,
   "dependencies": {
     "chrome-devtools-axi": "0.1.27",
-    "gh-axi": "0.1.27",
-    "lavish-axi": "0.1.42",
-    "quota-axi": "0.1.11",
+    "gh-axi": "0.1.28",
+    "lavish-axi": "0.1.43",
+    "quota-axi": "0.1.12",
     "tasks-axi": "0.2.3"
   },
   "engines": {

@@ -180,8 +180,9 @@ cooldown, then fails until the pin is deliberately advanced.
 Nix-managed wrappers invoke the exact mise-pinned Node runtime directly, so
 they do not depend on an agent session's inherited shell initialization or Node
 shim state.
-Dependabot proposes delayed minor and patch updates weekly, while security
-updates bypass the delay and target the minimum patched version. Major routine
+Dependabot checks daily and proposes minor and patch updates as soon as their
+cooldown expires, while security updates bypass the delay and target the minimum
+patched version. Major routine
 updates remain manual.
 
 Treehouse and no-mistakes use the equivalent Go/Nix policy. Their release tags,

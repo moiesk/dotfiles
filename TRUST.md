@@ -66,9 +66,9 @@ gate** and are pinned to exact releases.
 
 | Upstream | Pinned at | Capability granted | Why it is trusted |
 |---|---|---|---|
-| [`kunchenguid/gh-axi`](https://github.com/kunchenguid/gh-axi) | `gh-axi-v0.1.27` (flake input + npm `gh-axi@0.1.27`) | **GitHub write** — files/edits issues and PRs, merges, triggers workflows, manages Actions secrets/variables, raw API access, all under the local `gh` auth. | Pinned to an exact release; behind the cooldown/review gate. It is the sanctioned GitHub path for every agent, so its behavior is exercised constantly and any regression surfaces fast. |
+| [`kunchenguid/gh-axi`](https://github.com/kunchenguid/gh-axi) | `gh-axi-v0.1.28` (flake input + npm `gh-axi@0.1.28`) | **GitHub write** — files/edits issues and PRs, merges, triggers workflows, manages Actions secrets/variables, raw API access, all under the local `gh` auth. | Pinned to an exact release; behind the cooldown/review gate. It is the sanctioned GitHub path for every agent, so its behavior is exercised constantly and any regression surfaces fast. |
 | [`kunchenguid/chrome-devtools-axi`](https://github.com/kunchenguid/chrome-devtools-axi) | `chrome-devtools-axi-v0.1.27` (flake input + npm `chrome-devtools-axi@0.1.27`) | **Browser control** — navigates, clicks, fills forms, runs arbitrary JavaScript, and reads console/network in a real Chrome session. | Pinned to an exact release; behind the cooldown/review gate. Scoped to a driven browser session rather than the whole machine. |
-| [`kunchenguid/quota-axi`](https://github.com/kunchenguid/quota-axi) | `quota-axi-v0.1.11` (flake input + npm `quota-axi@0.1.11`) | **Reads local provider auth sources** — inspects Claude/Codex/Cursor/Copilot/Grok/Kimi quota windows from on-disk auth. Read-only: no routing, no provider mutation. | Pinned to an exact release; behind the cooldown/review gate. Documented as read-only, but it touches local credential material, which is why it is rated privileged rather than low-capability. |
+| [`kunchenguid/quota-axi`](https://github.com/kunchenguid/quota-axi) | `quota-axi-v0.1.12` (flake input + npm `quota-axi@0.1.12`) | **Reads local provider auth sources** — inspects Claude/Codex/Cursor/Copilot/Grok/Kimi quota windows from on-disk auth. Read-only: no routing, no provider mutation. | Pinned to an exact release; behind the cooldown/review gate. Documented as read-only, but it touches local credential material, which is why it is rated privileged rather than low-capability. |
 
 ## Tier B — Code-exec / workflow
 
@@ -79,7 +79,7 @@ is written specifically around these two.
 | Upstream | Pinned at | Capability granted | Why it is trusted |
 |---|---|---|---|
 | [`kunchenguid/treehouse`](https://github.com/kunchenguid/treehouse) | `v2.1.0` (flake input) | **Code-exec / workflow** — provides disposable git worktrees that agents build and run code inside. | Pinned to an exact release; explicitly covered by the cooldown/review gate (`check_release treehouse …`). |
-| [`kunchenguid/no-mistakes`](https://github.com/kunchenguid/no-mistakes) | `v1.40.2` (flake input, `flake = false`) | **git push + PR** — the validation pipeline that runs review/tests/lint and then pushes branches and opens pull requests. | Pinned to an exact release; explicitly covered by the cooldown/review gate (`check_release no-mistakes …`). It is the mandatory gate every change passes through, so its output is reviewed on every run. |
+| [`kunchenguid/no-mistakes`](https://github.com/kunchenguid/no-mistakes) | `v1.41.2` (flake input, `flake = false`) | **git push + PR** — the validation pipeline that runs review/tests/lint and then pushes branches and opens pull requests. | Pinned to an exact release; explicitly covered by the cooldown/review gate (`check_release no-mistakes …`). It is the mandatory gate every change passes through, so its output is reviewed on every run. |
 
 ## Tier C — Low-capability
 
@@ -88,7 +88,7 @@ these are pinned but not placed behind the release cooldown.
 
 | Upstream | Pinned at | Capability granted | Why it is trusted |
 |---|---|---|---|
-| [`kunchenguid/lavish-axi`](https://github.com/kunchenguid/lavish-axi) | `lavish-axi-v0.1.42` (flake input + npm `lavish-axi@0.1.42`) | Renders agent responses into reviewable HTML artifacts. | Pinned to an exact release; output-only presentation, no privileged capability. |
+| [`kunchenguid/lavish-axi`](https://github.com/kunchenguid/lavish-axi) | `lavish-axi-v0.1.43` (flake input + npm `lavish-axi@0.1.43`) | Renders agent responses into reviewable HTML artifacts. | Pinned to an exact release; output-only presentation, no privileged capability. |
 | [`kunchenguid/tasks-axi`](https://github.com/kunchenguid/tasks-axi) | `tasks-axi-v0.2.3` (flake input + npm `tasks-axi@0.2.3`) | Manages a local, hand-editable `backlog.md` task list. | Pinned to an exact release; operates on a local text backlog, no privileged capability. |
 | [`kunchenguid/tap/baby-menu`](https://github.com/kunchenguid/homebrew-tap) | Homebrew cask (unversioned; `greedyCasks` converges to latest) | Native macOS menu-bar app installed via Homebrew. | From the same `kunchenguid` tap. Rated low-capability as an ordinary user-space menu-bar app. Note: as a `greedyCask` it is **not** pinned to a version and self-updates to Homebrew's latest — the concentration risk applies, but the capability is low. |
 

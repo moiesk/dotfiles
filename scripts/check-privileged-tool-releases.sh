@@ -9,6 +9,7 @@ DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 GH_AXI_BIN="${GH_AXI_BIN:-gh-axi}"
 NPM_BIN="${NPM_BIN:-npm}"
 COOLDOWN_DAYS="${TOOL_UPDATE_COOLDOWN_DAYS:-7}"
+NOW_EPOCH="${TOOL_UPDATE_NOW_EPOCH:-$(date -u +%s)}"
 FAILURES=0
 
 check_release() {
@@ -47,7 +48,7 @@ check_release() {
   published_epoch="$(node -e \
     'const value = Date.parse(process.argv[1]); if (!Number.isFinite(value)) process.exit(1); console.log(Math.floor(value / 1000));' \
     "$published")"
-  now="$(date -u +%s)"
+  now="$NOW_EPOCH"
   age_seconds=$((now - published_epoch))
   cooldown_seconds=$((COOLDOWN_DAYS * 86400))
 
@@ -64,7 +65,7 @@ check_release() {
 
 check_npm_release() {
   local package_name="$1"
-  local pinned metadata latest published published_epoch now age_seconds cooldown_seconds
+  local pinned metadata latest published published_epoch now age_seconds cooldown_seconds eligible
 
   if ! pinned="$(jq -er --arg pkg "$package_name" \
     '.dependencies[$pkg]' "$DOTFILES_DIR/agent-tools/package.json")"; then
@@ -97,9 +98,35 @@ check_npm_release() {
   published_epoch="$(node -e \
     'const value = Date.parse(process.argv[1]); if (!Number.isFinite(value)) process.exit(1); console.log(Math.floor(value / 1000));' \
     "$published")"
-  now="$(date -u +%s)"
+  now="$NOW_EPOCH"
   age_seconds=$((now - published_epoch))
   cooldown_seconds=$((COOLDOWN_DAYS * 86400))
+
+  # A newly published latest release must not hide an older release that has
+  # already completed the cooldown. Select the highest stable eligible version.
+  eligible="$(node -e '
+    const metadata = JSON.parse(process.argv[1]);
+    const pinned = process.argv[2].split(".").map(Number);
+    const cutoff = Number(process.argv[3]) * 1000;
+    const parse = value => /^\d+\.\d+\.\d+$/.test(value)
+      ? value.split(".").map(Number)
+      : null;
+    const compare = (a, b) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2];
+    const candidates = (metadata.versions || [])
+      .map(value => ({ value, parsed: parse(value), published: Date.parse(metadata.time?.[value]) }))
+      .filter(item => item.parsed && Number.isFinite(item.published) && item.published <= cutoff)
+      .sort((a, b) => compare(b.parsed, a.parsed));
+    if (candidates[0] && compare(candidates[0].parsed, pinned) > 0) {
+      process.stdout.write(candidates[0].value);
+    }
+  ' "$metadata" "$pinned" "$((now - cooldown_seconds))")"
+
+  if [[ -n "$eligible" ]]; then
+    printf 'error: %s stable release %s is past cooldown; pinned release is %s\n' \
+      "$package_name" "$eligible" "$pinned" >&2
+    FAILURES=$((FAILURES + 1))
+    return
+  fi
 
   if ((age_seconds < cooldown_seconds)); then
     printf '%s %s is available but remains in the %s-day cooldown (pinned: %s)\n' \
