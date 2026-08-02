@@ -89,9 +89,9 @@ jobs:
       # package.json/-lock, matching scripts/post-switch.sh. Install it here so
       # the smoke test exercises the same rolling install.
       - run: npm install --prefix "$AGENT_TOOLS_PREFIX" @earendil-works/pi-coding-agent@latest
-      - run: "$AGENT_TOOLS_PREFIX/node_modules/.bin/pi" --version
-      - run: "$AGENT_TOOLS_PREFIX/node_modules/.bin/gh-axi" --help
-      - run: "$AGENT_TOOLS_PREFIX/node_modules/.bin/chrome-devtools-axi" --help
-      - run: "$AGENT_TOOLS_PREFIX/node_modules/.bin/lavish-axi" --help
-      - run: "$AGENT_TOOLS_PREFIX/node_modules/.bin/quota-axi" --help
-      - run: "$AGENT_TOOLS_PREFIX/node_modules/.bin/tasks-axi" --help
+      - run: '"$AGENT_TOOLS_PREFIX/node_modules/.bin/pi" --version'
+      - run: '"$AGENT_TOOLS_PREFIX/node_modules/.bin/gh-axi" --help'
+      - run: '"$AGENT_TOOLS_PREFIX/node_modules/.bin/chrome-devtools-axi" --help'
+      - run: '"$AGENT_TOOLS_PREFIX/node_modules/.bin/lavish-axi" --help'
+      - run: '"$AGENT_TOOLS_PREFIX/node_modules/.bin/quota-axi" --help'
+      - run: '"$AGENT_TOOLS_PREFIX/node_modules/.bin/tasks-axi" --help'
