@@ -148,6 +148,7 @@ done
 
 "$DOTFILES_DIR/scripts/test-materialize-agent-configs.sh"
 "$DOTFILES_DIR/scripts/test-check-homebrew-current.sh"
+"$DOTFILES_DIR/scripts/test-check-privileged-tool-releases.sh"
 
 "$DOTFILES_DIR/scripts/check-secrets.sh"
 
