@@ -99,6 +99,29 @@ for npm_project in agent-tools home/.config/opencode; do
   fi
 done
 
+if jq -e '.dependencies | has("@earendil-works/pi-coding-agent")' \
+  agent-tools/package.json >/dev/null ||
+  jq -e '.packages[""].dependencies | has("@earendil-works/pi-coding-agent")' \
+    agent-tools/package-lock.json >/dev/null; then
+  printf '%s\n' 'error: rolling Pi must remain outside committed npm manifests' >&2
+  exit 1
+fi
+
+npm_security_workflow=".github/workflows/npm-security.yml"
+for required_line in \
+  'AGENT_TOOLS_PREFIX: ${{ runner.temp }}/agent-tools' \
+  'cp package.json package-lock.json .npmrc "$AGENT_TOOLS_PREFIX/"' \
+  'npm ci --prefix "$AGENT_TOOLS_PREFIX"' \
+  'npm install --prefix "$AGENT_TOOLS_PREFIX" @earendil-works/pi-coding-agent@latest' \
+  '"$GITHUB_WORKSPACE/scripts/npm-audit.sh" "$audit_prefix"' \
+  'npm audit signatures --prefix "$audit_prefix"'; do
+  if ! rg -Fq "$required_line" "$npm_security_workflow"; then
+    printf 'error: npm security CI is missing full-tree step: %s\n' \
+      "$required_line" >&2
+    exit 1
+  fi
+done
+
 for input_package_prefix in \
   'lavish-axi lavish-axi lavish-axi-v' \
   'tasks-axi tasks-axi tasks-axi-v'; do
