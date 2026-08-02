@@ -29,6 +29,8 @@ permissions:
 jobs:
   audit:
     runs-on: ubuntu-latest
+    env:
+      AGENT_TOOLS_PREFIX: ${{ runner.temp }}/agent-tools
     strategy:
       fail-fast: false
       matrix:
@@ -45,13 +47,29 @@ jobs:
           node-version: 24.18.0
           cache: npm
           cache-dependency-path: ${{ matrix.project }}/package-lock.json
-      - run: npm ci
+      - name: Install locked agent tools and rolling Pi in isolation
+        if: matrix.project == 'agent-tools'
+        run: |
+          mkdir -p "$AGENT_TOOLS_PREFIX"
+          cp package.json package-lock.json .npmrc "$AGENT_TOOLS_PREFIX/"
+          npm ci --prefix "$AGENT_TOOLS_PREFIX"
+          npm install --prefix "$AGENT_TOOLS_PREFIX" @earendil-works/pi-coding-agent@latest
+      - name: Install locked OpenCode dependencies
+        if: matrix.project == 'home/.config/opencode'
+        run: npm ci
       - run: |
-          "$GITHUB_WORKSPACE/scripts/npm-audit.sh" "$PWD"
-      - run: npm audit signatures
+          if [[ "${{ matrix.project }}" == "agent-tools" ]]; then
+            audit_prefix="$AGENT_TOOLS_PREFIX"
+          else
+            audit_prefix="$PWD"
+          fi
+          "$GITHUB_WORKSPACE/scripts/npm-audit.sh" "$audit_prefix"
+          npm audit signatures --prefix "$audit_prefix"
 
   smoke-test-agent-tools:
     runs-on: ubuntu-latest
+    env:
+      AGENT_TOOLS_PREFIX: ${{ runner.temp }}/agent-tools
     defaults:
       run:
         working-directory: agent-tools
@@ -62,15 +80,18 @@ jobs:
           node-version: 24.18.0
           cache: npm
           cache-dependency-path: agent-tools/package-lock.json
-      - run: npm ci
+      - run: |
+          mkdir -p "$AGENT_TOOLS_PREFIX"
+          cp package.json package-lock.json .npmrc "$AGENT_TOOLS_PREFIX/"
+          npm ci --prefix "$AGENT_TOOLS_PREFIX"
       # Pi is a first-party harness (decisions #34/#36): it rolls to @latest on
       # top of the pinned, lockfile-driven tools rather than living in
       # package.json/-lock, matching scripts/post-switch.sh. Install it here so
       # the smoke test exercises the same rolling install.
-      - run: npm install @earendil-works/pi-coding-agent@latest
-      - run: node_modules/.bin/pi --version
-      - run: node_modules/.bin/gh-axi --help
-      - run: node_modules/.bin/chrome-devtools-axi --help
-      - run: node_modules/.bin/lavish-axi --help
-      - run: node_modules/.bin/quota-axi --help
-      - run: node_modules/.bin/tasks-axi --help
+      - run: npm install --prefix "$AGENT_TOOLS_PREFIX" @earendil-works/pi-coding-agent@latest
+      - run: '"$AGENT_TOOLS_PREFIX/node_modules/.bin/pi" --version'
+      - run: '"$AGENT_TOOLS_PREFIX/node_modules/.bin/gh-axi" --help'
+      - run: '"$AGENT_TOOLS_PREFIX/node_modules/.bin/chrome-devtools-axi" --help'
+      - run: '"$AGENT_TOOLS_PREFIX/node_modules/.bin/lavish-axi" --help'
+      - run: '"$AGENT_TOOLS_PREFIX/node_modules/.bin/quota-axi" --help'
+      - run: '"$AGENT_TOOLS_PREFIX/node_modules/.bin/tasks-axi" --help'
