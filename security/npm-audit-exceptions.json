@@ -1,14 +1,44 @@
 {
-  "GHSA-frvp-7c67-39w9": {
-    "projects": ["agent-tools"],
-    "expires": "2026-08-22",
-    "reason": "chrome-devtools-axi depends on @modelcontextprotocol/sdk, which resolves vulnerable @hono/node-server 1.19.14; no compatible patched release is available.",
-    "compensatingControl": "The advisory's encoded-backslash path traversal affects Windows only. These dotfiles deploy on macOS, and dependency CI runs on Linux."
-  },
   "GHSA-mh99-v99m-4gvg": {
     "projects": ["agent-tools"],
     "expires": "2026-08-22",
     "reason": "Pi's published npm-shrinkwrap pins brace-expansion 5.0.7, so the root project cannot apply the available 5.0.8 patch until Pi republishes its dependency tree.",
     "compensatingControl": "The vulnerable expansion is reached through glob patterns from user settings, installed package manifests, or trusted project configuration; this local CLI does not expose those patterns to unauthenticated network input."
+  },
+  "GHSA-rgw5-rvv9-x895": {
+    "projects": ["agent-tools"],
+    "expires": "2026-08-22",
+    "reason": "Pi's published npm-shrinkwrap pins brace-expansion 5.0.7, so the root project cannot apply the available 5.0.9 patch until Pi republishes its dependency tree.",
+    "compensatingControl": "The vulnerable expansion is reached through glob patterns from user settings, installed package manifests, or trusted project configuration; this local CLI does not expose those patterns to unauthenticated network input."
+  },
+  "GHSA-8xcm-r25x-g524": {
+    "projects": ["agent-tools"],
+    "expires": "2026-08-22",
+    "reason": "Pi 0.83.0's published npm-shrinkwrap pins undici 8.5.0, so the root project cannot apply the available 8.9.0 patch until Pi republishes its dependency tree.",
+    "compensatingControl": "Pi configures Undici Client, Pool, and fetch dispatchers but does not enable the vulnerable retry interceptor or forward upstream responses to downstream HTTP clients."
+  },
+  "GHSA-4cwx-7wf7-3272": {
+    "projects": ["agent-tools"],
+    "expires": "2026-08-22",
+    "reason": "Pi 0.83.0's published npm-shrinkwrap pins undici 8.5.0, so the root project cannot apply the available 8.9.0 patch until Pi republishes its dependency tree.",
+    "compensatingControl": "Pi does not enable Undici's vulnerable cache interceptor and runs as a local single-user CLI rather than a shared HTTP cache."
+  },
+  "GHSA-m8rv-5g2x-5cg5": {
+    "projects": ["agent-tools"],
+    "expires": "2026-08-22",
+    "reason": "Pi 0.83.0's published npm-shrinkwrap pins undici 8.5.0, so the root project cannot apply the available 8.9.0 patch until Pi republishes its dependency tree.",
+    "compensatingControl": "Pi's HTTP dispatcher installs Undici's fetch implementation; the advisory states that fetch and native Blob inputs are not affected by the vulnerable duck-typed Blob request path."
+  },
+  "GHSA-jr45-8vmc-qm54": {
+    "projects": ["agent-tools"],
+    "expires": "2026-08-22",
+    "reason": "Pi 0.83.0's published npm-shrinkwrap pins undici 8.5.0, so the root project cannot apply the available 8.9.0 patch until Pi republishes its dependency tree.",
+    "compensatingControl": "Pi does not enable Undici's vulnerable cache interceptor and runs as a local single-user CLI rather than a shared HTTP cache."
+  },
+  "GHSA-v3r7-h72x-cjcm": {
+    "projects": ["agent-tools"],
+    "expires": "2026-08-22",
+    "reason": "Pi 0.83.0's published npm-shrinkwrap pins undici 8.5.0, so the root project cannot apply the available 8.9.0 patch until Pi republishes its dependency tree.",
+    "compensatingControl": "Pi does not call Undici's vulnerable setCookie API or accept tenant-controlled cookie domain and unparsed attribute values."
   }
 }
