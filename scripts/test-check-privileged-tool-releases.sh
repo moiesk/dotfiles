@@ -22,12 +22,12 @@ pinned="$(jq -r --arg package "$package" '.dependencies[$package]' "$DOTFILES_DI
 if [[ "$package" == "quota-axi" ]]; then
   cat <<JSON
 {
-  "dist-tags": {"latest": "0.1.14"},
-  "versions": ["$pinned", "0.1.13", "0.1.14"],
+  "dist-tags": {"latest": "0.1.17"},
+  "versions": ["$pinned", "0.1.16", "0.1.17"],
   "time": {
     "$pinned": "2026-07-01T00:00:00Z",
-    "0.1.13": "2026-07-23T00:00:00Z",
-    "0.1.14": "2026-07-31T12:00:00Z"
+    "0.1.16": "2026-07-23T00:00:00Z",
+    "0.1.17": "2026-07-31T12:00:00Z"
   }
 }
 JSON
@@ -54,7 +54,7 @@ if GH_AXI_BIN="$tmp_dir/gh-axi" \
 fi
 
 if ! grep -Fq \
-  'error: quota-axi stable release 0.1.13 is past cooldown; pinned release is 0.1.12' \
+  'error: quota-axi stable release 0.1.16 is past cooldown; pinned release is 0.1.15' \
   "$output_file"; then
   cat "$output_file" >&2
   printf '%s\n' 'error: the release check did not report the highest eligible npm release' >&2
