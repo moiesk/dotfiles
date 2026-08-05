@@ -74,16 +74,16 @@
     "lavish-axi": {
       "flake": false,
       "locked": {
-        "lastModified": 1784695679,
-        "narHash": "sha256-CirTDJW8jgzHos3p0eJk7DCGn0OsYvBZHhZkwSyGWPA=",
+        "lastModified": 1785520637,
+        "narHash": "sha256-XJQHsmmSFajQGQopirzOQdR0ztN36ZcC7te2+IjrlFM=",
         "owner": "kunchenguid",
         "repo": "lavish-axi",
-        "rev": "966f4d58f769b0ceab5a8baf49982dba0fde4769",
+        "rev": "fb212c397c8d3f86d79953bcac3b797493b9ef1c",
         "type": "github"
       },
       "original": {
         "owner": "kunchenguid",
-        "ref": "lavish-axi-v0.1.43",
+        "ref": "lavish-axi-v0.1.45",
         "repo": "lavish-axi",
         "type": "github"
       }
@@ -216,16 +216,16 @@
     "tasks-axi": {
       "flake": false,
       "locked": {
-        "lastModified": 1783983389,
-        "narHash": "sha256-ziQJdRYtMsJW9xhRtrBiTjDe/5PcECXrBU9Wt9Tn7Vg=",
+        "lastModified": 1785475217,
+        "narHash": "sha256-GuD6gjE09IObnZr6kKWvbx56WOBRvbtuXOXRrKb2BUo=",
         "owner": "kunchenguid",
         "repo": "tasks-axi",
-        "rev": "0e2cf5904cc227bb66fed66bddac23da6ee449db",
+        "rev": "f1ba21a69137bb771ee1051c2b6179c3f4c8c4f4",
         "type": "github"
       },
       "original": {
         "owner": "kunchenguid",
-        "ref": "tasks-axi-v0.2.3",
+        "ref": "tasks-axi-v0.2.4",
         "repo": "tasks-axi",
         "type": "github"
       }
