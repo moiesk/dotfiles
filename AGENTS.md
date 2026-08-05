@@ -40,6 +40,11 @@ up the tool's tier there first. Tier A sits behind a release cooldown enforced b
 `scripts/check-privileged-tool-releases.sh`; Tier C does not. Pins take effect
 only after the captain runs `./rebuild.sh`; agents must not run it.
 
+A bump must never require editing a test fixture. Fixtures derive their synthetic
+versions from the live pins at run time and fail with a message naming themselves
+when that derivation stops producing the scenario under test — so a fixture
+failure after a bump means the fixture, never the checker (issue #61).
+
 ## Maintaining this file
 
 Keep this file for knowledge useful to almost every future agent session in this project.
