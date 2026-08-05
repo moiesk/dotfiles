@@ -35,11 +35,10 @@ To advance a pin: edit `flake.nix`, run a targeted `nix flake update <input> …
 `agent-tools/`, refresh the matching `TRUST.md` row, then run
 `./scripts/validate.sh`.
 
-Which tools may be bumped when is a `TRUST.md` question, not a preference: Tier A
-(`gh-axi`, `chrome-devtools-axi`, `quota-axi`) sits behind a seven-day release
-cooldown enforced by `scripts/check-privileged-tool-releases.sh`; Tier C
-(`lavish-axi`, `tasks-axi`) does not. Check the tier before bumping. Pins take
-effect only after the captain runs `./rebuild.sh`; agents must not run it.
+Which tools may be bumped when is a `TRUST.md` question, not a preference: look
+up the tool's tier there first. Tier A sits behind a release cooldown enforced by
+`scripts/check-privileged-tool-releases.sh`; Tier C does not. Pins take effect
+only after the captain runs `./rebuild.sh`; agents must not run it.
 
 ## Maintaining this file
 
