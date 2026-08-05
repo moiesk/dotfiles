@@ -22,6 +22,25 @@ stance, not the third-party inventory. Update it when an upstream is added,
 removed, or moves tier; authoritative pins live in `flake.lock` and
 `agent-tools/package.json`.
 
+### AXI tool pins live in two places
+
+Each `*-axi` tool is pinned twice and the two must name the same release: the
+`flake.nix` input supplies its **skill**, `agent-tools/package.json` supplies its
+**binary**. Bump both, or agents get a skill documenting a different version than
+the command they run.
+
+To advance a pin: edit `flake.nix`, run a targeted `nix flake update <input> …`
+(never a blanket `nix flake update` — it drags `nixpkgs` and friends along), edit
+`agent-tools/package.json`, regenerate with `npm install --package-lock-only` in
+`agent-tools/`, refresh the matching `TRUST.md` row, then run
+`./scripts/validate.sh`.
+
+Which tools may be bumped when is a `TRUST.md` question, not a preference: Tier A
+(`gh-axi`, `chrome-devtools-axi`, `quota-axi`) sits behind a seven-day release
+cooldown enforced by `scripts/check-privileged-tool-releases.sh`; Tier C
+(`lavish-axi`, `tasks-axi`) does not. Check the tier before bumping. Pins take
+effect only after the captain runs `./rebuild.sh`; agents must not run it.
+
 ## Maintaining this file
 
 Keep this file for knowledge useful to almost every future agent session in this project.
