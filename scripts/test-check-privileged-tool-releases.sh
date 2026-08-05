@@ -100,6 +100,7 @@ version_gt "$FIXTURE_NPM_LATEST" "$FIXTURE_NPM_INTERMEDIATE" ||
 
 cat >"$tmp_dir/gh-axi" <<'EOF'
 #!/usr/bin/env bash
+set -euo pipefail
 case "$*" in
   *treehouse*) tag="$FIXTURE_TREEHOUSE_TAG" ;;
   *no-mistakes*) tag="$FIXTURE_NO_MISTAKES_TAG" ;;
@@ -110,6 +111,7 @@ EOF
 
 cat >"$tmp_dir/npm" <<'EOF'
 #!/usr/bin/env bash
+set -euo pipefail
 package="$2"
 pinned="$(jq -r --arg package "$package" \
   '.dependencies[$package]' "$DOTFILES_DIR/agent-tools/package.json")"
@@ -150,6 +152,7 @@ output_file="$tmp_dir/output"
 if GH_AXI_BIN="$tmp_dir/gh-axi" \
   NPM_BIN="$tmp_dir/npm" \
   TOOL_UPDATE_NOW_EPOCH="$now_epoch" \
+  TOOL_UPDATE_COOLDOWN_DAYS="$cooldown_days" \
   "$CHECKER" >"$output_file" 2>&1; then
   cat "$output_file" >&2
   printf 'error: an eligible intermediate npm release was hidden by a fresh latest release (%s %s past cooldown behind %s, pinned %s)\n' \
