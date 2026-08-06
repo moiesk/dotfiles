@@ -14,24 +14,31 @@ assert_json_value() {
   fi
 }
 
-# A fresh home has no harness-created files. Claude gets portable defaults;
-# Codex and Pi remain absent until they need mutable local configuration.
+# A fresh home gets portable Claude and Pi settings. Codex and Pi's model
+# catalog remain absent until their harnesses need mutable local configuration.
 HOME="$TEST_ROOT/fresh-home" \
   "$DOTFILES_DIR/scripts/materialize-agent-configs.sh" "$DOTFILES_DIR" "$(command -v jq)"
 assert_json_value "$TEST_ROOT/fresh-home/.claude/settings.json" '.theme' 'auto'
 [[ ! -e "$TEST_ROOT/fresh-home/.codex/config.toml" ]]
-[[ ! -e "$TEST_ROOT/fresh-home/.pi/agent/settings.json" ]]
+assert_json_value "$TEST_ROOT/fresh-home/.pi/agent/settings.json" '.theme' 'light/dark'
 [[ ! -e "$TEST_ROOT/fresh-home/.pi/agent/models.json" ]]
 
 # Existing machine-local selections survive while portable keys are restored.
-mkdir -p "$TEST_ROOT/existing-home/.claude"
+mkdir -p "$TEST_ROOT/existing-home/.claude" "$TEST_ROOT/existing-home/.pi/agent"
 printf '%s\n' '{"theme":"dark","model":"local-model","effortLevel":"high"}' \
   > "$TEST_ROOT/existing-home/.claude/settings.json"
+printf '%s\n' \
+  '{"theme":"light","defaultProvider":"local-provider","defaultModel":"local-model","defaultThinkingLevel":"high"}' \
+  > "$TEST_ROOT/existing-home/.pi/agent/settings.json"
 HOME="$TEST_ROOT/existing-home" \
   "$DOTFILES_DIR/scripts/materialize-agent-configs.sh" "$DOTFILES_DIR" "$(command -v jq)"
 assert_json_value "$TEST_ROOT/existing-home/.claude/settings.json" '.theme' 'auto'
 assert_json_value "$TEST_ROOT/existing-home/.claude/settings.json" '.model' 'local-model'
 assert_json_value "$TEST_ROOT/existing-home/.claude/settings.json" '.effortLevel' 'high'
+assert_json_value "$TEST_ROOT/existing-home/.pi/agent/settings.json" '.theme' 'light/dark'
+assert_json_value "$TEST_ROOT/existing-home/.pi/agent/settings.json" '.defaultProvider' 'local-provider'
+assert_json_value "$TEST_ROOT/existing-home/.pi/agent/settings.json" '.defaultModel' 'local-model'
+assert_json_value "$TEST_ROOT/existing-home/.pi/agent/settings.json" '.defaultThinkingLevel' 'high'
 
 # Legacy managed symlinks become independent mutable files.
 mkdir -p "$TEST_ROOT/linked-home/.claude" "$TEST_ROOT/legacy"

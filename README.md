@@ -224,15 +224,18 @@ Tool-specific portable preferences remain separate from mutable harness state:
   TUI, plugins, and marketplaces. Home Manager overlays those
   keys onto the ordinary `~/.claude/settings.json`, preserving machine-local
   model, effort, and other harness-written keys.
-- Pi: `settings.json` and `models.json` are entirely machine-local because the
-  current contents select a local provider, model catalog, and thinking level.
+- Pi: `home/.pi/agent/settings.portable.json` tracks the automatic light/dark
+  theme. Home Manager overlays it onto the ordinary `settings.json`, preserving
+  machine-local provider, model, and thinking-level choices. `models.json`
+  remains entirely machine-local.
 - OpenCode: the plugin package manifest remains portable.
 
 `scripts/materialize-agent-configs.sh` performs the migration after Home
 Manager removes legacy links. It accepts missing files, so first bootstrap does
-not require Claude, Codex, or Pi to have run. An existing regular file is
-preserved, and an existing readable managed symlink is converted to a regular
-file before its local values are merged.
+not require Claude, Codex, or Pi to have run. Portable Claude and Pi settings
+are created as needed; an existing regular file is preserved, and an existing
+readable managed symlink is converted to a regular file before its local values
+are merged.
 
 Generated state is not tracked: model and effort selections, local provider
 catalogs, auth files, histories, transcripts, caches, logs, sockets, jobs,
@@ -242,10 +245,10 @@ project trust lists, installation IDs, and local app bundle paths.
 
 Home Manager uses out-of-store symlinks for most app configuration. Editing
 Neovim, Ghostty, or Herdr through their normal paths edits this checkout
-directly. Agent harness settings are the exception: edit portable Claude and
-Codex defaults in this checkout, while model, effort, project trust, and Pi
-settings remain local under the harness's normal home-directory paths. Run
-`./rebuild.sh` to apply portable-default or Nix changes.
+directly. Agent harness settings are the exception: edit portable Claude,
+Codex, and Pi defaults in this checkout, while model, effort, project trust,
+and provider choices remain local under each harness's normal home-directory
+paths. Run `./rebuild.sh` to apply portable-default or Nix changes.
 
 ## Nix garbage collection
 

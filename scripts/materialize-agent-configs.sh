@@ -50,8 +50,12 @@ merge_portable_json \
 # deliberately mutable and may be absent until Codex needs to persist a choice.
 materialize_mutable_file "$HOME/.codex/config.toml"
 
-# Pi currently has no portable settings in this repository. Preserve an old
-# linked configuration during migration, but allow both files to be absent on a
-# fresh machine so Pi can create them with machine-appropriate defaults.
-materialize_mutable_file "$HOME/.pi/agent/settings.json"
+# Pi's theme follows the terminal appearance while provider, model, and effort
+# choices remain machine-local.
+merge_portable_json \
+  "$HOME/.pi/agent/settings.json" \
+  "$DOTFILES_DIR/home/.pi/agent/settings.portable.json"
+
+# The model catalog remains entirely machine-local and may be absent until Pi
+# creates it.
 materialize_mutable_file "$HOME/.pi/agent/models.json"

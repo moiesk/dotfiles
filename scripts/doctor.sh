@@ -8,6 +8,18 @@ FAILURES=0
 pass() { printf '\033[1;32m✓\033[0m %s\n' "$*"; }
 fail() { printf '\033[1;31m✗\033[0m %s\n' "$*"; FAILURES=$((FAILURES + 1)); }
 
+check_portable_json_settings() {
+  local harness="$1" live_path="$2" portable_path="$3"
+
+  if [[ -f "$live_path" ]] &&
+    [[ ! -L "$live_path" ]] &&
+    jq -s -e '.[0] * .[1] == .[0]' "$live_path" "$portable_path" >/dev/null 2>&1; then
+    pass "$harness settings are mutable and include portable defaults"
+  else
+    fail "$harness settings are missing, linked, invalid, or lack portable defaults"
+  fi
+}
+
 for command_name in nix brew git gh codex claude pi opencode ghostty herdr nvim starship fzf mise uv bun vips gh-axi chrome-devtools-axi lavish-axi quota-axi tasks-axi treehouse no-mistakes; do
   if command -v "$command_name" >/dev/null 2>&1; then
     pass "$command_name is available"
@@ -76,15 +88,15 @@ else
   fail "Pi is not installed or cannot report a version"
 fi
 
-if [[ -f "$HOME/.claude/settings.json" ]] &&
-  [[ ! -L "$HOME/.claude/settings.json" ]] &&
-  jq -s -e '.[0] * .[1] == .[0]' \
-    "$HOME/.claude/settings.json" \
-    "$DOTFILES_DIR/home/.claude/settings.portable.json" >/dev/null 2>&1; then
-  pass "Claude settings are mutable and include portable defaults"
-else
-  fail "Claude settings are missing, linked, invalid, or lack portable defaults"
-fi
+check_portable_json_settings \
+  "Claude" \
+  "$HOME/.claude/settings.json" \
+  "$DOTFILES_DIR/home/.claude/settings.portable.json"
+
+check_portable_json_settings \
+  "Pi" \
+  "$HOME/.pi/agent/settings.json" \
+  "$DOTFILES_DIR/home/.pi/agent/settings.portable.json"
 
 if [[ -r /etc/codex/config.toml ]] &&
   cmp -s /etc/codex/config.toml "$DOTFILES_DIR/home/.codex/config.defaults.toml"; then
@@ -95,7 +107,6 @@ fi
 
 for mutable_config in \
   "$HOME/.codex/config.toml" \
-  "$HOME/.pi/agent/settings.json" \
   "$HOME/.pi/agent/models.json"; do
   if [[ ! -e "$mutable_config" ]]; then
     pass "$mutable_config is absent and may be created by its harness"

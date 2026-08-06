@@ -78,6 +78,7 @@ for json_file in \
   agent-tools/package.json \
   agent-tools/package-lock.json \
   home/.claude/settings.portable.json \
+  home/.pi/agent/settings.portable.json \
   home/.config/opencode/package.json \
   home/.config/opencode/package-lock.json; do
   jq empty "$json_file"
@@ -149,6 +150,14 @@ fi
 if ! jq -e 'has("model") or has("effortLevel") | not' \
   home/.claude/settings.portable.json >/dev/null; then
   printf '%s\n' 'error: Claude portable settings contain machine-local model or effort' >&2
+  exit 1
+fi
+
+if ! jq -e '
+  .theme == "light/dark"
+  and (has("defaultProvider") or has("defaultModel") or has("defaultThinkingLevel") | not)
+' home/.pi/agent/settings.portable.json >/dev/null; then
+  printf '%s\n' 'error: Pi portable settings must contain the auto theme without machine-local selections' >&2
   exit 1
 fi
 
