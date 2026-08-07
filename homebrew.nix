@@ -41,6 +41,7 @@
         name = "felixkratz/formulae/borders";
         trusted = true;
       }
+      "mole"
     ];
 
     casks = [
