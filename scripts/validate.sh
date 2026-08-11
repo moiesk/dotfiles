@@ -108,22 +108,39 @@ if jq -e '.dependencies | has("@earendil-works/pi-coding-agent")' \
 fi
 
 npm_security_workflow=".github/workflows/npm-security.yml"
-for required_line in \
-  'AGENT_TOOLS_PREFIX: ${{ runner.temp }}/agent-tools' \
-  'cp package.json package-lock.json .npmrc "$AGENT_TOOLS_PREFIX/"' \
-  'npm ci --prefix "$AGENT_TOOLS_PREFIX"' \
-  'npm install --prefix "$AGENT_TOOLS_PREFIX" @earendil-works/pi-coding-agent@latest' \
-  '"$GITHUB_WORKSPACE/scripts/npm-audit.sh" "$audit_prefix"' \
-  'npm audit signatures --prefix "$audit_prefix"'; do
-  if ! rg -Fq "$required_line" "$npm_security_workflow"; then
-    printf 'error: npm security CI is missing full-tree step: %s\n' \
-      "$required_line" >&2
+# Each entry is "<required occurrences>|<literal line>".
+for count_and_line in \
+  '2|echo "AGENT_TOOLS_PREFIX=$RUNNER_TEMP/agent-tools" >> "$GITHUB_ENV"' \
+  '2|cp package.json package-lock.json .npmrc "$AGENT_TOOLS_PREFIX/"' \
+  '2|(cd "$AGENT_TOOLS_PREFIX" && npm ci)' \
+  '2|npm install --prefix "$AGENT_TOOLS_PREFIX" @earendil-works/pi-coding-agent@latest' \
+  '1|"$GITHUB_WORKSPACE/scripts/npm-audit.sh" "$audit_prefix"' \
+  '1|npm audit signatures --prefix "$audit_prefix"'; do
+  required_count="${count_and_line%%|*}"
+  required_line="${count_and_line#*|}"
+  actual_count="$(rg -Fc -- "$required_line" "$npm_security_workflow" || true)"
+  if [[ "${actual_count:-0}" -lt "$required_count" ]]; then
+    printf 'error: npm security CI needs %s occurrence(s) of full-tree step (found %s): %s\n' \
+      "$required_count" "${actual_count:-0}" "$required_line" >&2
     exit 1
   fi
 done
 
+if rg -Fq -- 'npm ci --prefix' "$npm_security_workflow"; then
+  printf '%s\n' 'error: npm security CI must not use `npm ci --prefix`; npm rejects it, so the isolated install must run from inside $AGENT_TOOLS_PREFIX' >&2
+  exit 1
+fi
+
+if rg -Fq -- 'runner.temp' "$npm_security_workflow"; then
+  printf '%s\n' 'error: npm security CI must not use the runner.temp context; job-level env cannot resolve it, so the prefix must come from $RUNNER_TEMP via $GITHUB_ENV' >&2
+  exit 1
+fi
+
 for input_package_prefix in \
+  'chrome-devtools-axi chrome-devtools-axi chrome-devtools-axi-v' \
+  'gh-axi gh-axi gh-axi-v' \
   'lavish-axi lavish-axi lavish-axi-v' \
+  'quota-axi quota-axi quota-axi-v' \
   'tasks-axi tasks-axi tasks-axi-v'; do
   read -r flake_input npm_package tag_prefix <<<"$input_package_prefix"
   npm_version="$(jq -er --arg package "$npm_package" \
@@ -135,6 +152,20 @@ for input_package_prefix in \
       "$npm_package" "$npm_version" "$flake_ref" >&2
     exit 1
   fi
+
+  trust_row="$(rg -F -- "https://github.com/kunchenguid/${npm_package})" TRUST.md || true)"
+  if [[ "$(printf '%s' "$trust_row" | rg -c '' || true)" != "1" ]]; then
+    printf 'error: TRUST.md must contain exactly one inventory row for %s\n' \
+      "$npm_package" >&2
+    exit 1
+  fi
+  for trust_pin in "${tag_prefix}${npm_version}" "${npm_package}@${npm_version}"; do
+    if ! printf '%s' "$trust_row" | rg -Fq -- "$trust_pin"; then
+      printf 'error: TRUST.md row for %s does not document the current pin %s\n' \
+        "$npm_package" "$trust_pin" >&2
+      exit 1
+    fi
+  done
 done
 
 no_mistakes_version="$(sed -nE \
