@@ -22,12 +22,14 @@ stance, not the third-party inventory. Update it when an upstream is added,
 removed, or moves tier; authoritative pins live in `flake.lock` and
 `agent-tools/package.json`.
 
-### AXI tool pins live in two places
+### AXI tool pins live in three places
 
-Each `*-axi` tool is pinned twice and the two must name the same release: the
-`flake.nix` input supplies its **skill**, `agent-tools/package.json` supplies its
-**binary**. Bump both, or agents get a skill documenting a different version than
-the command they run.
+Each `*-axi` tool is pinned three times and all three must name the same
+release: the `flake.nix` input supplies its **skill**, `agent-tools/package.json`
+supplies its **binary**, and its `TRUST.md` row **discloses** both. Bump all
+three, or agents get a skill documenting a different version than the command
+they run, or a trust inventory that no longer describes what is installed.
+`./scripts/validate.sh` enforces the agreement.
 
 To advance a pin: edit `flake.nix`, run a targeted `nix flake update <input> …`
 (never a blanket `nix flake update` — it drags `nixpkgs` and friends along), edit
