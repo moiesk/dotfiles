@@ -124,14 +124,19 @@ mise exec -- ruby --version
 ./scripts/doctor.sh
 ```
 
-Update all other pinned Nix inputs (Homebrew itself advances automatically on
-every `./rebuild.sh`):
+Advance the other pinned Nix inputs by naming each one. A blanket `nix flake
+update` also drags `nixpkgs`, `nix-darwin`, and `home-manager` along, which
+turns a single reviewable pin bump into an untargeted framework upgrade
+(Homebrew itself advances automatically on every `./rebuild.sh`):
 
 ```sh
-nix flake update
+nix flake update tasks-axi no-mistakes   # name only the inputs you intend to move
 ./scripts/validate.sh
 ./rebuild.sh
 ```
+
+For the `*-axi` tools, the flake input is only one of three pins that must move
+together; see `AGENTS.md` for the full bump procedure.
 
 ## Repository map
 

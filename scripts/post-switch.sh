@@ -36,7 +36,10 @@ mkdir -p "$AGENT_TOOLS_PREFIX"
 cp "$DOTFILES_DIR/agent-tools/package.json" "$AGENT_TOOLS_PREFIX/package.json"
 cp "$DOTFILES_DIR/agent-tools/package-lock.json" "$AGENT_TOOLS_PREFIX/package-lock.json"
 cp "$DOTFILES_DIR/agent-tools/.npmrc" "$AGENT_TOOLS_PREFIX/.npmrc"
-mise exec -- npm ci --prefix "$AGENT_TOOLS_PREFIX"
+# npm rejects `ci --prefix`: it resolves the lockfile from the current directory
+# and then refuses to install into a different tree, so the isolated install has
+# to run from inside the prefix itself (same rule as .github/workflows/npm-security.yml).
+(cd "$AGENT_TOOLS_PREFIX" && mise exec -- npm ci)
 
 # Pi is a first-party harness (decisions #34/#36): it deliberately rolls to the
 # latest published release on every rebuild, like the claude-code/codex casks —
@@ -88,7 +91,7 @@ if ! uv tool list | rg -q '^interrogate v1\.7\.0$'; then
 fi
 
 say "installing locked OpenCode plugin dependencies"
-mise exec -- npm ci --prefix "$HOME/.config/opencode"
+(cd "$HOME/.config/opencode" && mise exec -- npm ci)
 "$DOTFILES_DIR/scripts/npm-audit.sh" "$HOME/.config/opencode"
 mise exec -- npm audit signatures --prefix "$HOME/.config/opencode"
 
