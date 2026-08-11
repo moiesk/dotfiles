@@ -109,7 +109,7 @@ fi
 
 npm_security_workflow=".github/workflows/npm-security.yml"
 for required_line in \
-  'AGENT_TOOLS_PREFIX: ${{ runner.temp }}/agent-tools' \
+  'echo "AGENT_TOOLS_PREFIX=$RUNNER_TEMP/agent-tools" >> "$GITHUB_ENV"' \
   'cp package.json package-lock.json .npmrc "$AGENT_TOOLS_PREFIX/"' \
   'npm ci --prefix "$AGENT_TOOLS_PREFIX"' \
   'npm install --prefix "$AGENT_TOOLS_PREFIX" @earendil-works/pi-coding-agent@latest' \
@@ -123,7 +123,10 @@ for required_line in \
 done
 
 for input_package_prefix in \
+  'chrome-devtools-axi chrome-devtools-axi chrome-devtools-axi-v' \
+  'gh-axi gh-axi gh-axi-v' \
   'lavish-axi lavish-axi lavish-axi-v' \
+  'quota-axi quota-axi quota-axi-v' \
   'tasks-axi tasks-axi tasks-axi-v'; do
   read -r flake_input npm_package tag_prefix <<<"$input_package_prefix"
   npm_version="$(jq -er --arg package "$npm_package" \

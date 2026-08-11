@@ -29,8 +29,6 @@ permissions:
 jobs:
   audit:
     runs-on: ubuntu-latest
-    env:
-      AGENT_TOOLS_PREFIX: ${{ runner.temp }}/agent-tools
     strategy:
       fail-fast: false
       matrix:
@@ -47,6 +45,9 @@ jobs:
           node-version: 24.18.0
           cache: npm
           cache-dependency-path: ${{ matrix.project }}/package-lock.json
+      - name: Configure isolated agent tools prefix
+        if: matrix.project == 'agent-tools'
+        run: echo "AGENT_TOOLS_PREFIX=$RUNNER_TEMP/agent-tools" >> "$GITHUB_ENV"
       - name: Install locked agent tools and rolling Pi in isolation
         if: matrix.project == 'agent-tools'
         run: |
@@ -68,8 +69,6 @@ jobs:
 
   smoke-test-agent-tools:
     runs-on: ubuntu-latest
-    env:
-      AGENT_TOOLS_PREFIX: ${{ runner.temp }}/agent-tools
     defaults:
       run:
         working-directory: agent-tools
@@ -80,6 +79,8 @@ jobs:
           node-version: 24.18.0
           cache: npm
           cache-dependency-path: agent-tools/package-lock.json
+      - name: Configure isolated agent tools prefix
+        run: echo "AGENT_TOOLS_PREFIX=$RUNNER_TEMP/agent-tools" >> "$GITHUB_ENV"
       - run: |
           mkdir -p "$AGENT_TOOLS_PREFIX"
           cp package.json package-lock.json .npmrc "$AGENT_TOOLS_PREFIX/"

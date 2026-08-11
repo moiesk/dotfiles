@@ -19,16 +19,16 @@
     "chrome-devtools-axi": {
       "flake": false,
       "locked": {
-        "lastModified": 1784695683,
-        "narHash": "sha256-TmRl31TG0pRwg7F8tEwIbgYGKHeyR0waHVJuvgdqVhU=",
+        "lastModified": 1785475217,
+        "narHash": "sha256-ST2x1+KQM4X/3KtbHUr+O5o6m8CLB50SzDVzMLbspno=",
         "owner": "kunchenguid",
         "repo": "chrome-devtools-axi",
-        "rev": "de1b5c5040ac657674dcb5475c0f2d90d714256d",
+        "rev": "f6a9cb1b6228efcb2f541c2d08b67a026078c5a5",
         "type": "github"
       },
       "original": {
         "owner": "kunchenguid",
-        "ref": "chrome-devtools-axi-v0.1.27",
+        "ref": "chrome-devtools-axi-v0.1.28",
         "repo": "chrome-devtools-axi",
         "type": "github"
       }
@@ -36,16 +36,16 @@
     "gh-axi": {
       "flake": false,
       "locked": {
-        "lastModified": 1784906131,
-        "narHash": "sha256-R6Ce8aAqe5ZFKaHgSE5amleFL+s+RHfpZakdySf8ixs=",
+        "lastModified": 1785475217,
+        "narHash": "sha256-xGabDo12fh+YO1ihSo6fyh8bYiELH+iWRDPZ37dMzNI=",
         "owner": "kunchenguid",
         "repo": "gh-axi",
-        "rev": "fe384b3af00dfdcc68e21e3f65a96b7fe5366dfa",
+        "rev": "09c488ec5bb22d068fbca1ab58212e9f63fd490c",
         "type": "github"
       },
       "original": {
         "owner": "kunchenguid",
-        "ref": "gh-axi-v0.1.28",
+        "ref": "gh-axi-v0.1.29",
         "repo": "gh-axi",
         "type": "github"
       }
@@ -182,16 +182,16 @@
     "quota-axi": {
       "flake": false,
       "locked": {
-        "lastModified": 1784854707,
-        "narHash": "sha256-4xMoA5xfis2OQ3b5OrtfC8t6GAwCBMGVGgQQ9KH/8x4=",
+        "lastModified": 1785532543,
+        "narHash": "sha256-uZX6l+90UehBHmp/p22DkNvgIc2nx9HnKeP8sK7e0jM=",
         "owner": "kunchenguid",
         "repo": "quota-axi",
-        "rev": "515b6ec4ac0c4a73d6f80376ff11b4f207eb351c",
+        "rev": "9b2a3cbc4265bc4e017fd85d35705fe969521588",
         "type": "github"
       },
       "original": {
         "owner": "kunchenguid",
-        "ref": "quota-axi-v0.1.12",
+        "ref": "quota-axi-v0.1.17",
         "repo": "quota-axi",
         "type": "github"
       }
@@ -237,16 +237,16 @@
         ]
       },
       "locked": {
-        "lastModified": 1784576200,
-        "narHash": "sha256-QtjDNcGOHaOBGefwdQ2huW+uf1A6EizhgyJLC2YxkjY=",
+        "lastModified": 1785475217,
+        "narHash": "sha256-nybPc6SXPxw5MZIFrjrmJDno9aMH2R4uZz0U8rayAOo=",
         "owner": "kunchenguid",
         "repo": "treehouse",
-        "rev": "c0b7f685d4511eec765ab4cbb47583178424eb45",
+        "rev": "939cb59ba0bd69036ae52fc19b5b41e0a3f167d3",
         "type": "github"
       },
       "original": {
         "owner": "kunchenguid",
-        "ref": "v2.1.0",
+        "ref": "v2.1.1",
         "repo": "treehouse",
         "type": "github"
       }
