@@ -9,9 +9,18 @@ CHECKER="$DOTFILES_DIR/scripts/check-agent-tool-pins.sh"
 tmp_dir="$(mktemp -d)"
 trap 'rm -rf "$tmp_dir"' EXIT
 
+FIXTURE_NAME="$(basename "${BASH_SOURCE[0]}")"
+
 fixture_error() {
-  printf 'error: the fixture in scripts/%s is degenerate: %s\n' \
-    "$(basename "${BASH_SOURCE[0]}")" "$1" >&2
+  printf 'error: the fixture in scripts/%s is degenerate: %s\n' "$FIXTURE_NAME" "$1" >&2
+  printf '%s\n' \
+    'the scenario under test was never constructed, so this says nothing about' \
+    'scripts/check-agent-tool-pins.sh; repair the fixture instead' >&2
+  exit 1
+}
+
+checker_error() {
+  printf 'error: scripts/check-agent-tool-pins.sh regressed: %s\n' "$1" >&2
   exit 1
 }
 
@@ -26,18 +35,14 @@ copy_pin_files() {
 }
 
 replace_file_text() {
-  local file="$1" old="$2" new="$3"
-  python3 - "$file" "$old" "$new" <<'PY'
-from pathlib import Path
-import sys
-
-path = Path(sys.argv[1])
-old, new = sys.argv[2:]
-text = path.read_text()
-if text.count(old) != 1:
-    raise SystemExit(f"expected exactly one {old!r} in {path}, found {text.count(old)}")
-path.write_text(text.replace(old, new))
-PY
+  local file="$1" old="$2" new="$3" count escaped_old escaped_new
+  count="$(grep -F -o -- "$old" "$file" | grep -c '' || true)"
+  [[ "$count" == "1" ]] ||
+    fixture_error "expected exactly one occurrence of '$old' in $file, found $count"
+  escaped_old="$(printf '%s' "$old" | sed 's#[][\\.*^$/|]#\\&#g')"
+  escaped_new="$(printf '%s' "$new" | sed 's#[\\&|]#\\&#g')"
+  sed "s|$escaped_old|$escaped_new|" "$file" >"$file.new"
+  mv "$file.new" "$file"
 }
 
 replace_json() {
@@ -51,11 +56,11 @@ expect_failure() {
   local expected="$1" output
   if output="$(DOTFILES_DIR="$tmp_dir/repo" "$CHECKER" 2>&1)"; then
     printf '%s\n' "$output" >&2
-    fixture_error "the checker accepted drift; expected: $expected"
+    checker_error "the checker accepted injected drift; expected: $expected"
   fi
   if ! grep -Fq "$expected" <<<"$output"; then
     printf '%s\n' "$output" >&2
-    fixture_error "the checker did not fail clearly; expected: $expected"
+    checker_error "the checker did not report the drift clearly; expected: $expected"
   fi
 }
 
@@ -96,6 +101,12 @@ for tool_prefix in \
     '.packages[""].dependencies[$tool] = $bumped' \
     --arg tool "$tool" --arg bumped "$bumped"
   expect_failure "error: $tool npm manifest version $pinned does not match package-lock root version $bumped"
+
+  copy_pin_files
+  replace_json "$tmp_dir/repo/agent-tools/package-lock.json" \
+    '.packages[$path].version = $bumped' \
+    --arg path "node_modules/$tool" --arg bumped "$bumped"
+  expect_failure "error: $tool npm manifest version $pinned does not match package-lock installed version $bumped"
 
   copy_pin_files
   replace_json "$tmp_dir/repo/flake.lock" '.nodes[$tool].original.ref = $ref' \
