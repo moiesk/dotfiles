@@ -1,0 +1,106 @@
+#!/usr/bin/env bash
+# Focused drift tests for scripts/check-agent-tool-pins.sh.
+# Synthetic versions are derived from the live pins so routine bumps cannot
+# make these fixtures stale.
+set -euo pipefail
+
+DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
+CHECKER="$DOTFILES_DIR/scripts/check-agent-tool-pins.sh"
+tmp_dir="$(mktemp -d)"
+trap 'rm -rf "$tmp_dir"' EXIT
+
+fixture_error() {
+  printf 'error: the fixture in scripts/%s is degenerate: %s\n' \
+    "$(basename "${BASH_SOURCE[0]}")" "$1" >&2
+  exit 1
+}
+
+copy_pin_files() {
+  rm -rf "$tmp_dir/repo"
+  mkdir -p "$tmp_dir/repo/agent-tools"
+  cp "$DOTFILES_DIR/flake.nix" "$DOTFILES_DIR/flake.lock" \
+    "$DOTFILES_DIR/TRUST.md" "$tmp_dir/repo/"
+  cp "$DOTFILES_DIR/agent-tools/package.json" \
+    "$DOTFILES_DIR/agent-tools/package-lock.json" \
+    "$tmp_dir/repo/agent-tools/"
+}
+
+replace_file_text() {
+  local file="$1" old="$2" new="$3"
+  python3 - "$file" "$old" "$new" <<'PY'
+from pathlib import Path
+import sys
+
+path = Path(sys.argv[1])
+old, new = sys.argv[2:]
+text = path.read_text()
+if text.count(old) != 1:
+    raise SystemExit(f"expected exactly one {old!r} in {path}, found {text.count(old)}")
+path.write_text(text.replace(old, new))
+PY
+}
+
+replace_json() {
+  local file="$1" filter="$2"
+  shift 2
+  jq "$@" "$filter" "$file" >"$file.new"
+  mv "$file.new" "$file"
+}
+
+expect_failure() {
+  local expected="$1" output
+  if output="$(DOTFILES_DIR="$tmp_dir/repo" "$CHECKER" 2>&1)"; then
+    printf '%s\n' "$output" >&2
+    fixture_error "the checker accepted drift; expected: $expected"
+  fi
+  if ! grep -Fq "$expected" <<<"$output"; then
+    printf '%s\n' "$output" >&2
+    fixture_error "the checker did not fail clearly; expected: $expected"
+  fi
+}
+
+for tool_prefix in \
+  'chrome-devtools-axi chrome-devtools-axi-v' \
+  'gh-axi gh-axi-v' \
+  'lavish-axi lavish-axi-v' \
+  'quota-axi quota-axi-v' \
+  'tasks-axi tasks-axi-v'; do
+  read -r tool tag_prefix <<<"$tool_prefix"
+  pinned="$(jq -er --arg tool "$tool" '.dependencies[$tool]' \
+    "$DOTFILES_DIR/agent-tools/package.json")"
+  [[ "$pinned" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]] ||
+    fixture_error "$tool pin ($pinned) is not a plain major.minor.patch version"
+  bumped="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.$((BASH_REMATCH[3] + 1))"
+  pinned_ref="${tag_prefix}${pinned}"
+  bumped_ref="${tag_prefix}${bumped}"
+
+  # A coordinated npm-surface move must still fail until the flake surface moves.
+  copy_pin_files
+  replace_json "$tmp_dir/repo/agent-tools/package.json" \
+    '.dependencies[$tool] = $bumped' --arg tool "$tool" --arg bumped "$bumped"
+  replace_json "$tmp_dir/repo/agent-tools/package-lock.json" \
+    '.packages[""].dependencies[$tool] = $bumped | .packages[$path].version = $bumped' \
+    --arg tool "$tool" --arg path "node_modules/$tool" --arg bumped "$bumped"
+  expect_failure "error: $tool flake.nix ref $pinned_ref does not match npm version $bumped"
+
+  # A coordinated flake-surface move must still fail until the npm surface moves.
+  copy_pin_files
+  replace_file_text "$tmp_dir/repo/flake.nix" "/$pinned_ref\";" "/$bumped_ref\";"
+  replace_json "$tmp_dir/repo/flake.lock" '.nodes[$tool].original.ref = $ref' \
+    --arg tool "$tool" --arg ref "$bumped_ref"
+  expect_failure "error: $tool flake.nix ref $bumped_ref does not match npm version $pinned"
+
+  # One-sided lockfile edits get lock-specific diagnostics.
+  copy_pin_files
+  replace_json "$tmp_dir/repo/agent-tools/package-lock.json" \
+    '.packages[""].dependencies[$tool] = $bumped' \
+    --arg tool "$tool" --arg bumped "$bumped"
+  expect_failure "error: $tool npm manifest version $pinned does not match package-lock root version $bumped"
+
+  copy_pin_files
+  replace_json "$tmp_dir/repo/flake.lock" '.nodes[$tool].original.ref = $ref' \
+    --arg tool "$tool" --arg ref "$bumped_ref"
+  expect_failure "error: $tool flake.nix ref $pinned_ref does not match flake.lock ref $bumped_ref"
+done
+
+printf '%s\n' 'agent tool pin checks passed'
