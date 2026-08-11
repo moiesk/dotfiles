@@ -112,7 +112,7 @@ npm_security_workflow=".github/workflows/npm-security.yml"
 for count_and_line in \
   '2|echo "AGENT_TOOLS_PREFIX=$RUNNER_TEMP/agent-tools" >> "$GITHUB_ENV"' \
   '2|cp package.json package-lock.json .npmrc "$AGENT_TOOLS_PREFIX/"' \
-  '2|npm ci --prefix "$AGENT_TOOLS_PREFIX"' \
+  '2|(cd "$AGENT_TOOLS_PREFIX" && npm ci)' \
   '2|npm install --prefix "$AGENT_TOOLS_PREFIX" @earendil-works/pi-coding-agent@latest' \
   '1|"$GITHUB_WORKSPACE/scripts/npm-audit.sh" "$audit_prefix"' \
   '1|npm audit signatures --prefix "$audit_prefix"'; do
@@ -125,6 +125,11 @@ for count_and_line in \
     exit 1
   fi
 done
+
+if rg -Fq -- 'npm ci --prefix' "$npm_security_workflow"; then
+  printf '%s\n' 'error: npm security CI must not use `npm ci --prefix`; npm rejects it, so the isolated install must run from inside $AGENT_TOOLS_PREFIX' >&2
+  exit 1
+fi
 
 if rg -Fq -- 'runner.temp' "$npm_security_workflow"; then
   printf '%s\n' 'error: npm security CI must not use the runner.temp context; job-level env cannot resolve it, so the prefix must come from $RUNNER_TEMP via $GITHUB_ENV' >&2

@@ -53,7 +53,7 @@ jobs:
         run: |
           mkdir -p "$AGENT_TOOLS_PREFIX"
           cp package.json package-lock.json .npmrc "$AGENT_TOOLS_PREFIX/"
-          npm ci --prefix "$AGENT_TOOLS_PREFIX"
+          (cd "$AGENT_TOOLS_PREFIX" && npm ci)
           npm install --prefix "$AGENT_TOOLS_PREFIX" @earendil-works/pi-coding-agent@latest
       - name: Install locked OpenCode dependencies
         if: matrix.project == 'home/.config/opencode'
@@ -84,7 +84,7 @@ jobs:
       - run: |
           mkdir -p "$AGENT_TOOLS_PREFIX"
           cp package.json package-lock.json .npmrc "$AGENT_TOOLS_PREFIX/"
-          npm ci --prefix "$AGENT_TOOLS_PREFIX"
+          (cd "$AGENT_TOOLS_PREFIX" && npm ci)
       # Pi is a first-party harness (decisions #34/#36): it rolls to @latest on
       # top of the pinned, lockfile-driven tools rather than living in
       # package.json/-lock, matching scripts/post-switch.sh. Install it here so
