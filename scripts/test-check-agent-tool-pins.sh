@@ -92,7 +92,7 @@ while IFS=$'\t' read -r flake_input tool tag_prefix extra; do
   copy_pin_files
   replace_file_text "$tmp_dir/repo/flake.nix" "/$pinned_ref\";" "/$bumped_ref\";"
   replace_json "$tmp_dir/repo/flake.lock" '.nodes[$tool].original.ref = $ref' \
-    --arg tool "$tool" --arg ref "$bumped_ref"
+    --arg tool "$flake_input" --arg ref "$bumped_ref"
   expect_failure "error: $tool flake.nix ref $bumped_ref does not match npm version $pinned"
 
   # One-sided lockfile edits get lock-specific diagnostics.

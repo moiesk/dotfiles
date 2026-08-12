@@ -43,7 +43,7 @@ cleanup() {
       if [[ -f "$backup_dir/$relative" ]]; then
         rollback="$DOTFILES_DIR/$(dirname "$relative")/.update-agent-tool-pin.rollback.$$"
         cp -p "$backup_dir/$relative" "$rollback" || true
-        mv -f "$rollback" "$DOTFILES_DIR/$relative" || true
+        mv -f "$rollback" "$DOTFILES_DIR/$relative" || rm -f "$rollback"
       fi
     done
     printf '%s\n' 'error: installation failed; restored every coordinated pin file' >&2
@@ -69,21 +69,31 @@ replace_literal_once() {
   [[ "$count" == "1" ]] ||
     fail "$file must contain exactly one occurrence of '$old' (found $count)"
 
-  awk -v old="$old" -v new="$new" '
+  replace_old="$old" replace_new="$new" awk '
+    BEGIN {
+      old = ENVIRON["replace_old"]
+      new = ENVIRON["replace_new"]
+      replaced = 0
+    }
     {
-      position = index($0, old)
+      position = replaced ? 0 : index($0, old)
       if (position) {
         $0 = substr($0, 1, position - 1) new substr($0, position + length(old))
+        replaced = 1
       }
       print
     }
-  ' "$file" >"$file.update-agent-tool-pin"
+    END { if (!replaced) exit 1 }
+  ' "$file" >"$file.update-agent-tool-pin" ||
+    { rm -f "$file.update-agent-tool-pin"; fail "failed to substitute '$old' in $file"; }
   mv "$file.update-agent-tool-pin" "$file"
 }
 
 lock_closure_filter='
   def dependency_paths($packages; $path):
-    (($packages[$path].dependencies // {}) | keys[]) as $dependency
+    ((($packages[$path].dependencies // {})
+      + ($packages[$path].optionalDependencies // {})
+      + ($packages[$path].peerDependencies // {})) | keys[]) as $dependency
     | ($packages | keys[]
        | select(. == ("node_modules/" + $dependency)
                 or endswith("/node_modules/" + $dependency)));

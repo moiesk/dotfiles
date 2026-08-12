@@ -4,7 +4,7 @@ set -euo pipefail
 
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 HELPER="$DOTFILES_DIR/scripts/update-agent-tool-pin.sh"
-tmp_dir="$(mktemp -d)"
+tmp_dir="$(cd "$(mktemp -d)" && pwd -P)"
 trap 'rm -rf "$tmp_dir"' EXIT
 
 fixture_error() {
@@ -98,11 +98,29 @@ if [[ "${INJECT_UNRELATED_LOCK_CHURN:-0}" == "1" ]]; then
   mv package-lock.json.new package-lock.json
 fi
 EOF
-  chmod +x "$mock_bin/nix" "$mock_bin/mise"
+  cat >"$mock_bin/mv" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+target="${!#}"
+printf '%s\n' "$target" >>"$MV_LOG"
+if [[ -n "${FAIL_INSTALL_TARGET:-}" && "$target" == "${FAIL_INSTALL_TARGET}" && ! -e "${MV_SENTINEL:-}" ]]; then
+  : >"${MV_SENTINEL}"
+  printf 'mock mv failure: %s\n' "$target" >&2
+  exit 27
+fi
+if [[ -x /bin/mv ]]; then
+  exec /bin/mv "$@"
+fi
+exec /usr/bin/mv "$@"
+EOF
+  chmod +x "$mock_bin/nix" "$mock_bin/mise" "$mock_bin/mv"
   NIX_LOG="$tmp_dir/nix.log"
   MISE_LOG="$tmp_dir/mise.log"
+  MV_LOG="$tmp_dir/mv.log"
+  export MV_LOG
   : >"$NIX_LOG"
   : >"$MISE_LOG"
+  : >"$MV_LOG"
 }
 
 bumped_version() {
@@ -182,6 +200,8 @@ done <"$DOTFILES_DIR/scripts/agent-tool-pins.tsv"
 make_fixture
 make_mocks
 first_tool="$(awk -F '\t' '$1 !~ /^#/ { print $2; exit }' "$DOTFILES_DIR/scripts/agent-tool-pins.tsv")"
+first_prefix="$(awk -F '\t' '$1 !~ /^#/ { print $3; exit }' "$DOTFILES_DIR/scripts/agent-tool-pins.tsv")"
+[[ -n "$first_tool" && -n "$first_prefix" ]] || fixture_error 'shared inventory has no usable first row'
 first_old="$(jq -er --arg tool "$first_tool" '.dependencies[$tool]' "$fixture/agent-tools/package.json")"
 first_new="$(bumped_version "$first_old")"
 for malformed in 1.2 v1.2.3 1.2.3-beta 01.2.3 1.2.3+build; do
@@ -236,5 +256,44 @@ unset INJECT_UNRELATED_LOCK_CHURN
 assert_source_unchanged
 [[ -z "$(git -C "$fixture" status --porcelain --untracked-files=all)" ]] ||
   helper_error 'lock-churn refusal left partial or temporary files in source'
+
+make_fixture
+make_mocks
+MV_SENTINEL="$tmp_dir/install-mv-fired"
+FAIL_INSTALL_TARGET="$fixture/TRUST.md"
+rm -f "$MV_SENTINEL"
+export MV_SENTINEL FAIL_INSTALL_TARGET
+expect_failure 'restored every coordinated pin file' "$first_tool" "$first_new"
+unset MV_SENTINEL FAIL_INSTALL_TARGET
+[[ -e "$tmp_dir/install-mv-fired" ]] ||
+  fixture_error 'the install phase never failed, so rollback of installed files was not exercised'
+for installed in flake.nix flake.lock agent-tools/package.json agent-tools/package-lock.json; do
+  grep -Fxq -- "$fixture/$installed" "$MV_LOG" ||
+    fixture_error "the install phase never replaced $installed, so rollback was not exercised"
+done
+assert_source_unchanged
+[[ -z "$(git -C "$fixture" status --porcelain --untracked-files=all)" ]] ||
+  helper_error 'install-phase rollback left partial or temporary files in source'
+
+# A backslash in the TRUST.md row must survive the literal row substitution.
+make_fixture
+make_mocks
+trust_line="$(rg -n -F "https://github.com/kunchenguid/${first_tool})" "$fixture/TRUST.md" | cut -d: -f1)"
+[[ "$trust_line" =~ ^[0-9]+$ ]] || fixture_error 'could not locate a single TRUST.md row to annotate'
+backslash_note=' \|annotated'
+backslash_note="$backslash_note" awk -v line="$trust_line" \
+  'NR == line { $0 = $0 ENVIRON["backslash_note"] } { print }' \
+  "$fixture/TRUST.md" >"$fixture/TRUST.md.new"
+mv "$fixture/TRUST.md.new" "$fixture/TRUST.md"
+grep -Fq -- '\|annotated' "$fixture/TRUST.md" ||
+  fixture_error 'the backslash annotation was never written to TRUST.md'
+commit_fixture
+run_helper "$first_tool" "$first_new" >/dev/null
+grep -Fq -- '\|annotated' "$fixture/TRUST.md" ||
+  helper_error 'row substitution dropped a backslash from the TRUST.md row'
+grep -Fq -- "${first_prefix}${first_new}" "$fixture/TRUST.md" ||
+  helper_error 'row substitution skipped the TRUST.md release tag'
+grep -Fq -- "${first_tool}@${first_new}" "$fixture/TRUST.md" ||
+  helper_error 'row substitution skipped the TRUST.md npm pin'
 
 printf '%s\n' 'agent tool pin update helper checks passed'
