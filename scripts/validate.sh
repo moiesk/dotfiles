@@ -171,7 +171,9 @@ for mutable_config in \
 done
 
 "$DOTFILES_DIR/scripts/test-materialize-agent-configs.sh"
+"$DOTFILES_DIR/scripts/test-agent-tool-pin-workflow.sh"
 "$DOTFILES_DIR/scripts/test-check-agent-tool-pins.sh"
+"$DOTFILES_DIR/scripts/test-update-agent-tool-pin.sh"
 "$DOTFILES_DIR/scripts/test-check-homebrew-current.sh"
 "$DOTFILES_DIR/scripts/test-check-privileged-tool-releases.sh"
 
