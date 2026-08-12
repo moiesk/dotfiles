@@ -43,4 +43,12 @@ done
 [[ "$(rg -Fc -- '      - run: ./scripts/check-agent-tool-pins.sh' "$WORKFLOW" || true)" == "1" ]] ||
   fail 'workflow must invoke the repository checker exactly once'
 
+# The workflow installs nothing beyond actions/checkout, so the checker may only
+# use tools preinstalled on the runner; ripgrep is not one of them.
+[[ "$(rg -c '^      - (run|uses):' "$WORKFLOW" || true)" == "2" ]] ||
+  fail 'workflow must remain checkout plus the checker with no tool installation steps'
+if rg -qw 'rg' "$DOTFILES_DIR/scripts/check-agent-tool-pins.sh"; then
+  fail 'checker must not depend on ripgrep, which is absent from the CI runner'
+fi
+
 printf '%s\n' 'agent tool pin workflow checks passed'

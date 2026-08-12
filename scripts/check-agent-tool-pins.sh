@@ -105,7 +105,7 @@ while IFS=$'\t' read -r flake_input npm_package tag_prefix extra; do
     exit 1
   fi
 
-  trust_row="$(rg -F -- "https://github.com/kunchenguid/${npm_package})" \
+  trust_row="$(grep -F -- "https://github.com/kunchenguid/${npm_package})" \
     "$DOTFILES_DIR/TRUST.md" || true)"
   if [[ "$(printf '%s\n' "$trust_row" | awk 'NF { count++ } END { print count + 0 }')" != "1" ]]; then
     printf 'error: TRUST.md must contain exactly one inventory row for %s\n' \
