@@ -1,0 +1,43 @@
+name: agent tool pin alignment
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/agent-tool-pins.yml"
+      - "agent-tools/package.json"
+      - "agent-tools/package-lock.json"
+      - "flake.lock"
+      - "flake.nix"
+      - "scripts/agent-tool-pins.tsv"
+      - "scripts/check-agent-tool-pins.sh"
+      - "scripts/test-agent-tool-pin-workflow.sh"
+      - "scripts/test-check-agent-tool-pins.sh"
+      - "scripts/test-update-agent-tool-pin.sh"
+      - "scripts/update-agent-tool-pin.sh"
+      - "TRUST.md"
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/agent-tool-pins.yml"
+      - "agent-tools/package.json"
+      - "agent-tools/package-lock.json"
+      - "flake.lock"
+      - "flake.nix"
+      - "scripts/agent-tool-pins.tsv"
+      - "scripts/check-agent-tool-pins.sh"
+      - "scripts/test-agent-tool-pin-workflow.sh"
+      - "scripts/test-check-agent-tool-pins.sh"
+      - "scripts/test-update-agent-tool-pin.sh"
+      - "scripts/update-agent-tool-pin.sh"
+      - "TRUST.md"
+
+permissions:
+  contents: read
+
+jobs:
+  alignment:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: ./scripts/check-agent-tool-pins.sh

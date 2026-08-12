@@ -130,7 +130,7 @@ turns a single reviewable pin bump into an untargeted framework upgrade
 (Homebrew itself advances automatically on every `./rebuild.sh`):
 
 ```sh
-nix flake update tasks-axi no-mistakes   # name only the inputs you intend to move
+nix flake update treehouse no-mistakes   # name only the inputs you intend to move
 ./scripts/validate.sh
 ./rebuild.sh
 ```
@@ -188,7 +188,9 @@ shim state.
 Dependabot checks daily and proposes minor and patch updates as soon as their
 cooldown expires, while security updates bypass the delay and target the minimum
 patched version. Major routine
-updates remain manual.
+updates remain manual. A Dependabot proposal for an `*-axi` tool moves only the
+npm pin, so CI marks it red on purpose; it is replaced by a coordinated update
+rather than merged (see `AGENTS.md`).
 
 Treehouse and no-mistakes use the equivalent Go/Nix policy. Their release tags,
 source revisions, and NAR hashes are pinned through `flake.lock`. Daily CI scans

@@ -26,12 +26,13 @@ checker_error() {
 
 copy_pin_files() {
   rm -rf "$tmp_dir/repo"
-  mkdir -p "$tmp_dir/repo/agent-tools"
+  mkdir -p "$tmp_dir/repo/agent-tools" "$tmp_dir/repo/scripts"
   cp "$DOTFILES_DIR/flake.nix" "$DOTFILES_DIR/flake.lock" \
     "$DOTFILES_DIR/TRUST.md" "$tmp_dir/repo/"
   cp "$DOTFILES_DIR/agent-tools/package.json" \
     "$DOTFILES_DIR/agent-tools/package-lock.json" \
     "$tmp_dir/repo/agent-tools/"
+  cp "$DOTFILES_DIR/scripts/agent-tool-pins.tsv" "$tmp_dir/repo/scripts/"
 }
 
 replace_file_text() {
@@ -64,13 +65,12 @@ expect_failure() {
   fi
 }
 
-for tool_prefix in \
-  'chrome-devtools-axi chrome-devtools-axi-v' \
-  'gh-axi gh-axi-v' \
-  'lavish-axi lavish-axi-v' \
-  'quota-axi quota-axi-v' \
-  'tasks-axi tasks-axi-v'; do
-  read -r tool tag_prefix <<<"$tool_prefix"
+tested_tools=0
+while IFS=$'\t' read -r flake_input tool tag_prefix extra; do
+  [[ -z "$flake_input" || "$flake_input" == \#* ]] && continue
+  [[ -n "$tool" && -n "$tag_prefix" && -z "${extra:-}" ]] ||
+    fixture_error "invalid inventory record for $flake_input"
+  tested_tools=$((tested_tools + 1))
   pinned="$(jq -er --arg tool "$tool" '.dependencies[$tool]' \
     "$DOTFILES_DIR/agent-tools/package.json")"
   [[ "$pinned" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]] ||
@@ -92,7 +92,7 @@ for tool_prefix in \
   copy_pin_files
   replace_file_text "$tmp_dir/repo/flake.nix" "/$pinned_ref\";" "/$bumped_ref\";"
   replace_json "$tmp_dir/repo/flake.lock" '.nodes[$tool].original.ref = $ref' \
-    --arg tool "$tool" --arg ref "$bumped_ref"
+    --arg tool "$flake_input" --arg ref "$bumped_ref"
   expect_failure "error: $tool flake.nix ref $bumped_ref does not match npm version $pinned"
 
   # One-sided lockfile edits get lock-specific diagnostics.
@@ -110,8 +110,24 @@ for tool_prefix in \
 
   copy_pin_files
   replace_json "$tmp_dir/repo/flake.lock" '.nodes[$tool].original.ref = $ref' \
-    --arg tool "$tool" --arg ref "$bumped_ref"
+    --arg tool "$flake_input" --arg ref "$bumped_ref"
   expect_failure "error: $tool flake.nix ref $pinned_ref does not match flake.lock ref $bumped_ref"
-done
+
+  # TRUST.md is a pin surface too: deliberately drifting its release tag must fail.
+  copy_pin_files
+  replace_file_text "$tmp_dir/repo/TRUST.md" "$pinned_ref" "$bumped_ref"
+  expect_failure "error: TRUST.md row for $tool does not document exactly one current pin $pinned_ref"
+done <"$DOTFILES_DIR/scripts/agent-tool-pins.tsv"
+
+[[ "$tested_tools" -gt 0 ]] || fixture_error 'the shared agent tool inventory is empty'
+
+# A newly added npm-backed AXI dependency cannot silently miss checker/test coverage.
+copy_pin_files
+replace_json "$tmp_dir/repo/agent-tools/package.json" \
+  '.dependencies["unlisted-axi"] = "1.2.3"'
+replace_json "$tmp_dir/repo/agent-tools/package-lock.json" \
+  '.packages[""].dependencies["unlisted-axi"] = "1.2.3"
+  | .packages["node_modules/unlisted-axi"] = {"version": "1.2.3"}'
+expect_failure 'error: npm-backed AXI dependency unlisted-axi is missing from scripts/agent-tool-pins.tsv'
 
 printf '%s\n' 'agent tool pin checks passed'

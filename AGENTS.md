@@ -31,16 +31,17 @@ three, or agents get a skill documenting a different version than the command
 they run, or a trust inventory that no longer describes what is installed.
 `./scripts/validate.sh` enforces the agreement.
 
-To advance a pin: edit `flake.nix`, run a targeted `nix flake update <input> …`
-(never a blanket `nix flake update` — it drags `nixpkgs` and friends along), edit
-`agent-tools/package.json`, regenerate with `npm install --package-lock-only` in
-`agent-tools/`, refresh the matching `TRUST.md` row, then run
-`./scripts/validate.sh`.
+Dependabot proposes npm changes after its cooldown, and the read-only AXI pin
+alignment workflow deliberately marks an npm-only proposal red. A maintainer
+must first establish release eligibility from `TRUST.md` and, where applicable,
+`scripts/check-privileged-tool-releases.sh`; the helper does not make or bypass
+that policy decision. Then run `./scripts/update-agent-tool-pin.sh <tool>
+<version>`, review its coordinated five-file diff, ship a replacement PR, and
+close the incomplete Dependabot PR as superseded. The helper performs only a
+targeted Nix update (never a blanket `nix flake update`) and full validation.
 
-Which tools may be bumped when is a `TRUST.md` question, not a preference: look
-up the tool's tier there first. Tier A sits behind a release cooldown enforced by
-`scripts/check-privileged-tool-releases.sh`; Tier C does not. Pins take effect
-only after the captain runs `./rebuild.sh`; agents must not run it.
+Pins take effect only after the captain runs `./rebuild.sh`; agents must not run
+it.
 
 A bump must never require editing a test fixture. Fixtures derive their synthetic
 versions from the live pins at run time and fail with a message naming themselves
