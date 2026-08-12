@@ -136,37 +136,7 @@ if rg -Fq -- 'runner.temp' "$npm_security_workflow"; then
   exit 1
 fi
 
-for input_package_prefix in \
-  'chrome-devtools-axi chrome-devtools-axi chrome-devtools-axi-v' \
-  'gh-axi gh-axi gh-axi-v' \
-  'lavish-axi lavish-axi lavish-axi-v' \
-  'quota-axi quota-axi quota-axi-v' \
-  'tasks-axi tasks-axi tasks-axi-v'; do
-  read -r flake_input npm_package tag_prefix <<<"$input_package_prefix"
-  npm_version="$(jq -er --arg package "$npm_package" \
-    '.dependencies[$package]' agent-tools/package.json)"
-  flake_ref="$(jq -er --arg input "$flake_input" \
-    '.nodes[$input].original.ref' flake.lock)"
-  if [[ "$flake_ref" != "${tag_prefix}${npm_version}" ]]; then
-    printf 'error: %s npm version %s does not match flake ref %s\n' \
-      "$npm_package" "$npm_version" "$flake_ref" >&2
-    exit 1
-  fi
-
-  trust_row="$(rg -F -- "https://github.com/kunchenguid/${npm_package})" TRUST.md || true)"
-  if [[ "$(printf '%s' "$trust_row" | rg -c '' || true)" != "1" ]]; then
-    printf 'error: TRUST.md must contain exactly one inventory row for %s\n' \
-      "$npm_package" >&2
-    exit 1
-  fi
-  for trust_pin in "${tag_prefix}${npm_version}" "${npm_package}@${npm_version}"; do
-    if ! printf '%s' "$trust_row" | rg -Fq -- "$trust_pin"; then
-      printf 'error: TRUST.md row for %s does not document the current pin %s\n' \
-        "$npm_package" "$trust_pin" >&2
-      exit 1
-    fi
-  done
-done
+"$DOTFILES_DIR/scripts/check-agent-tool-pins.sh"
 
 no_mistakes_version="$(sed -nE \
   's/^[[:space:]]*noMistakesVersion = "([^"]+)";/\1/p' home.nix)"
@@ -201,6 +171,7 @@ for mutable_config in \
 done
 
 "$DOTFILES_DIR/scripts/test-materialize-agent-configs.sh"
+"$DOTFILES_DIR/scripts/test-check-agent-tool-pins.sh"
 "$DOTFILES_DIR/scripts/test-check-homebrew-current.sh"
 "$DOTFILES_DIR/scripts/test-check-privileged-tool-releases.sh"
 
