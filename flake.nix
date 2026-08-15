@@ -35,27 +35,27 @@
     };
 
     chrome-devtools-axi = {
-      url = "github:kunchenguid/chrome-devtools-axi/chrome-devtools-axi-v0.1.28";
+      url = "github:kunchenguid/chrome-devtools-axi/chrome-devtools-axi-v0.1.29";
       flake = false;
     };
 
     gh-axi = {
-      url = "github:kunchenguid/gh-axi/gh-axi-v0.1.29";
+      url = "github:kunchenguid/gh-axi/gh-axi-v0.1.30";
       flake = false;
     };
 
     lavish-axi = {
-      url = "github:kunchenguid/lavish-axi/lavish-axi-v0.1.45";
+      url = "github:kunchenguid/lavish-axi/lavish-axi-v0.1.46";
       flake = false;
     };
 
     quota-axi = {
-      url = "github:kunchenguid/quota-axi/quota-axi-v0.1.17";
+      url = "github:kunchenguid/quota-axi/quota-axi-v0.1.18";
       flake = false;
     };
 
     tasks-axi = {
-      url = "github:kunchenguid/tasks-axi/tasks-axi-v0.2.4";
+      url = "github:kunchenguid/tasks-axi/tasks-axi-v0.2.5";
       flake = false;
     };
   };
