@@ -35,7 +35,7 @@
     };
 
     chrome-devtools-axi = {
-      url = "github:kunchenguid/chrome-devtools-axi/chrome-devtools-axi-v0.1.28";
+      url = "github:kunchenguid/chrome-devtools-axi/chrome-devtools-axi-v0.1.29";
       flake = false;
     };
 
