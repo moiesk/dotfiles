@@ -216,16 +216,16 @@
     "tasks-axi": {
       "flake": false,
       "locked": {
-        "lastModified": 1785475217,
-        "narHash": "sha256-GuD6gjE09IObnZr6kKWvbx56WOBRvbtuXOXRrKb2BUo=",
+        "lastModified": 1786079439,
+        "narHash": "sha256-obwgvKls8GljbUdFrl7ht9+k0AEQjdqvLGf4UHscv+M=",
         "owner": "kunchenguid",
         "repo": "tasks-axi",
-        "rev": "f1ba21a69137bb771ee1051c2b6179c3f4c8c4f4",
+        "rev": "44a41f38f3c74e5337c10b88ca2e1555374c6af4",
         "type": "github"
       },
       "original": {
         "owner": "kunchenguid",
-        "ref": "tasks-axi-v0.2.4",
+        "ref": "tasks-axi-v0.2.5",
         "repo": "tasks-axi",
         "type": "github"
       }

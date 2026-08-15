@@ -6,7 +6,7 @@
     "gh-axi": "0.1.30",
     "lavish-axi": "0.1.46",
     "quota-axi": "0.1.18",
-    "tasks-axi": "0.2.4"
+    "tasks-axi": "0.2.5"
   },
   "engines": {
     "node": ">=24.18.0 <25"

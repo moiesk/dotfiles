@@ -89,7 +89,7 @@ these are pinned but not placed behind the release cooldown.
 | Upstream | Pinned at | Capability granted | Why it is trusted |
 |---|---|---|---|
 | [`kunchenguid/lavish-axi`](https://github.com/kunchenguid/lavish-axi) | `lavish-axi-v0.1.46` (flake input + npm `lavish-axi@0.1.46`) | Renders agent responses into reviewable HTML artifacts. | Pinned to an exact release; output-only presentation, no privileged capability. |
-| [`kunchenguid/tasks-axi`](https://github.com/kunchenguid/tasks-axi) | `tasks-axi-v0.2.4` (flake input + npm `tasks-axi@0.2.4`) | Manages a local, hand-editable `backlog.md` task list. | Pinned to an exact release; operates on a local text backlog, no privileged capability. |
+| [`kunchenguid/tasks-axi`](https://github.com/kunchenguid/tasks-axi) | `tasks-axi-v0.2.5` (flake input + npm `tasks-axi@0.2.5`) | Manages a local, hand-editable `backlog.md` task list. | Pinned to an exact release; operates on a local text backlog, no privileged capability. |
 | [`kunchenguid/tap/baby-menu`](https://github.com/kunchenguid/homebrew-tap) | Homebrew cask (unversioned; `greedyCasks` converges to latest) | Native macOS menu-bar app installed via Homebrew. | From the same `kunchenguid` tap. Rated low-capability as an ordinary user-space menu-bar app. Note: as a `greedyCask` it is **not** pinned to a version and self-updates to Homebrew's latest — the concentration risk applies, but the capability is low. |
 
 ## firstmate — accept-as-rolling ⚠️
