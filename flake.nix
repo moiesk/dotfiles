@@ -50,7 +50,7 @@
     };
 
     quota-axi = {
-      url = "github:kunchenguid/quota-axi/quota-axi-v0.1.17";
+      url = "github:kunchenguid/quota-axi/quota-axi-v0.1.18";
       flake = false;
     };
 
