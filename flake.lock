@@ -165,16 +165,16 @@
     "no-mistakes": {
       "flake": false,
       "locked": {
-        "lastModified": 1784873727,
-        "narHash": "sha256-taoeI58AZ8mlAYhxlvD+fxU6ZX/WBdM9ghplnkjXZqU=",
+        "lastModified": 1786171100,
+        "narHash": "sha256-GC4qxqu/oI+DwoMRfQzPbUOhRQh+oFIcLhLo8U5UI3U=",
         "owner": "kunchenguid",
         "repo": "no-mistakes",
-        "rev": "867d64d9c2df89f3f204ad1f5528e5bf7b460caa",
+        "rev": "2ac37698d441b4318867179e567a9f9dadb345fb",
         "type": "github"
       },
       "original": {
         "owner": "kunchenguid",
-        "ref": "v1.41.2",
+        "ref": "v1.48.0",
         "repo": "no-mistakes",
         "type": "github"
       }

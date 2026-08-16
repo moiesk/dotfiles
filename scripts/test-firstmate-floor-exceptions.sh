@@ -222,15 +222,15 @@ github_ref="$(jq -er '.nodes["no-mistakes"].original.ref' "$DOTFILES_DIR/flake.l
   fixture_error 'the live no-mistakes flake ref is missing'
 [[ "$github_ref" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]] ||
   fixture_error "the live no-mistakes ref is not a v-prefixed semver: $github_ref"
-((BASH_REMATCH[3] >= 2)) ||
-  fixture_error "the live no-mistakes patch $github_ref cannot yield a gap fixture"
 github_major="${BASH_REMATCH[1]}"
 github_minor="${BASH_REMATCH[2]}"
 github_patch="${BASH_REMATCH[3]}"
-github_previous="$github_major.$github_minor.$((github_patch - 2))"
-github_required="$github_major.$github_minor.$((github_patch - 1))"
-github_adopted="$github_major.$github_minor.$github_patch"
-github_newer="$github_major.$github_minor.$((github_patch + 1))"
+# Derive the synthetic gap above the live ref: counting up cannot underflow, so
+# the scenario survives any released patch level, including x.y.0 and x.y.1.
+github_previous="$github_major.$github_minor.$github_patch"
+github_required="$github_major.$github_minor.$((github_patch + 1))"
+github_adopted="$github_major.$github_minor.$((github_patch + 2))"
+github_newer="$github_major.$github_minor.$((github_patch + 3))"
 github_repo="$tmp_dir/github-repo"
 mkdir -p "$github_repo/scripts"
 awk -F '\t' '$1 ~ /^#/ || $1 == "no-mistakes"' \
