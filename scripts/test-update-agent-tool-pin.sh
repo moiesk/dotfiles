@@ -193,10 +193,17 @@ while IFS=$'\t' read -r flake_input tool tag_prefix extra; do
     helper_error "$tool npm invocation omitted the exact package version"
 
   changed="$(git -C "$fixture" status --short | awk '{ print $2 }' | sort)"
-  expected_changed="$(printf '%s\n' TRUST.md agent-tools/package-lock.json agent-tools/package.json flake.lock flake.nix | sort)"
+  expected_changed="$({
+    printf '%s\n' TRUST.md agent-tools/package-lock.json agent-tools/package.json flake.lock flake.nix
+    if jq -e --arg dependency "$tool" \
+      'any(.exceptions[]; .dependency == $dependency)' \
+      "$DOTFILES_DIR/security/firstmate-floor-exceptions.json" >/dev/null; then
+      printf '%s\n' security/firstmate-floor-exceptions.json
+    fi
+  } | sort)"
   [[ "$changed" == "$expected_changed" ]] || {
     printf 'changed files:\n%s\n' "$changed" >&2
-    helper_error "$tool success did not leave exactly the coordinated five-file diff"
+    helper_error "$tool success did not leave exactly its coordinated pin and exception-evidence diff"
   }
 done <"$DOTFILES_DIR/scripts/agent-tool-pins.tsv"
 [[ "$supported_count" -gt 0 ]] || fixture_error 'shared inventory is empty'
