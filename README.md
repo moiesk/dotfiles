@@ -252,6 +252,26 @@ Only after that succeeds, update Firstmate separately (normally through its
 Rebuild installs only committed pins and deliberately neither inspects, fetches,
 nor modifies the existing mutable `~/firstmate` clone.
 
+#### Retiring an exception
+
+An exception is only valid while its adopted release is still inside the
+seven-day cooldown; once the cooldown elapses the record is stale evidence and
+`scripts/check-firstmate-floor-exceptions.sh` rejects it, which also fails the
+daily privileged-tool security run. Every validation run prints how many hours
+remain (`retire in 42h`) and warns on stderr inside the last two days, so the
+deadline is visible before it bites. Retire the expired record mechanically and
+ship the removal:
+
+```sh
+./scripts/check-firstmate-floor-exceptions.sh --retire-expired
+git diff security/firstmate-floor-exceptions.json
+./scripts/validate.sh
+```
+
+The command deletes only records whose adopted release has completed the
+ordinary cooldown — those pins now stand on the normal policy and need no
+exception — and leaves the pins themselves untouched.
+
 `scripts/doctor.sh` verifies the commands, skills, and Firstmate clone rather
 than checking only that command names exist.
 

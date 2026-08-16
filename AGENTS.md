@@ -39,7 +39,11 @@ that policy decision. Then run `./scripts/update-agent-tool-pin.sh <tool>
 <version>`, review its coordinated pin diff, ship a replacement PR, and close
 the incomplete Dependabot PR as superseded. A captain-approved rolling-Firstmate
 floor exception uses the preflight and `--firstmate-commit` workflow in
-`README.md`; no other early adoption is allowed. The helper performs only a
+`README.md`; no other early adoption is allowed. Such an exception is valid only
+inside the cooldown it shortens: once the adopted release completes the
+cooldown, `./scripts/check-firstmate-floor-exceptions.sh --retire-expired`
+deletes the spent record and the removal must be shipped, or the daily
+privileged-tool run fails on stale evidence. The helper performs only a
 targeted Nix update (never a blanket `nix flake update`) and full validation.
 
 Pins take effect only after the captain runs `./rebuild.sh`; agents must not run

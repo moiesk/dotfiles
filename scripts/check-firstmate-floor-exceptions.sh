@@ -18,12 +18,17 @@ Usage:
   scripts/check-firstmate-floor-exceptions.sh
   scripts/check-firstmate-floor-exceptions.sh --candidate <40-hex-commit>
   scripts/check-firstmate-floor-exceptions.sh --show-floor <dependency> <40-hex-commit>
+  scripts/check-firstmate-floor-exceptions.sh --retire-expired
 
 With no arguments, validate every committed cooldown exception against its exact
-Firstmate commit, the committed dependency pin, and published release metadata.
+Firstmate commit, the committed dependency pin, and published release metadata,
+and warn while a record is approaching its retirement deadline.
 With --candidate, inspect that immutable Firstmate commit and report whether the
 currently committed dotfiles pins meet every registered dependency floor.
 With --show-floor, print one dependency floor for the pin-update helper.
+With --retire-expired, delete every exception whose adopted release has since
+completed the ordinary cooldown and no longer needs an exception, so the record
+is retired by review rather than by a scheduled failure.
 EOF
 }
 
@@ -145,6 +150,67 @@ npm_release_evidence() {
   printf '%s\n' "$published"
 }
 
+release_published_at() {
+  local pin_kind="$1" release_key="$2" tag_prefix="$3" version="$4" metadata published
+  case "$pin_kind" in
+    npm)
+      metadata="$($NPM_BIN view "$release_key" --json 2>/dev/null)" || return 1
+      published="$(jq -r --arg version "$version" '.time[$version] // empty' <<<"$metadata")"
+      ;;
+    flake)
+      [[ "$tag_prefix" =~ ^[A-Za-z0-9._-]+$ ]] || return 1
+      metadata="$($GH_AXI_BIN api GET \
+        "/repos/$release_key/releases/tags/${tag_prefix}${version}" 2>/dev/null)" || return 1
+      published="$(awk -F': ' '/^published_at:/ { print $2; exit }' <<<"$metadata")"
+      published="${published%\"}"
+      published="${published#\"}"
+      ;;
+    *) return 1 ;;
+  esac
+  [[ -n "$published" ]] || return 1
+  printf '%s\n' "$published"
+}
+
+published_epoch_of() {
+  node -e '
+    const value = Date.parse(process.argv[1]);
+    if (!Number.isFinite(value)) process.exit(1);
+    console.log(Math.floor(value / 1000));
+  ' "$1"
+}
+
+registry_row() {
+  local dependency="$1" rows row_count
+  rows="$(awk -F '\t' -v dependency="$dependency" '$1 == dependency { print }' "$REGISTRY")"
+  row_count="$(awk 'NF { count++ } END { print count + 0 }' <<<"$rows")"
+  [[ "$row_count" == 1 ]] || return 1
+  printf '%s\n' "$rows"
+}
+
+validate_exception_schema() {
+  jq -e '
+    type == "object"
+    and (keys | sort) == ["exceptions", "schema_version"]
+    and .schema_version == 1
+    and (.exceptions | type == "array")
+    and all(.exceptions[];
+      type == "object"
+      and (keys | sort) == [
+        "adopted_version", "dependency", "firstmate_commit",
+        "firstmate_repository", "previous_version", "required_version"
+      ]
+      and (.dependency | type == "string" and length > 0)
+      and (.adopted_version | type == "string" and test("^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"))
+      and (.required_version | type == "string" and test("^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"))
+      and (.previous_version | type == "string" and test("^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"))
+      and .firstmate_repository == "kunchenguid/firstmate"
+      and (.firstmate_commit | type == "string" and test("^[0-9a-f]{40}$"))
+    )
+    and (([.exceptions[].dependency] | unique | length) == (.exceptions | length))
+  ' "$EXCEPTIONS" >/dev/null ||
+    fail 'Firstmate floor exceptions are malformed, duplicate, or over-broad'
+}
+
 github_release_evidence() {
   local repository="$1" tag_prefix="$2" adopted="$3" required="$4"
   local metadata tag published response tags lowest
@@ -220,6 +286,45 @@ if [[ "$#" == 2 && "$1" == --candidate ]]; then
   exit 0
 fi
 
+if [[ "$#" == 1 && "$1" == --retire-expired ]]; then
+  [[ -f "$EXCEPTIONS" ]] || fail "missing Firstmate floor exception record: $EXCEPTIONS"
+  validate_exception_schema
+  retired=()
+  while IFS=$'\t' read -r dependency adopted; do
+    [[ -n "$dependency" ]] || continue
+    rows="$(registry_row "$dependency")" ||
+      fail "$dependency exception does not name a supported Firstmate dependency floor"
+    IFS=$'\t' read -r _ pin_kind pin_key _ _ _ release_repository tag_prefix _ <<<"$rows"
+    case "$pin_kind" in
+      npm) release_key="$pin_key" ;;
+      flake) release_key="$release_repository" ;;
+      *) fail "$dependency exception does not name a supported Firstmate dependency floor" ;;
+    esac
+    published="$(release_published_at "$pin_kind" "$release_key" "$tag_prefix" "$adopted")" ||
+      fail "could not read the release publication time for $dependency $adopted"
+    published_epoch="$(published_epoch_of "$published")" ||
+      fail "release timestamp for $dependency $adopted is malformed"
+    age_seconds=$((NOW_EPOCH - published_epoch))
+    ((age_seconds < COOLDOWN_DAYS * 86400)) || retired+=("$dependency")
+  done < <(jq -r '.exceptions[] | [.dependency, .adopted_version] | @tsv' "$EXCEPTIONS")
+
+  if ((${#retired[@]} == 0)); then
+    printf 'no Firstmate floor exception has completed the %s-day cooldown\n' "$COOLDOWN_DAYS"
+    exit 0
+  fi
+  retired_json="$(printf '%s\n' "${retired[@]}" | jq -R . | jq -s .)"
+  jq --argjson retired "$retired_json" \
+    '.exceptions |= map(select(.dependency as $name | ($retired | index($name)) | not))' \
+    "$EXCEPTIONS" >"$EXCEPTIONS.next"
+  mv "$EXCEPTIONS.next" "$EXCEPTIONS"
+  for dependency in "${retired[@]}"; do
+    printf 'retired Firstmate floor exception: %s completed the %s-day cooldown\n' \
+      "$dependency" "$COOLDOWN_DAYS"
+  done
+  printf 'review and commit %s, then ship the retirement.\n' "$EXCEPTIONS"
+  exit 0
+fi
+
 if [[ "$#" != 0 ]]; then
   usage >&2
   exit 2
@@ -227,33 +332,12 @@ fi
 
 [[ -f "$EXCEPTIONS" ]] || fail "missing Firstmate floor exception record: $EXCEPTIONS"
 
-jq -e '
-  type == "object"
-  and (keys | sort) == ["exceptions", "schema_version"]
-  and .schema_version == 1
-  and (.exceptions | type == "array")
-  and all(.exceptions[];
-    type == "object"
-    and (keys | sort) == [
-      "adopted_version", "dependency", "firstmate_commit",
-      "firstmate_repository", "previous_version", "required_version"
-    ]
-    and (.dependency | type == "string" and length > 0)
-    and (.adopted_version | type == "string" and test("^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"))
-    and (.required_version | type == "string" and test("^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"))
-    and (.previous_version | type == "string" and test("^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"))
-    and .firstmate_repository == "kunchenguid/firstmate"
-    and (.firstmate_commit | type == "string" and test("^[0-9a-f]{40}$"))
-  )
-  and (([.exceptions[].dependency] | unique | length) == (.exceptions | length))
-' "$EXCEPTIONS" >/dev/null || fail 'Firstmate floor exceptions are malformed, duplicate, or over-broad'
+validate_exception_schema
 
 while IFS=$'\t' read -r dependency previous adopted required repository commit; do
   [[ -n "$dependency" ]] || continue
-  rows="$(awk -F '\t' -v dependency="$dependency" \
-    '$1 == dependency { print }' "$REGISTRY")"
-  row_count="$(awk 'NF { count++ } END { print count + 0 }' <<<"$rows")"
-  [[ "$row_count" == 1 ]] || fail "$dependency exception does not name a supported Firstmate dependency floor"
+  rows="$(registry_row "$dependency")" ||
+    fail "$dependency exception does not name a supported Firstmate dependency floor"
   IFS=$'\t' read -r _ pin_kind pin_key floor_path floor_variable exception_allowed release_repository tag_prefix extra <<<"$rows"
   [[ -z "${extra:-}" && "$exception_allowed" == yes ]] ||
     fail "$dependency exception does not name a cooldown-gated Firstmate dependency floor"
@@ -289,18 +373,20 @@ while IFS=$'\t' read -r dependency previous adopted required repository commit; 
         fail "could not verify GitHub release evidence for $dependency $adopted"
       ;;
   esac
-  published_epoch="$(node -e '
-    const value = Date.parse(process.argv[1]);
-    if (!Number.isFinite(value)) process.exit(1);
-    console.log(Math.floor(value / 1000));
-  ' "$published")" || fail "release timestamp for $dependency $adopted is malformed"
+  published_epoch="$(published_epoch_of "$published")" ||
+    fail "release timestamp for $dependency $adopted is malformed"
   age_seconds=$((NOW_EPOCH - published_epoch))
   ((age_seconds >= 0)) || fail "$dependency $adopted has a future release timestamp"
   ((age_seconds < COOLDOWN_DAYS * 86400)) ||
-    fail "$dependency exception is stale because adopted version $adopted has completed the ${COOLDOWN_DAYS}-day cooldown"
+    fail "$dependency exception is stale because adopted version $adopted has completed the ${COOLDOWN_DAYS}-day cooldown; retire it with scripts/check-firstmate-floor-exceptions.sh --retire-expired"
 
-  printf 'valid Firstmate floor exception: %s %s requires %s at %s\n' \
-    "$dependency" "$adopted" "$required" "$commit"
+  remaining_hours=$(((COOLDOWN_DAYS * 86400 - age_seconds) / 3600))
+  printf 'valid Firstmate floor exception: %s %s requires %s at %s (retire in %sh)\n' \
+    "$dependency" "$adopted" "$required" "$commit" "$remaining_hours"
+  if ((remaining_hours < 48)); then
+    printf 'warning: the %s floor exception expires in %sh; retire it with scripts/check-firstmate-floor-exceptions.sh --retire-expired\n' \
+      "$dependency" "$remaining_hours" >&2
+  fi
 done < <(jq -r '.exceptions[] | [
   .dependency, .previous_version, .adopted_version, .required_version,
   .firstmate_repository, .firstmate_commit

@@ -119,7 +119,7 @@ run_checker() {
     FIXTURE_LATEST="$latest" \
     FIXTURE_FRESH_AT="$fresh_at" \
     FIXTURE_OLD_AT="$old_at" \
-    "$CHECKER"
+    "$CHECKER" "$@"
 }
 
 expect_failure() {
@@ -169,6 +169,36 @@ expect_failure "previous version $previous_previous does not match historical pi
 write_exception
 fresh_at="$old_at"
 expect_failure "exception is stale because adopted version $adopted has completed the 7-day cooldown"
+grep -Fq -- '--retire-expired' "$tmp_dir/output" ||
+  fail 'stale rejection did not name the retirement command'
+fresh_at="$fresh_release_at"
+
+# An exception still inside the cooldown is kept, and the run warns before the
+# retirement deadline instead of failing without notice later.
+write_exception
+run_checker >"$tmp_dir/output" 2>&1 || fail 'valid exception was rejected before its retirement'
+grep -Fq 'retire in ' "$tmp_dir/output" ||
+  fail 'valid exception did not report its remaining retirement window'
+run_checker --retire-expired >"$tmp_dir/output" 2>&1 ||
+  fail 'retirement failed while the exception was still inside cooldown'
+grep -Fq 'no Firstmate floor exception has completed the 7-day cooldown' "$tmp_dir/output" || {
+  cat "$tmp_dir/output" >&2
+  fail 'retirement did not report that nothing was expired'
+}
+jq -e '(.exceptions | length) == 1' "$tmp_dir/repo/exceptions.json" >/dev/null ||
+  fail 'retirement removed an exception that was still inside cooldown'
+
+fresh_at="$old_at"
+run_checker --retire-expired >"$tmp_dir/output" 2>&1 || {
+  cat "$tmp_dir/output" >&2
+  fail 'retirement of an expired exception failed'
+}
+grep -Fq 'retired Firstmate floor exception: quota-axi' "$tmp_dir/output" ||
+  fail 'retirement did not report the removed exception'
+jq -e '.schema_version == 1 and (.exceptions | length) == 0' \
+  "$tmp_dir/repo/exceptions.json" >/dev/null ||
+  fail 'retirement did not delete the expired exception record'
+run_checker >/dev/null 2>&1 || fail 'validation still failed after retiring expired evidence'
 fresh_at="$fresh_release_at"
 
 jq -n --arg pin "$previous" '{dependencies: {"quota-axi": $pin}}' \
