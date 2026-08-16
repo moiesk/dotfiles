@@ -10,11 +10,23 @@ GH_AXI_BIN="${GH_AXI_BIN:-gh-axi}"
 NPM_BIN="${NPM_BIN:-npm}"
 COOLDOWN_DAYS="${TOOL_UPDATE_COOLDOWN_DAYS:-7}"
 NOW_EPOCH="${TOOL_UPDATE_NOW_EPOCH:-$(date -u +%s)}"
+EXCEPTIONS_FILE="${FIRSTMATE_FLOOR_EXCEPTIONS_FILE:-$DOTFILES_DIR/security/firstmate-floor-exceptions.json}"
 FAILURES=0
+
+"$DOTFILES_DIR/scripts/check-firstmate-floor-exceptions.sh"
+
+has_floor_exception() {
+  local dependency="$1" pinned="$2"
+  jq -e --arg dependency "$dependency" --arg pinned "$pinned" '
+    any(.exceptions[];
+      .dependency == $dependency and .adopted_version == $pinned)
+  ' "$EXCEPTIONS_FILE" >/dev/null
+}
 
 check_release() {
   local input_name="$1" repository="$2"
   local pinned metadata latest published published_epoch now age_seconds cooldown_seconds
+  local pinned_metadata pinned_published pinned_published_epoch pinned_age_seconds
 
   if ! pinned="$(jq -er --arg input "$input_name" \
     '.nodes[$input].original.ref' "$DOTFILES_DIR/flake.lock")"; then
@@ -38,6 +50,41 @@ check_release() {
     printf 'error: incomplete release metadata for %s\n' "$repository" >&2
     FAILURES=$((FAILURES + 1))
     return
+  fi
+
+  if [[ "$pinned" == "$latest" ]]; then
+    pinned_published="$published"
+  else
+    if ! pinned_metadata="$($GH_AXI_BIN api GET "/repos/$repository/releases/tags/$pinned")"; then
+      printf 'error: could not fetch pinned release metadata for %s with %s\n' \
+        "$repository" "$GH_AXI_BIN" >&2
+      FAILURES=$((FAILURES + 1))
+      return
+    fi
+    pinned_published="$(awk -F': ' '/^published_at:/ { print $2; exit }' <<<"$pinned_metadata")"
+    pinned_published="${pinned_published%\"}"
+    pinned_published="${pinned_published#\"}"
+  fi
+  if [[ -z "$pinned_published" ]]; then
+    printf 'error: incomplete pinned release metadata for %s %s\n' "$repository" "$pinned" >&2
+    FAILURES=$((FAILURES + 1))
+    return
+  fi
+  pinned_published_epoch="$(node -e \
+    'const value = Date.parse(process.argv[1]); if (!Number.isFinite(value)) process.exit(1); console.log(Math.floor(value / 1000));' \
+    "$pinned_published")"
+  pinned_age_seconds=$((NOW_EPOCH - pinned_published_epoch))
+  cooldown_seconds=$((COOLDOWN_DAYS * 86400))
+  if ((pinned_age_seconds < cooldown_seconds)); then
+    if has_floor_exception "$input_name" "${pinned#v}"; then
+      printf '%s pinned release %s is inside cooldown under a valid Firstmate floor exception\n' \
+        "$input_name" "$pinned"
+    else
+      printf 'error: %s pinned release %s is still in the %s-day cooldown without a valid Firstmate floor exception\n' \
+        "$input_name" "$pinned" "$COOLDOWN_DAYS" >&2
+      FAILURES=$((FAILURES + 1))
+      return
+    fi
   fi
 
   if [[ "$pinned" == "$latest" ]]; then
@@ -66,6 +113,7 @@ check_release() {
 check_npm_release() {
   local package_name="$1"
   local pinned metadata latest published published_epoch now age_seconds cooldown_seconds eligible
+  local pinned_published pinned_published_epoch pinned_age_seconds
 
   if ! pinned="$(jq -er --arg pkg "$package_name" \
     '.dependencies[$pkg]' "$DOTFILES_DIR/agent-tools/package.json")"; then
@@ -88,6 +136,29 @@ check_npm_release() {
     printf 'error: incomplete npm metadata for %s\n' "$package_name" >&2
     FAILURES=$((FAILURES + 1))
     return
+  fi
+
+  pinned_published="$(jq -r --arg v "$pinned" '.time[$v] // empty' <<<"$metadata")"
+  if [[ -z "$pinned_published" ]]; then
+    printf 'error: npm metadata does not contain pinned release %s %s\n' "$package_name" "$pinned" >&2
+    FAILURES=$((FAILURES + 1))
+    return
+  fi
+  pinned_published_epoch="$(node -e \
+    'const value = Date.parse(process.argv[1]); if (!Number.isFinite(value)) process.exit(1); console.log(Math.floor(value / 1000));' \
+    "$pinned_published")"
+  pinned_age_seconds=$((NOW_EPOCH - pinned_published_epoch))
+  cooldown_seconds=$((COOLDOWN_DAYS * 86400))
+  if ((pinned_age_seconds < cooldown_seconds)); then
+    if has_floor_exception "$package_name" "$pinned"; then
+      printf '%s pinned release %s is inside cooldown under a valid Firstmate floor exception\n' \
+        "$package_name" "$pinned"
+    else
+      printf 'error: %s pinned release %s is still in the %s-day cooldown without a valid Firstmate floor exception\n' \
+        "$package_name" "$pinned" "$COOLDOWN_DAYS" >&2
+      FAILURES=$((FAILURES + 1))
+      return
+    fi
   fi
 
   if [[ "$pinned" == "$latest" ]]; then

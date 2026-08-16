@@ -20,12 +20,15 @@ helper_error() {
 make_fixture() {
   fixture="$tmp_dir/repo"
   rm -rf "$fixture"
-  mkdir -p "$fixture/agent-tools" "$fixture/scripts"
+  mkdir -p "$fixture/agent-tools" "$fixture/scripts" "$fixture/security"
   cp "$DOTFILES_DIR/flake.nix" "$DOTFILES_DIR/flake.lock" "$DOTFILES_DIR/TRUST.md" "$fixture/"
   cp "$DOTFILES_DIR/agent-tools/package.json" \
     "$DOTFILES_DIR/agent-tools/package-lock.json" "$fixture/agent-tools/"
   cp "$DOTFILES_DIR/scripts/agent-tool-pins.tsv" \
-    "$DOTFILES_DIR/scripts/check-agent-tool-pins.sh" "$fixture/scripts/"
+    "$DOTFILES_DIR/scripts/check-agent-tool-pins.sh" \
+    "$DOTFILES_DIR/scripts/check-firstmate-floor-exceptions.sh" \
+    "$DOTFILES_DIR/scripts/firstmate-tool-floors.tsv" "$fixture/scripts/"
+  cp "$DOTFILES_DIR/security/firstmate-floor-exceptions.json" "$fixture/security/"
   cat >"$fixture/scripts/validate.sh" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
@@ -33,7 +36,8 @@ DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 DOTFILES_DIR="$DOTFILES_DIR" "$DOTFILES_DIR/scripts/check-agent-tool-pins.sh" >/dev/null
 printf '%s\n' 'fixture validation passed'
 EOF
-  chmod +x "$fixture/scripts/check-agent-tool-pins.sh" "$fixture/scripts/validate.sh"
+  chmod +x "$fixture/scripts/check-agent-tool-pins.sh" \
+    "$fixture/scripts/check-firstmate-floor-exceptions.sh" "$fixture/scripts/validate.sh"
   git -C "$fixture" init -q
   git -C "$fixture" config user.name 'Fixture Test'
   git -C "$fixture" config user.email 'fixture@example.invalid'

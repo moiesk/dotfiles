@@ -77,6 +77,7 @@ done
 for json_file in \
   agent-tools/package.json \
   agent-tools/package-lock.json \
+  security/firstmate-floor-exceptions.json \
   home/.claude/settings.portable.json \
   home/.config/opencode/package.json \
   home/.config/opencode/package-lock.json; do
@@ -175,6 +176,7 @@ done
 "$DOTFILES_DIR/scripts/test-check-agent-tool-pins.sh"
 "$DOTFILES_DIR/scripts/test-update-agent-tool-pin.sh"
 "$DOTFILES_DIR/scripts/test-check-homebrew-current.sh"
+"$DOTFILES_DIR/scripts/test-firstmate-floor-exceptions.sh"
 "$DOTFILES_DIR/scripts/test-check-privileged-tool-releases.sh"
 
 "$DOTFILES_DIR/scripts/check-secrets.sh"

@@ -10,6 +10,9 @@ on:
       - "flake.nix"
       - "home.nix"
       - "scripts/check-privileged-tool-releases.sh"
+      - "scripts/check-firstmate-floor-exceptions.sh"
+      - "scripts/firstmate-tool-floors.tsv"
+      - "security/firstmate-floor-exceptions.json"
       - "scripts/govulncheck-policy.sh"
       - "security/go-vulnerability-exceptions.json"
   push:
@@ -23,6 +26,9 @@ on:
       - "flake.nix"
       - "home.nix"
       - "scripts/check-privileged-tool-releases.sh"
+      - "scripts/check-firstmate-floor-exceptions.sh"
+      - "scripts/firstmate-tool-floors.tsv"
+      - "security/firstmate-floor-exceptions.json"
       - "scripts/govulncheck-policy.sh"
       - "security/go-vulnerability-exceptions.json"
   schedule:

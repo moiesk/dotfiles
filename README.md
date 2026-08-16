@@ -218,6 +218,36 @@ clone under Firstmate's own update workflow instead of replacing it on every
 rebuild. Per-project setup remains explicit: run `/setup-matt-pocock-skills` to
 configure Matt's workflow and `no-mistakes init` to add a validation gate.
 
+### Firstmate dependency-floor preflight
+
+Use this separate two-step workflow when a reviewed candidate Firstmate commit
+raises a hard tool floor above the committed dotfiles pin. Never substitute a
+branch name or mutable `origin/main` for the full candidate SHA:
+
+```sh
+candidate=<40-hex-candidate-firstmate-commit>
+./scripts/check-firstmate-floor-exceptions.sh --candidate "$candidate"
+./scripts/update-agent-tool-pin.sh --firstmate-commit "$candidate" <tool> <lowest-compatible-version>
+git diff --check
+./scripts/validate.sh
+```
+
+The first command reports every declared floor and exits nonzero while any pin
+is unmet. The updater records the narrow exception and coordinates the reviewed
+Nix, npm, lockfile, and trust surfaces; its own validation owns the detailed
+record checks. Review and ship that dotfiles change first. The captain then
+checks out the reviewed branch and runs:
+
+```sh
+./rebuild.sh
+```
+
+Only after that succeeds, update Firstmate separately (normally through its
+`/updatefirstmate` workflow; the guarded mechanical command is
+`"$HOME/firstmate/bin/fm-update.sh"`). Rebuild installs only committed pins and
+deliberately neither inspects, fetches, nor modifies the existing mutable
+`~/firstmate` clone.
+
 `scripts/doctor.sh` verifies the commands, skills, and Firstmate clone rather
 than checking only that command names exist.
 

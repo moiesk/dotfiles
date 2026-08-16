@@ -30,7 +30,9 @@ Instead:
   **cooldown + review gate**: `scripts/check-privileged-tool-releases.sh` only
   surfaces a newer stable release after a **seven-day cooldown**
   (`TOOL_UPDATE_COOLDOWN_DAYS`, default 7), so a freshly-published — possibly
-  malicious — release is never adopted on the day it drops.
+  malicious — release is not ordinarily adopted on the day it drops. The only
+  early-adoption path is the exact-commit Firstmate dependency-floor exception
+  described below; package-only updates still wait.
 - This document is the disclosure half: the trust is written down, tiered, and
   reviewable rather than implicit.
 
@@ -116,6 +118,26 @@ machine — and firstmate holds the most reach of anything in the stack, because
 orchestrates the agents that wield the Tier A and Tier B tools. An adopter must
 accept that ongoing, rolling trust in the `kunchenguid` account explicitly; the
 pinning + cooldown protections above **do not apply to firstmate.**
+
+A rolling Firstmate commit can nevertheless declare a hard dependency floor
+above a dotfiles pin. To avoid an availability deadlock without discarding the
+cooldown generally,
+[`security/firstmate-floor-exceptions.json`](security/firstmate-floor-exceptions.json)
+may authorize exactly the lowest released version satisfying that floor. Each
+record binds the previous and adopted pins, required floor, expected repository,
+and full candidate commit SHA. `scripts/check-firstmate-floor-exceptions.sh`
+reads the declaration from that immutable GitHub object, checks release
+metadata, rejects unrelated or broader records, and rejects the record once the
+ordinary cooldown has elapsed. `scripts/check-privileged-tool-releases.sh`
+therefore rejects every fresh committed privileged pin unless that evidence is
+currently valid, including when the fresh pin happens to equal npm `latest`.
+
+This is an availability exception, not a safety attestation. It deliberately
+reduces observation time for one dependency release and does not prove either
+the Firstmate commit or package is benign. The cooldown retains independent
+value against an npm-publisher/package-only compromise and for every use of the
+tool outside Firstmate; integrity, signature, vulnerability, exact-pin, and
+review gates remain unchanged.
 
 Why it is nonetheless trusted: it is the intended supervisor for this exact
 setup, its clone/update behavior is verified by `scripts/doctor.sh`, and its
