@@ -131,9 +131,10 @@ metadata, rejects unrelated or broader records, and rejects the record once the
 ordinary cooldown has elapsed. A spent record is therefore retired, not kept:
 each validation run reports the remaining hours and warns inside the last two
 days, and `scripts/check-firstmate-floor-exceptions.sh --retire-expired` deletes
-every record whose adopted release has completed the cooldown (see `README.md`). `scripts/check-privileged-tool-releases.sh`
-therefore rejects every fresh committed privileged pin unless that evidence is
-currently valid, including when the fresh pin happens to equal npm `latest`.
+every record whose adopted release has completed the cooldown (see `README.md`).
+`scripts/check-privileged-tool-releases.sh` therefore rejects every fresh
+committed privileged pin unless that evidence is currently valid, including when
+the fresh pin happens to equal npm `latest`.
 
 This is an availability exception, not a safety attestation. It deliberately
 reduces observation time for one dependency release and does not prove either

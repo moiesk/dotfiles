@@ -181,7 +181,10 @@ in `security/npm-audit-exceptions.json`; the audit gate fails again when that
 exception expires. The privileged `gh-axi`, `chrome-devtools-axi`, and
 `quota-axi` pins additionally carry the same release-cooldown hold as Treehouse
 and no-mistakes below: the daily CI gate holds a newer npm release through the
-cooldown, then fails until the pin is deliberately advanced.
+cooldown, then fails until the pin is deliberately advanced. That gate also
+fails on a committed privileged pin that is itself still inside the cooldown
+unless a valid Firstmate dependency-floor exception covers it (see `TRUST.md`
+and the preflight below).
 Nix-managed wrappers invoke the exact mise-pinned Node runtime directly, so
 they do not depend on an agent session's inherited shell initialization or Node
 shim state.
