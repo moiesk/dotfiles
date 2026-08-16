@@ -12,37 +12,72 @@ fail() {
   exit 1
 }
 
-commit='f1a4af426d7199c1781bc91ccd143b8e1f732d10'
+fixture_error() {
+  printf 'error: the fixture in scripts/%s is degenerate: %s\n' \
+    "$(basename "${BASH_SOURCE[0]}")" "$1" >&2
+  exit 1
+}
+
+live_pin="$(jq -er '.dependencies["quota-axi"]' \
+  "$DOTFILES_DIR/agent-tools/package.json")" ||
+  fixture_error 'the live quota-axi pin is missing'
+[[ "$live_pin" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]] ||
+  fixture_error "the live quota-axi pin is not plain semver: $live_pin"
+((BASH_REMATCH[3] >= 2)) ||
+  fixture_error "the live quota-axi patch $live_pin cannot yield two lower fixture versions"
+major="${BASH_REMATCH[1]}"
+minor="${BASH_REMATCH[2]}"
+patch="${BASH_REMATCH[3]}"
+previous_previous="$major.$minor.$((patch - 2))"
+previous="$major.$minor.$((patch - 1))"
+adopted="$live_pin"
+broader="$major.$minor.$((patch + 1))"
+latest="$major.$minor.$((patch + 2))"
+
+commit='2222222222222222222222222222222222222222'
 now_epoch=1786752000 # 2026-08-15T00:00:00Z
 fresh_at='2026-08-13T06:34:14Z'
+fresh_release_at="$fresh_at"
 old_at='2026-07-01T00:00:00Z'
 
 mkdir -p "$tmp_dir/repo/agent-tools" "$tmp_dir/bin"
-printf '{"dependencies":{"quota-axi":"0.1.25"}}\n' >"$tmp_dir/repo/agent-tools/package.json"
+jq -n --arg pin "$previous" '{dependencies: {"quota-axi": $pin}}' \
+  >"$tmp_dir/repo/agent-tools/package.json"
 awk -F '\t' '$1 ~ /^#/ || $1 == "quota-axi"' \
   "$DOTFILES_DIR/scripts/firstmate-tool-floors.tsv" >"$tmp_dir/repo/floors.tsv"
+git -C "$tmp_dir/repo" init -q
+git -C "$tmp_dir/repo" config user.name 'Fixture Test'
+git -C "$tmp_dir/repo" config user.email 'fixture@example.invalid'
+git -C "$tmp_dir/repo" add agent-tools/package.json floors.tsv
+git -C "$tmp_dir/repo" commit -qm 'historical pin fixture'
+jq -n --arg pin "$adopted" '{dependencies: {"quota-axi": $pin}}' \
+  >"$tmp_dir/repo/agent-tools/package.json"
 
 cat >"$tmp_dir/bin/gh-axi" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
 [[ "$*" == *"/repos/kunchenguid/firstmate/contents/bin/fm-quota-axi-lib.sh?ref=$FIXTURE_COMMIT"* ]] || exit 1
-printf 'api_response:\n  body: 0.1.25\n  truncated: false\n'
+printf 'api_response:\n  body: %s\n  truncated: false\n' "$FIXTURE_REQUIRED"
 EOF
 
 cat >"$tmp_dir/bin/npm" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
 jq -n \
+  --arg previous "$FIXTURE_PREVIOUS" \
+  --arg adopted "$FIXTURE_ADOPTED" \
+  --arg broader "$FIXTURE_BROADER" \
+  --arg latest "$FIXTURE_LATEST" \
   --arg fresh_at "$FIXTURE_FRESH_AT" \
   --arg old_at "$FIXTURE_OLD_AT" \
   '{
-    "dist-tags": {latest: "0.1.28"},
-    versions: ["0.1.24", "0.1.25", "0.1.26", "0.1.28"],
+    "dist-tags": {latest: $latest},
+    versions: [$previous, $adopted, $broader, $latest],
     time: {
-      "0.1.24": $old_at,
-      "0.1.25": $fresh_at,
-      "0.1.26": $fresh_at,
-      "0.1.28": $fresh_at
+      ($previous): $old_at,
+      ($adopted): $fresh_at,
+      ($broader): $fresh_at,
+      ($latest): $fresh_at
     }
   }'
 EOF
@@ -51,14 +86,15 @@ chmod +x "$tmp_dir/bin/gh-axi" "$tmp_dir/bin/npm"
 write_exception() {
   jq -n \
     --arg dependency "${1:-quota-axi}" \
-    --arg adopted "${2:-0.1.25}" \
-    --arg required "${3:-0.1.25}" \
+    --arg adopted "${2:-$adopted}" \
+    --arg required "${3:-$adopted}" \
     --arg commit "${4:-$commit}" \
+    --arg previous "${5:-$previous}" \
     '{
       schema_version: 1,
       exceptions: [{
         dependency: $dependency,
-        previous_version: "0.1.18",
+        previous_version: $previous,
         adopted_version: $adopted,
         required_version: $required,
         firstmate_repository: "kunchenguid/firstmate",
@@ -76,6 +112,11 @@ run_checker() {
     TOOL_UPDATE_NOW_EPOCH="$now_epoch" \
     TOOL_UPDATE_COOLDOWN_DAYS=7 \
     FIXTURE_COMMIT="$commit" \
+    FIXTURE_REQUIRED="$adopted" \
+    FIXTURE_PREVIOUS="$previous" \
+    FIXTURE_ADOPTED="$adopted" \
+    FIXTURE_BROADER="$broader" \
+    FIXTURE_LATEST="$latest" \
     FIXTURE_FRESH_AT="$fresh_at" \
     FIXTURE_OLD_AT="$old_at" \
     "$CHECKER"
@@ -95,41 +136,130 @@ expect_failure() {
 write_exception
 run_checker >/dev/null || fail 'valid exact-commit floor exception was rejected'
 
-write_exception quota-axi 0.1.26 0.1.25
-jq '.dependencies["quota-axi"] = "0.1.26"' "$tmp_dir/repo/agent-tools/package.json" \
+write_exception quota-axi "$broader" "$adopted"
+jq --arg pin "$broader" '.dependencies["quota-axi"] = $pin' "$tmp_dir/repo/agent-tools/package.json" \
   >"$tmp_dir/repo/agent-tools/package.json.next"
 mv "$tmp_dir/repo/agent-tools/package.json.next" "$tmp_dir/repo/agent-tools/package.json"
-expect_failure 'is broader than the lowest released version 0.1.25'
+expect_failure "is broader than the lowest released version $adopted"
 
-write_exception treehouse 2.1.2 2.1.2
+write_exception treehouse "$adopted" "$adopted"
 expect_failure 'does not name a supported Firstmate dependency floor'
 
-write_exception quota-axi 0.1.24 0.1.25
-jq '.dependencies["quota-axi"] = "0.1.24"' "$tmp_dir/repo/agent-tools/package.json" \
+write_exception quota-axi "$previous" "$adopted"
+jq --arg pin "$previous" '.dependencies["quota-axi"] = $pin' "$tmp_dir/repo/agent-tools/package.json" \
   >"$tmp_dir/repo/agent-tools/package.json.next"
 mv "$tmp_dir/repo/agent-tools/package.json.next" "$tmp_dir/repo/agent-tools/package.json"
-expect_failure 'does not satisfy required version 0.1.25'
+expect_failure "does not satisfy required version $adopted"
 
-write_exception quota-axi 0.1.25 0.1.24
-jq '.dependencies["quota-axi"] = "0.1.25"' "$tmp_dir/repo/agent-tools/package.json" \
+write_exception quota-axi "$adopted" "$previous" "$commit" "$previous_previous"
+jq --arg pin "$adopted" '.dependencies["quota-axi"] = $pin' "$tmp_dir/repo/agent-tools/package.json" \
   >"$tmp_dir/repo/agent-tools/package.json.next"
 mv "$tmp_dir/repo/agent-tools/package.json.next" "$tmp_dir/repo/agent-tools/package.json"
-expect_failure 'declares quota-axi floor 0.1.25, not recorded required version 0.1.24'
+expect_failure "declares quota-axi floor $adopted, not recorded required version $previous"
 
-write_exception quota-axi 0.1.25 0.1.25 1111111111111111111111111111111111111111
+write_exception quota-axi "$adopted" "$adopted" 1111111111111111111111111111111111111111
 expect_failure 'could not read Firstmate floor evidence'
 
-printf '{"dependencies":{"quota-axi":"0.1.24"}}\n' >"$tmp_dir/repo/agent-tools/package.json"
+write_exception quota-axi "$adopted" "$adopted" "$commit" "$adopted"
+expect_failure "is unrelated because previous pin $adopted already satisfied required version $adopted"
+
+write_exception quota-axi "$adopted" "$adopted" "$commit" "$previous_previous"
+expect_failure "previous version $previous_previous does not match historical pin $previous"
+
+write_exception
+fresh_at="$old_at"
+expect_failure "exception is stale because adopted version $adopted has completed the 7-day cooldown"
+fresh_at="$fresh_release_at"
+
+jq -n --arg pin "$previous" '{dependencies: {"quota-axi": $pin}}' \
+  >"$tmp_dir/repo/agent-tools/package.json"
 if DOTFILES_DIR="$tmp_dir/repo" \
   FIRSTMATE_FLOOR_REGISTRY="$tmp_dir/repo/floors.tsv" \
   GH_AXI_BIN="$tmp_dir/bin/gh-axi" \
   FIXTURE_COMMIT="$commit" \
+  FIXTURE_REQUIRED="$adopted" \
   "$CHECKER" --candidate "$commit" >"$tmp_dir/output" 2>&1; then
   fail 'candidate preflight accepted an unmet quota-axi floor'
 fi
-grep -Fq 'unmet: quota-axi pin 0.1.24 is below Firstmate floor 0.1.25' "$tmp_dir/output" || {
+grep -Fq "unmet: quota-axi pin $previous is below Firstmate floor $adopted" "$tmp_dir/output" || {
   cat "$tmp_dir/output" >&2
   fail 'candidate preflight did not report the unmet floor'
 }
+
+# GitHub-release dependencies also select the lowest published version above a
+# floor that is not itself a release; Firstmate tags are never consulted.
+github_ref="$(jq -er '.nodes["no-mistakes"].original.ref' "$DOTFILES_DIR/flake.lock")" ||
+  fixture_error 'the live no-mistakes flake ref is missing'
+[[ "$github_ref" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]] ||
+  fixture_error "the live no-mistakes ref is not a v-prefixed semver: $github_ref"
+((BASH_REMATCH[3] >= 2)) ||
+  fixture_error "the live no-mistakes patch $github_ref cannot yield a gap fixture"
+github_major="${BASH_REMATCH[1]}"
+github_minor="${BASH_REMATCH[2]}"
+github_patch="${BASH_REMATCH[3]}"
+github_previous="$github_major.$github_minor.$((github_patch - 2))"
+github_required="$github_major.$github_minor.$((github_patch - 1))"
+github_adopted="$github_major.$github_minor.$github_patch"
+github_newer="$github_major.$github_minor.$((github_patch + 1))"
+github_repo="$tmp_dir/github-repo"
+mkdir -p "$github_repo/scripts"
+awk -F '\t' '$1 ~ /^#/ || $1 == "no-mistakes"' \
+  "$DOTFILES_DIR/scripts/firstmate-tool-floors.tsv" >"$github_repo/floors.tsv"
+jq -n --arg ref "v$github_previous" \
+  '{nodes: {"no-mistakes": {original: {ref: $ref}}}}' >"$github_repo/flake.lock"
+git -C "$github_repo" init -q
+git -C "$github_repo" config user.name 'Fixture Test'
+git -C "$github_repo" config user.email 'fixture@example.invalid'
+git -C "$github_repo" add floors.tsv flake.lock
+git -C "$github_repo" commit -qm 'historical GitHub pin fixture'
+jq -n --arg ref "v$github_adopted" \
+  '{nodes: {"no-mistakes": {original: {ref: $ref}}}}' >"$github_repo/flake.lock"
+jq -n \
+  --arg previous "$github_previous" \
+  --arg adopted "$github_adopted" \
+  --arg required "$github_required" \
+  --arg commit "$commit" \
+  '{schema_version: 1, exceptions: [{
+    dependency: "no-mistakes",
+    previous_version: $previous,
+    adopted_version: $adopted,
+    required_version: $required,
+    firstmate_repository: "kunchenguid/firstmate",
+    firstmate_commit: $commit
+  }]}' >"$github_repo/exceptions.json"
+cat >"$tmp_dir/bin/gh-axi-github" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+case "$*" in
+  *"/repos/kunchenguid/firstmate/contents/bin/fm-bootstrap.sh?ref=$FIXTURE_COMMIT"*)
+    printf 'api_response:\n  body: %s\n  truncated: false\n' "$FIXTURE_GITHUB_REQUIRED"
+    ;;
+  *"/repos/kunchenguid/no-mistakes/releases?per_page=100"*)
+    body="$(printf 'v%s\nv%s\nv%s\n' \
+      "$FIXTURE_GITHUB_PREVIOUS" "$FIXTURE_GITHUB_ADOPTED" "$FIXTURE_GITHUB_NEWER" | jq -Rs .)"
+    printf 'api_response:\n  body: %s\n  truncated: false\n' "$body"
+    ;;
+  *"/repos/kunchenguid/no-mistakes/releases/tags/v$FIXTURE_GITHUB_ADOPTED"*)
+    printf 'tag_name: v%s\npublished_at: "%s"\n' \
+      "$FIXTURE_GITHUB_ADOPTED" "$FIXTURE_FRESH_AT"
+    ;;
+  *) exit 1 ;;
+esac
+EOF
+chmod +x "$tmp_dir/bin/gh-axi-github"
+DOTFILES_DIR="$github_repo" \
+  FIRSTMATE_FLOOR_REGISTRY="$github_repo/floors.tsv" \
+  FIRSTMATE_FLOOR_EXCEPTIONS_FILE="$github_repo/exceptions.json" \
+  GH_AXI_BIN="$tmp_dir/bin/gh-axi-github" \
+  TOOL_UPDATE_NOW_EPOCH="$now_epoch" \
+  TOOL_UPDATE_COOLDOWN_DAYS=7 \
+  FIXTURE_COMMIT="$commit" \
+  FIXTURE_GITHUB_PREVIOUS="$github_previous" \
+  FIXTURE_GITHUB_REQUIRED="$github_required" \
+  FIXTURE_GITHUB_ADOPTED="$github_adopted" \
+  FIXTURE_GITHUB_NEWER="$github_newer" \
+  FIXTURE_FRESH_AT="$fresh_release_at" \
+  "$CHECKER" >/dev/null ||
+  fail 'GitHub release gap did not select the lowest satisfying published version'
 
 printf '%s\n' 'Firstmate floor exception checks passed'

@@ -225,9 +225,9 @@ raises a hard tool floor above the committed dotfiles pin. Never substitute a
 branch name or mutable `origin/main` for the full candidate SHA:
 
 ```sh
-candidate=<40-hex-candidate-firstmate-commit>
+candidate=f1a4af426d7199c1781bc91ccd143b8e1f732d10
 ./scripts/check-firstmate-floor-exceptions.sh --candidate "$candidate"
-./scripts/update-agent-tool-pin.sh --firstmate-commit "$candidate" <tool> <lowest-compatible-version>
+./scripts/update-agent-tool-pin.sh --firstmate-commit "$candidate" quota-axi 0.1.25
 git diff --check
 ./scripts/validate.sh
 ```
@@ -243,10 +243,14 @@ checks out the reviewed branch and runs:
 ```
 
 Only after that succeeds, update Firstmate separately (normally through its
-`/updatefirstmate` workflow; the guarded mechanical command is
-`"$HOME/firstmate/bin/fm-update.sh"`). Rebuild installs only committed pins and
-deliberately neither inspects, fetches, nor modifies the existing mutable
-`~/firstmate` clone.
+`/updatefirstmate` workflow). Its guarded mechanical command is:
+
+```sh
+"$HOME/firstmate/bin/fm-update.sh"
+```
+
+Rebuild installs only committed pins and deliberately neither inspects, fetches,
+nor modifies the existing mutable `~/firstmate` clone.
 
 `scripts/doctor.sh` verifies the commands, skills, and Firstmate clone rather
 than checking only that command names exist.

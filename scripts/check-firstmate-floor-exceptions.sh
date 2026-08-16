@@ -10,6 +10,7 @@ NPM_BIN="${NPM_BIN:-npm}"
 COOLDOWN_DAYS="${TOOL_UPDATE_COOLDOWN_DAYS:-7}"
 NOW_EPOCH="${TOOL_UPDATE_NOW_EPOCH:-$(date -u +%s)}"
 FIRSTMATE_REPOSITORY='kunchenguid/firstmate'
+DOTFILES_HISTORY_DIR="${FIRSTMATE_DOTFILES_HISTORY_DIR:-$DOTFILES_DIR}"
 
 usage() {
   cat <<'EOF'
@@ -31,6 +32,23 @@ fail() {
   exit 1
 }
 
+api_body() {
+  local response="$1" body count
+  grep -Fxq '  truncated: false' <<<"$response" || return 1
+  count="$(grep -c '^  body: ' <<<"$response" || true)"
+  [[ "$count" == 1 ]] || return 1
+  body="$(sed -n 's/^  body: //p' <<<"$response")"
+  node -e '
+    const value = process.argv[1];
+    try {
+      const parsed = JSON.parse(value);
+      process.stdout.write(typeof parsed === "string" ? parsed : String(parsed));
+    } catch {
+      process.stdout.write(value);
+    }
+  ' "$body"
+}
+
 semver_at_least() {
   node -e '
     const parse = value => /^\d+\.\d+\.\d+$/.test(value) ? value.split(".").map(Number) : null;
@@ -43,15 +61,12 @@ semver_at_least() {
 }
 
 floor_from_commit() {
-  local commit="$1" path="$2" variable="$3" response value count jq_filter
+  local commit="$1" path="$2" variable="$3" response value jq_filter
   [[ "$path" =~ ^[A-Za-z0-9._/-]+$ && "$variable" =~ ^[A-Z0-9_]+$ ]] || return 1
   jq_filter=".content | @base64d | [match(\"(?m)^${variable}=([0-9]+\\\\.[0-9]+\\\\.[0-9]+)$\"; \"g\")] | if length == 1 then .[0].captures[0].string else error(\"expected exactly one floor\") end"
   response="$($GH_AXI_BIN api GET "/repos/$FIRSTMATE_REPOSITORY/contents/$path?ref=$commit" \
     --jq "$jq_filter" 2>/dev/null)" || return 1
-  grep -Fxq '  truncated: false' <<<"$response" || return 1
-  count="$(grep -c '^  body: ' <<<"$response" || true)"
-  [[ "$count" == 1 ]] || return 1
-  value="$(sed -n 's/^  body: //p' <<<"$response")"
+  value="$(api_body "$response")" || return 1
   [[ "$value" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]] || return 1
   printf '%s\n' "$value"
 }
@@ -73,6 +88,38 @@ pinned_version() {
   esac
 }
 
+version_at_revision() {
+  local revision="$1" pin_kind="$2" pin_key="$3" tag_prefix="$4" ref
+  case "$pin_kind" in
+    npm)
+      git -C "$DOTFILES_HISTORY_DIR" show "$revision:agent-tools/package.json" 2>/dev/null |
+        jq -er --arg dependency "$pin_key" '.dependencies[$dependency]'
+      ;;
+    flake)
+      ref="$(git -C "$DOTFILES_HISTORY_DIR" show "$revision:flake.lock" 2>/dev/null |
+        jq -er --arg input "$pin_key" '.nodes[$input].original.ref')" || return 1
+      [[ "$ref" == "$tag_prefix"* ]] || return 1
+      printf '%s\n' "${ref#"$tag_prefix"}"
+      ;;
+    *) return 1 ;;
+  esac
+}
+
+historical_previous_pin() {
+  local pin_kind="$1" pin_key="$2" tag_prefix="$3" adopted="$4"
+  local revision value
+  revision="$(git -C "$DOTFILES_HISTORY_DIR" rev-parse --verify HEAD 2>/dev/null)" || return 1
+  while [[ -n "$revision" ]]; do
+    value="$(version_at_revision "$revision" "$pin_kind" "$pin_key" "$tag_prefix")" || return 1
+    if [[ "$value" != "$adopted" ]]; then
+      printf '%s\n' "$value"
+      return 0
+    fi
+    revision="$(git -C "$DOTFILES_HISTORY_DIR" rev-parse --verify "$revision^" 2>/dev/null || true)"
+  done
+  return 1
+}
+
 npm_release_evidence() {
   local dependency="$1" adopted="$2" required="$3" metadata lowest published
   metadata="$($NPM_BIN view "$dependency" --json 2>/dev/null)" || return 1
@@ -83,7 +130,9 @@ npm_release_evidence() {
     const compare = (a, b) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2];
     const matches = (metadata.versions || [])
       .map(value => ({value, parsed: parse(value)}))
-      .filter(item => item.parsed && compare(item.parsed, required) >= 0)
+      .filter(item => item.parsed
+        && Number.isFinite(Date.parse(metadata.time?.[item.value]))
+        && compare(item.parsed, required) >= 0)
       .sort((a, b) => compare(a.parsed, b.parsed));
     if (matches[0]) process.stdout.write(matches[0].value);
   ' "$metadata" "$required")" || return 1
@@ -97,11 +146,30 @@ npm_release_evidence() {
 }
 
 github_release_evidence() {
-  local repository="$1" tag_prefix="$2" adopted="$3" required="$4" metadata tag published
-  # When the declared floor itself is released, it is necessarily the lowest
-  # released version satisfying that exact semantic-version floor.
-  [[ "$adopted" == "$required" ]] ||
-    fail "$repository exception must adopt its released floor exactly; no broader GitHub-release exception is supported"
+  local repository="$1" tag_prefix="$2" adopted="$3" required="$4"
+  local metadata tag published response tags lowest
+  [[ "$tag_prefix" =~ ^[A-Za-z0-9._-]+$ ]] || return 1
+  response="$($GH_AXI_BIN api GET "/repos/$repository/releases?per_page=100" \
+    --paginate --jq '.[].tag_name' 2>/dev/null)" || return 1
+  tags="$(api_body "$response")" || return 1
+  lowest="$(node -e '
+    const prefix = process.argv[1];
+    const required = process.argv[2].split(".").map(Number);
+    const escape = value => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const pattern = new RegExp(`^${escape(prefix)}(\\d+)\\.(\\d+)\\.(\\d+)$`);
+    const compare = (a, b) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2];
+    const matches = process.argv[3].split("\n")
+      .map(value => ({value, match: value.match(pattern)}))
+      .filter(item => item.match)
+      .map(item => ({value: item.value.slice(prefix.length), parts: item.match.slice(1).map(Number)}))
+      .filter(item => compare(item.parts, required) >= 0)
+      .sort((a, b) => compare(a.parts, b.parts));
+    if (matches[0]) process.stdout.write(matches[0].value);
+  ' "$tag_prefix" "$required" "$tags")" || return 1
+  [[ -n "$lowest" ]] || return 1
+  if [[ "$adopted" != "$lowest" ]]; then
+    fail "$repository exception adopted version $adopted is broader than the lowest released version $lowest satisfying floor $required"
+  fi
   tag="${tag_prefix}${adopted}"
   metadata="$($GH_AXI_BIN api GET "/repos/$repository/releases/tags/$tag" 2>/dev/null)" || return 1
   published="$(awk -F': ' '/^published_at:/ { print $2; exit }' <<<"$metadata")"
@@ -197,14 +265,19 @@ while IFS=$'\t' read -r dependency previous adopted required repository commit; 
   if ! semver_at_least "$adopted" "$required"; then
     fail "$dependency adopted version $adopted does not satisfy required version $required"
   fi
-  if semver_at_least "$previous" "$required"; then
-    fail "$dependency exception is unrelated because previous pin $previous already satisfied required version $required"
-  fi
 
   actual_floor="$(floor_from_commit "$commit" "$floor_path" "$floor_variable")" ||
     fail "could not read Firstmate floor evidence for $dependency at exact $FIRSTMATE_REPOSITORY commit $commit"
   [[ "$actual_floor" == "$required" ]] ||
     fail "Firstmate commit $commit declares $dependency floor $actual_floor, not recorded required version $required"
+
+  if semver_at_least "$previous" "$required"; then
+    fail "$dependency exception is unrelated because previous pin $previous already satisfied required version $required"
+  fi
+  historical_previous="$(historical_previous_pin "$pin_kind" "$pin_key" "$tag_prefix" "$adopted")" ||
+    fail "could not establish the historical $dependency pin preceding adopted version $adopted"
+  [[ "$previous" == "$historical_previous" ]] ||
+    fail "$dependency exception previous version $previous does not match historical pin $historical_previous"
 
   case "$pin_kind" in
     npm)

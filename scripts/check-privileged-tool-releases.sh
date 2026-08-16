@@ -23,10 +23,37 @@ has_floor_exception() {
   ' "$EXCEPTIONS_FILE" >/dev/null
 }
 
+check_pinned_cooldown() {
+  local dependency="$1" displayed_pin="$2" exception_version="$3" published="$4"
+  local published_epoch age_seconds cooldown_seconds
+  if ! published_epoch="$(node -e \
+    'const value = Date.parse(process.argv[1]); if (!Number.isFinite(value)) process.exit(1); console.log(Math.floor(value / 1000));' \
+    "$published")"; then
+    printf 'error: %s pinned release %s has a malformed publication timestamp\n' \
+      "$dependency" "$displayed_pin" >&2
+    FAILURES=$((FAILURES + 1))
+    return 1
+  fi
+  age_seconds=$((NOW_EPOCH - published_epoch))
+  cooldown_seconds=$((COOLDOWN_DAYS * 86400))
+  if ((age_seconds < cooldown_seconds)); then
+    if has_floor_exception "$dependency" "$exception_version"; then
+      printf '%s pinned release %s is inside cooldown under a valid Firstmate floor exception\n' \
+        "$dependency" "$displayed_pin"
+      return 0
+    fi
+    printf 'error: %s pinned release %s is still in the %s-day cooldown without a valid Firstmate floor exception\n' \
+      "$dependency" "$displayed_pin" "$COOLDOWN_DAYS" >&2
+    FAILURES=$((FAILURES + 1))
+    return 1
+  fi
+  return 0
+}
+
 check_release() {
   local input_name="$1" repository="$2"
   local pinned metadata latest published published_epoch now age_seconds cooldown_seconds
-  local pinned_metadata pinned_published pinned_published_epoch pinned_age_seconds
+  local pinned_metadata pinned_published
 
   if ! pinned="$(jq -er --arg input "$input_name" \
     '.nodes[$input].original.ref' "$DOTFILES_DIR/flake.lock")"; then
@@ -70,22 +97,7 @@ check_release() {
     FAILURES=$((FAILURES + 1))
     return
   fi
-  pinned_published_epoch="$(node -e \
-    'const value = Date.parse(process.argv[1]); if (!Number.isFinite(value)) process.exit(1); console.log(Math.floor(value / 1000));' \
-    "$pinned_published")"
-  pinned_age_seconds=$((NOW_EPOCH - pinned_published_epoch))
-  cooldown_seconds=$((COOLDOWN_DAYS * 86400))
-  if ((pinned_age_seconds < cooldown_seconds)); then
-    if has_floor_exception "$input_name" "${pinned#v}"; then
-      printf '%s pinned release %s is inside cooldown under a valid Firstmate floor exception\n' \
-        "$input_name" "$pinned"
-    else
-      printf 'error: %s pinned release %s is still in the %s-day cooldown without a valid Firstmate floor exception\n' \
-        "$input_name" "$pinned" "$COOLDOWN_DAYS" >&2
-      FAILURES=$((FAILURES + 1))
-      return
-    fi
-  fi
+  check_pinned_cooldown "$input_name" "$pinned" "${pinned#v}" "$pinned_published" || return
 
   if [[ "$pinned" == "$latest" ]]; then
     printf '%s is on the latest stable release (%s)\n' "$input_name" "$pinned"
@@ -113,7 +125,7 @@ check_release() {
 check_npm_release() {
   local package_name="$1"
   local pinned metadata latest published published_epoch now age_seconds cooldown_seconds eligible
-  local pinned_published pinned_published_epoch pinned_age_seconds
+  local pinned_published
 
   if ! pinned="$(jq -er --arg pkg "$package_name" \
     '.dependencies[$pkg]' "$DOTFILES_DIR/agent-tools/package.json")"; then
@@ -144,22 +156,7 @@ check_npm_release() {
     FAILURES=$((FAILURES + 1))
     return
   fi
-  pinned_published_epoch="$(node -e \
-    'const value = Date.parse(process.argv[1]); if (!Number.isFinite(value)) process.exit(1); console.log(Math.floor(value / 1000));' \
-    "$pinned_published")"
-  pinned_age_seconds=$((NOW_EPOCH - pinned_published_epoch))
-  cooldown_seconds=$((COOLDOWN_DAYS * 86400))
-  if ((pinned_age_seconds < cooldown_seconds)); then
-    if has_floor_exception "$package_name" "$pinned"; then
-      printf '%s pinned release %s is inside cooldown under a valid Firstmate floor exception\n' \
-        "$package_name" "$pinned"
-    else
-      printf 'error: %s pinned release %s is still in the %s-day cooldown without a valid Firstmate floor exception\n' \
-        "$package_name" "$pinned" "$COOLDOWN_DAYS" >&2
-      FAILURES=$((FAILURES + 1))
-      return
-    fi
-  fi
+  check_pinned_cooldown "$package_name" "$pinned" "$pinned" "$pinned_published" || return
 
   if [[ "$pinned" == "$latest" ]]; then
     printf '%s is on the latest stable release (%s)\n' "$package_name" "$pinned"

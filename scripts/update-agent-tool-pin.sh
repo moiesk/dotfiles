@@ -17,12 +17,12 @@ Usage: scripts/update-agent-tool-pin.sh [--firstmate-commit <sha>] <tool> <versi
 Coordinate one supported npm-backed AXI tool across flake.nix, flake.lock,
 agent-tools/package.json, agent-tools/package-lock.json, and TRUST.md.
 
-VERSION must be a plain exact major.minor.patch semver. This helper does not
-assess release eligibility or bypass TRUST.md policy. Before running it, the
-maintainer must establish that the selected release is eligible, including the
-7-day cooldown for tools whose trust tier requires it. When an exact candidate
-Firstmate commit raises a hard dependency floor above the current pin, pass
---firstmate-commit to record and mechanically validate the narrow exception.
+VERSION must be a plain exact major.minor.patch semver. Without
+--firstmate-commit, this helper does not assess ordinary release eligibility or
+bypass TRUST.md policy; the maintainer must first establish that the selected
+release is eligible, including the 7-day cooldown where required. When an exact
+candidate Firstmate commit raises a hard dependency floor above the current pin,
+pass --firstmate-commit to record and mechanically validate the narrow exception.
 
 The repository must start clean. The update is built and fully validated in a
 temporary copy before the coordinated files are installed for review. This
@@ -292,7 +292,8 @@ if [[ -n "$firstmate_commit" ]]; then
       }]
     ' "$exceptions_file" >"$exceptions_file.next"
   mv "$exceptions_file.next" "$exceptions_file"
-  DOTFILES_DIR="$stage_dir" "$stage_dir/scripts/check-firstmate-floor-exceptions.sh"
+  DOTFILES_DIR="$stage_dir" FIRSTMATE_DOTFILES_HISTORY_DIR="$DOTFILES_DIR" \
+    "$stage_dir/scripts/check-firstmate-floor-exceptions.sh"
 fi
 
 DOTFILES_DIR="$stage_dir" "$stage_dir/scripts/check-agent-tool-pins.sh"
