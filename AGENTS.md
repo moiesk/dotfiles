@@ -36,8 +36,14 @@ alignment workflow deliberately marks an npm-only proposal red. A maintainer
 must first establish release eligibility from `TRUST.md` and, where applicable,
 `scripts/check-privileged-tool-releases.sh`; the helper does not make or bypass
 that policy decision. Then run `./scripts/update-agent-tool-pin.sh <tool>
-<version>`, review its coordinated five-file diff, ship a replacement PR, and
-close the incomplete Dependabot PR as superseded. The helper performs only a
+<version>`, review its coordinated pin diff, ship a replacement PR, and close
+the incomplete Dependabot PR as superseded. A captain-approved rolling-Firstmate
+floor exception uses the preflight and `--firstmate-commit` workflow in
+`README.md`; no other early adoption is allowed. Such an exception is valid only
+inside the cooldown it shortens: once the adopted release completes the
+cooldown, `./scripts/check-firstmate-floor-exceptions.sh --retire-expired`
+deletes the spent record and the removal must be shipped, or the daily
+privileged-tool run fails on stale evidence. The helper performs only a
 targeted Nix update (never a blanket `nix flake update`) and full validation.
 
 Pins take effect only after the captain runs `./rebuild.sh`; agents must not run

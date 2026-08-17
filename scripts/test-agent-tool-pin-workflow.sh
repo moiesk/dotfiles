@@ -26,6 +26,9 @@ for path in \
   'flake.nix' \
   'scripts/agent-tool-pins.tsv' \
   'scripts/check-agent-tool-pins.sh' \
+  'scripts/check-firstmate-floor-exceptions.sh' \
+  'scripts/firstmate-tool-floors.tsv' \
+  'security/firstmate-floor-exceptions.json' \
   'scripts/test-agent-tool-pin-workflow.sh' \
   'scripts/test-check-agent-tool-pins.sh' \
   'scripts/test-update-agent-tool-pin.sh' \

@@ -181,7 +181,10 @@ in `security/npm-audit-exceptions.json`; the audit gate fails again when that
 exception expires. The privileged `gh-axi`, `chrome-devtools-axi`, and
 `quota-axi` pins additionally carry the same release-cooldown hold as Treehouse
 and no-mistakes below: the daily CI gate holds a newer npm release through the
-cooldown, then fails until the pin is deliberately advanced.
+cooldown, then fails until the pin is deliberately advanced. That gate also
+fails on a committed privileged pin that is itself still inside the cooldown
+unless a valid Firstmate dependency-floor exception covers it (see `TRUST.md`
+and the preflight below).
 Nix-managed wrappers invoke the exact mise-pinned Node runtime directly, so
 they do not depend on an agent session's inherited shell initialization or Node
 shim state.
@@ -217,6 +220,60 @@ configuration and state. Bootstrap creates `~/firstmate` once, then leaves that
 clone under Firstmate's own update workflow instead of replacing it on every
 rebuild. Per-project setup remains explicit: run `/setup-matt-pocock-skills` to
 configure Matt's workflow and `no-mistakes init` to add a validation gate.
+
+### Firstmate dependency-floor preflight
+
+Use this separate two-step workflow when a reviewed candidate Firstmate commit
+raises a hard tool floor above the committed dotfiles pin. Never substitute a
+branch name or mutable `origin/main` for the full candidate SHA:
+
+```sh
+candidate=f1a4af426d7199c1781bc91ccd143b8e1f732d10
+./scripts/check-firstmate-floor-exceptions.sh --candidate "$candidate"
+./scripts/update-agent-tool-pin.sh --firstmate-commit "$candidate" quota-axi 0.1.25
+git diff --check
+./scripts/validate.sh
+```
+
+The first command reports every declared floor and exits nonzero while any pin
+is unmet. The updater records the narrow exception and coordinates the reviewed
+Nix, npm, lockfile, and trust surfaces; its own validation owns the detailed
+record checks. Review and ship that dotfiles change first. The captain then
+checks out the reviewed branch and runs:
+
+```sh
+./rebuild.sh
+```
+
+Only after that succeeds, update Firstmate separately (normally through its
+`/updatefirstmate` workflow). Its guarded mechanical command is:
+
+```sh
+"$HOME/firstmate/bin/fm-update.sh"
+```
+
+Rebuild installs only committed pins and deliberately neither inspects, fetches,
+nor modifies the existing mutable `~/firstmate` clone.
+
+#### Retiring an exception
+
+An exception is only valid while its adopted release is still inside the
+seven-day cooldown; once the cooldown elapses the record is stale evidence and
+`scripts/check-firstmate-floor-exceptions.sh` rejects it, which also fails the
+daily privileged-tool security run. Every validation run prints how many hours
+remain (`retire in 42h`) and warns on stderr inside the last two days, so the
+deadline is visible before it bites. Retire the expired record mechanically and
+ship the removal:
+
+```sh
+./scripts/check-firstmate-floor-exceptions.sh --retire-expired
+git diff security/firstmate-floor-exceptions.json
+./scripts/validate.sh
+```
+
+The command deletes only records whose adopted release has completed the
+ordinary cooldown — those pins now stand on the normal policy and need no
+exception — and leaves the pins themselves untouched.
 
 `scripts/doctor.sh` verifies the commands, skills, and Firstmate clone rather
 than checking only that command names exist.

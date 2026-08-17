@@ -12,15 +12,17 @@ installing=0
 
 usage() {
   cat <<'EOF'
-Usage: scripts/update-agent-tool-pin.sh <tool> <version>
+Usage: scripts/update-agent-tool-pin.sh [--firstmate-commit <sha>] <tool> <version>
 
 Coordinate one supported npm-backed AXI tool across flake.nix, flake.lock,
 agent-tools/package.json, agent-tools/package-lock.json, and TRUST.md.
 
-VERSION must be a plain exact major.minor.patch semver. This helper does not
-assess release eligibility or bypass TRUST.md policy. Before running it, the
-maintainer must establish that the selected release is eligible, including the
-7-day cooldown for tools whose trust tier requires it.
+VERSION must be a plain exact major.minor.patch semver. Without
+--firstmate-commit, this helper does not assess ordinary release eligibility or
+bypass TRUST.md policy; the maintainer must first establish that the selected
+release is eligible, including the 7-day cooldown where required. When an exact
+candidate Firstmate commit raises a hard dependency floor above the current pin,
+pass --firstmate-commit to record and mechanically validate the narrow exception.
 
 The repository must start clean. The update is built and fully validated in a
 temporary copy before the coordinated files are installed for review. This
@@ -39,7 +41,7 @@ cleanup() {
   trap - EXIT INT TERM HUP
 
   if [[ "$installing" == "1" && -n "$backup_dir" && -d "$backup_dir" ]]; then
-    for relative in flake.nix flake.lock agent-tools/package.json agent-tools/package-lock.json TRUST.md; do
+    for relative in flake.nix flake.lock agent-tools/package.json agent-tools/package-lock.json TRUST.md security/firstmate-floor-exceptions.json; do
       if [[ -f "$backup_dir/$relative" ]]; then
         rollback="$DOTFILES_DIR/$(dirname "$relative")/.update-agent-tool-pin.rollback.$$"
         cp -p "$backup_dir/$relative" "$rollback" || true
@@ -112,9 +114,19 @@ if [[ "$#" == "1" && ("$1" == "-h" || "$1" == "--help") ]]; then
   usage
   exit 0
 fi
+firstmate_commit=""
+if [[ "$#" -ge 1 && "$1" == --firstmate-commit ]]; then
+  [[ "$#" == 4 ]] || { usage >&2; exit 2; }
+  firstmate_commit="$2"
+  shift 2
+fi
 [[ "$#" == "2" ]] || { usage >&2; exit 2; }
 tool="$1"
 version="$2"
+
+if [[ -n "$firstmate_commit" && ! "$firstmate_commit" =~ ^[0-9a-f]{40}$ ]]; then
+  fail "Firstmate commit must be an exact lowercase 40-hex SHA: $firstmate_commit"
+fi
 
 if [[ ! "$version" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
   fail "version must be a plain exact semver (major.minor.patch): $version"
@@ -153,7 +165,8 @@ mutation_files='flake.nix
 flake.lock
 agent-tools/package.json
 agent-tools/package-lock.json
-TRUST.md'
+TRUST.md
+security/firstmate-floor-exceptions.json'
 while IFS= read -r relative; do
   [[ -f "$DOTFILES_DIR/$relative" && ! -L "$DOTFILES_DIR/$relative" ]] ||
     fail "required pin surface is missing, not regular, or a symlink: $relative"
@@ -162,6 +175,8 @@ while IFS= read -r relative; do
 done <<<"$mutation_files"
 [[ -x "$DOTFILES_DIR/scripts/check-agent-tool-pins.sh" ]] ||
   fail "scripts/check-agent-tool-pins.sh is missing or not executable"
+[[ -x "$DOTFILES_DIR/scripts/check-firstmate-floor-exceptions.sh" ]] ||
+  fail "scripts/check-firstmate-floor-exceptions.sh is missing or not executable"
 
 # Refuse malformed, missing, duplicate, or already-drifted records before staging.
 DOTFILES_DIR="$DOTFILES_DIR" "$DOTFILES_DIR/scripts/check-agent-tool-pins.sh" >/dev/null
@@ -243,6 +258,44 @@ new_trust_row="${trust_row//$old_ref/$new_ref}"
 new_trust_row="${new_trust_row//${npm_package}@${old_version}/${npm_package}@${version}}"
 replace_literal_once "$stage_dir/TRUST.md" "$trust_row" "$new_trust_row"
 
+exceptions_file="$stage_dir/security/firstmate-floor-exceptions.json"
+jq --arg dependency "$npm_package" \
+  '.exceptions |= map(select(.dependency != $dependency))' \
+  "$exceptions_file" >"$exceptions_file.next"
+mv "$exceptions_file.next" "$exceptions_file"
+if [[ -n "$firstmate_commit" ]]; then
+  required_version="$(DOTFILES_DIR="$stage_dir" \
+    "$stage_dir/scripts/check-firstmate-floor-exceptions.sh" \
+    --show-floor "$npm_package" "$firstmate_commit")" ||
+    fail "could not establish the $npm_package floor at Firstmate commit $firstmate_commit"
+  if node -e '
+    const parse = value => value.split(".").map(Number);
+    const a = parse(process.argv[1]); const b = parse(process.argv[2]);
+    const compare = (x, y) => x[0] - y[0] || x[1] - y[1] || x[2] - y[2];
+    process.exit(compare(a, b) >= 0 ? 0 : 1);
+  ' "$old_version" "$required_version"; then
+    fail "Firstmate floor $required_version is unrelated because current $npm_package pin $old_version already satisfies it"
+  fi
+  jq \
+    --arg dependency "$npm_package" \
+    --arg previous "$old_version" \
+    --arg adopted "$version" \
+    --arg required "$required_version" \
+    --arg commit "$firstmate_commit" '
+      .exceptions += [{
+        dependency: $dependency,
+        previous_version: $previous,
+        adopted_version: $adopted,
+        required_version: $required,
+        firstmate_repository: "kunchenguid/firstmate",
+        firstmate_commit: $commit
+      }]
+    ' "$exceptions_file" >"$exceptions_file.next"
+  mv "$exceptions_file.next" "$exceptions_file"
+  DOTFILES_DIR="$stage_dir" FIRSTMATE_DOTFILES_HISTORY_DIR="$DOTFILES_DIR" \
+    "$stage_dir/scripts/check-firstmate-floor-exceptions.sh"
+fi
+
 DOTFILES_DIR="$stage_dir" "$stage_dir/scripts/check-agent-tool-pins.sh"
 "$stage_dir/scripts/validate.sh"
 
@@ -267,5 +320,9 @@ done <<<"$mutation_files"
 installing=0
 
 printf 'coordinated %s pin update staged: %s -> %s\n' "$npm_package" "$old_version" "$version"
-printf '%s\n' 'Review the five-file diff, then commit it on a branch and ship a replacement PR.'
+if [[ -n "$firstmate_commit" ]]; then
+  printf 'recorded exact Firstmate floor evidence: %s requires %s at %s\n' \
+    "$npm_package" "$required_version" "$firstmate_commit"
+fi
+printf '%s\n' 'Review the coordinated pin and exception-evidence diff, then commit it on a branch and ship a replacement PR.'
 printf '%s\n' 'Close the incomplete Dependabot PR as superseded; activation remains a separate captain action.'

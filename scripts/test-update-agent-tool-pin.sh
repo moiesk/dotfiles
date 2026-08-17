@@ -20,12 +20,15 @@ helper_error() {
 make_fixture() {
   fixture="$tmp_dir/repo"
   rm -rf "$fixture"
-  mkdir -p "$fixture/agent-tools" "$fixture/scripts"
+  mkdir -p "$fixture/agent-tools" "$fixture/scripts" "$fixture/security"
   cp "$DOTFILES_DIR/flake.nix" "$DOTFILES_DIR/flake.lock" "$DOTFILES_DIR/TRUST.md" "$fixture/"
   cp "$DOTFILES_DIR/agent-tools/package.json" \
     "$DOTFILES_DIR/agent-tools/package-lock.json" "$fixture/agent-tools/"
   cp "$DOTFILES_DIR/scripts/agent-tool-pins.tsv" \
-    "$DOTFILES_DIR/scripts/check-agent-tool-pins.sh" "$fixture/scripts/"
+    "$DOTFILES_DIR/scripts/check-agent-tool-pins.sh" \
+    "$DOTFILES_DIR/scripts/check-firstmate-floor-exceptions.sh" \
+    "$DOTFILES_DIR/scripts/firstmate-tool-floors.tsv" "$fixture/scripts/"
+  cp "$DOTFILES_DIR/security/firstmate-floor-exceptions.json" "$fixture/security/"
   cat >"$fixture/scripts/validate.sh" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
@@ -33,7 +36,8 @@ DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 DOTFILES_DIR="$DOTFILES_DIR" "$DOTFILES_DIR/scripts/check-agent-tool-pins.sh" >/dev/null
 printf '%s\n' 'fixture validation passed'
 EOF
-  chmod +x "$fixture/scripts/check-agent-tool-pins.sh" "$fixture/scripts/validate.sh"
+  chmod +x "$fixture/scripts/check-agent-tool-pins.sh" \
+    "$fixture/scripts/check-firstmate-floor-exceptions.sh" "$fixture/scripts/validate.sh"
   git -C "$fixture" init -q
   git -C "$fixture" config user.name 'Fixture Test'
   git -C "$fixture" config user.email 'fixture@example.invalid'
@@ -189,10 +193,17 @@ while IFS=$'\t' read -r flake_input tool tag_prefix extra; do
     helper_error "$tool npm invocation omitted the exact package version"
 
   changed="$(git -C "$fixture" status --short | awk '{ print $2 }' | sort)"
-  expected_changed="$(printf '%s\n' TRUST.md agent-tools/package-lock.json agent-tools/package.json flake.lock flake.nix | sort)"
+  expected_changed="$({
+    printf '%s\n' TRUST.md agent-tools/package-lock.json agent-tools/package.json flake.lock flake.nix
+    if jq -e --arg dependency "$tool" \
+      'any(.exceptions[]; .dependency == $dependency)' \
+      "$DOTFILES_DIR/security/firstmate-floor-exceptions.json" >/dev/null; then
+      printf '%s\n' security/firstmate-floor-exceptions.json
+    fi
+  } | sort)"
   [[ "$changed" == "$expected_changed" ]] || {
     printf 'changed files:\n%s\n' "$changed" >&2
-    helper_error "$tool success did not leave exactly the coordinated five-file diff"
+    helper_error "$tool success did not leave exactly its coordinated pin and exception-evidence diff"
   }
 done <"$DOTFILES_DIR/scripts/agent-tool-pins.tsv"
 [[ "$supported_count" -gt 0 ]] || fixture_error 'shared inventory is empty'

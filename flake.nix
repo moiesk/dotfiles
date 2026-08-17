@@ -25,7 +25,7 @@
     };
 
     no-mistakes = {
-      url = "github:kunchenguid/no-mistakes/v1.41.2";
+      url = "github:kunchenguid/no-mistakes/v1.48.0";
       flake = false;
     };
 
@@ -50,7 +50,7 @@
     };
 
     quota-axi = {
-      url = "github:kunchenguid/quota-axi/quota-axi-v0.1.18";
+      url = "github:kunchenguid/quota-axi/quota-axi-v0.1.25";
       flake = false;
     };
 

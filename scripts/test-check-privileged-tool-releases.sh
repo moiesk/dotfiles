@@ -85,9 +85,24 @@ FIXTURE_NPM_PINNED="$(jq -er --arg package "$FIXTURE_NPM_PACKAGE" \
   fixture_error "the $FIXTURE_NPM_PACKAGE pin ($FIXTURE_NPM_PINNED) is not a plain major.minor.patch version"
 FIXTURE_NPM_INTERMEDIATE="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.$((BASH_REMATCH[3] + 1))"
 FIXTURE_NPM_LATEST="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.$((BASH_REMATCH[3] + 2))"
+history_revision="$(git -C "$DOTFILES_DIR" rev-parse --verify HEAD)"
+FIXTURE_NPM_PREVIOUS=''
+while [[ -n "$history_revision" ]]; do
+  history_pin="$(git -C "$DOTFILES_DIR" show "$history_revision:agent-tools/package.json" |
+    jq -er --arg package "$FIXTURE_NPM_PACKAGE" '.dependencies[$package]')" ||
+    fixture_error "could not derive historical $FIXTURE_NPM_PACKAGE pin"
+  if [[ "$history_pin" != "$FIXTURE_NPM_PINNED" ]]; then
+    FIXTURE_NPM_PREVIOUS="$history_pin"
+    break
+  fi
+  history_revision="$(git -C "$DOTFILES_DIR" rev-parse --verify "$history_revision^" 2>/dev/null || true)"
+done
+[[ "$FIXTURE_NPM_PREVIOUS" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] ||
+  fixture_error "no historical pin preceding $FIXTURE_NPM_PACKAGE $FIXTURE_NPM_PINNED was found"
 FIXTURE_NPM_PINNED_AT="$(epoch_to_iso "$pinned_published_epoch")"
 FIXTURE_NPM_INTERMEDIATE_AT="$(epoch_to_iso "$intermediate_published_epoch")"
 FIXTURE_NPM_LATEST_AT="$(epoch_to_iso "$latest_published_epoch")"
+FIXTURE_FIRSTMATE_COMMIT='0000000000000000000000000000000000000000'
 
 version_gt "$FIXTURE_NPM_INTERMEDIATE" "$FIXTURE_NPM_PINNED" ||
   fixture_error "the release under test ($FIXTURE_NPM_INTERMEDIATE) does not sit above the $FIXTURE_NPM_PACKAGE pin ($FIXTURE_NPM_PINNED), so there is nothing for the check to flag"
@@ -102,6 +117,10 @@ cat >"$tmp_dir/gh-axi" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
 case "$*" in
+  *"/repos/kunchenguid/firstmate/contents/bin/fm-quota-axi-lib.sh?ref=$FIXTURE_FIRSTMATE_COMMIT"*)
+    printf 'api_response:\n  body: %s\n  truncated: false\n' "$FIXTURE_NPM_PINNED"
+    exit 0
+    ;;
   *treehouse*) tag="$FIXTURE_TREEHOUSE_TAG" ;;
   *no-mistakes*) tag="$FIXTURE_NO_MISTAKES_TAG" ;;
   *) exit 1 ;;
@@ -115,7 +134,32 @@ set -euo pipefail
 package="$2"
 pinned="$(jq -r --arg package "$package" \
   '.dependencies[$package]' "$DOTFILES_DIR/agent-tools/package.json")"
-if [[ "$package" == "$FIXTURE_NPM_PACKAGE" ]]; then
+if [[ "${FIXTURE_MODE:-}" == malformed-pinned && "$package" == "$FIXTURE_NPM_PACKAGE" ]]; then
+  jq -n --arg pinned "$pinned" \
+    '{
+      "dist-tags": {latest: $pinned},
+      versions: [$pinned],
+      time: {($pinned): "not-a-timestamp"}
+    }'
+elif [[ "${FIXTURE_MODE:-}" == fresh-available && "$package" == "$FIXTURE_NPM_PACKAGE" ]]; then
+  jq -n \
+    --arg pinned "$pinned" \
+    --arg latest "$FIXTURE_NPM_LATEST" \
+    --arg pinned_at "$FIXTURE_NPM_PINNED_AT" \
+    --arg latest_at "$FIXTURE_NPM_LATEST_AT" \
+    '{
+      "dist-tags": {latest: $latest},
+      versions: [$pinned, $latest],
+      time: {($pinned): $pinned_at, ($latest): $latest_at}
+    }'
+elif [[ "${FIXTURE_MODE:-}" == pinned-latest && "$package" == "$FIXTURE_NPM_PACKAGE" ]]; then
+  jq -n --arg pinned "$pinned" --arg published "$FIXTURE_NPM_LATEST_AT" \
+    '{
+      "dist-tags": {latest: $pinned},
+      versions: [$pinned],
+      time: {($pinned): $published}
+    }'
+elif [[ "$package" == "$FIXTURE_NPM_PACKAGE" ]]; then
   jq -n \
     --arg pinned "$pinned" \
     --arg intermediate "$FIXTURE_NPM_INTERMEDIATE" \
@@ -142,15 +186,20 @@ else
 fi
 EOF
 chmod +x "$tmp_dir/gh-axi" "$tmp_dir/npm"
+printf '{"schema_version":1,"exceptions":[]}\n' >"$tmp_dir/exceptions.json"
 
 export DOTFILES_DIR
 export FIXTURE_TREEHOUSE_TAG FIXTURE_NO_MISTAKES_TAG FIXTURE_GITHUB_PUBLISHED_AT
 export FIXTURE_NPM_PACKAGE FIXTURE_NPM_INTERMEDIATE FIXTURE_NPM_LATEST
 export FIXTURE_NPM_PINNED_AT FIXTURE_NPM_INTERMEDIATE_AT FIXTURE_NPM_LATEST_AT
+export FIXTURE_NPM_PINNED
+export FIXTURE_NPM_PREVIOUS
+export FIXTURE_FIRSTMATE_COMMIT
 
 output_file="$tmp_dir/output"
 if GH_AXI_BIN="$tmp_dir/gh-axi" \
   NPM_BIN="$tmp_dir/npm" \
+  FIRSTMATE_FLOOR_EXCEPTIONS_FILE="$tmp_dir/exceptions.json" \
   TOOL_UPDATE_NOW_EPOCH="$now_epoch" \
   TOOL_UPDATE_COOLDOWN_DAYS="$cooldown_days" \
   "$CHECKER" >"$output_file" 2>&1; then
@@ -174,6 +223,103 @@ fi
 reported_errors="$(grep -c '^error: ' "$output_file" || true)"
 ((reported_errors == 1)) ||
   fixture_error "the stubbed tools produced $reported_errors checker errors, but only $FIXTURE_NPM_PACKAGE is under test"
+
+# A pin moved to a release that is still inside cooldown is itself a policy
+# violation. In particular, pinned == latest must not make that adoption pass.
+if FIXTURE_MODE=pinned-latest \
+  GH_AXI_BIN="$tmp_dir/gh-axi" \
+  NPM_BIN="$tmp_dir/npm" \
+  FIRSTMATE_FLOOR_EXCEPTIONS_FILE="$tmp_dir/exceptions.json" \
+  TOOL_UPDATE_NOW_EPOCH="$now_epoch" \
+  TOOL_UPDATE_COOLDOWN_DAYS="$cooldown_days" \
+  "$CHECKER" >"$output_file" 2>&1; then
+  cat "$output_file" >&2
+  printf '%s\n' 'error: a fresh npm release passed merely because pinned == latest' >&2
+  exit 1
+fi
+expected_error="error: $FIXTURE_NPM_PACKAGE pinned release $FIXTURE_NPM_PINNED is still in the ${cooldown_days}-day cooldown without a valid Firstmate floor exception"
+grep -Fq "$expected_error" "$output_file" || {
+  cat "$output_file" >&2
+  printf 'error: the pinned-equals-latest bypass was not rejected\nexpected: %s\n' \
+    "$expected_error" >&2
+  exit 1
+}
+
+if FIXTURE_MODE=malformed-pinned \
+  GH_AXI_BIN="$tmp_dir/gh-axi" \
+  NPM_BIN="$tmp_dir/npm" \
+  FIRSTMATE_FLOOR_EXCEPTIONS_FILE="$tmp_dir/exceptions.json" \
+  TOOL_UPDATE_NOW_EPOCH="$now_epoch" \
+  TOOL_UPDATE_COOLDOWN_DAYS="$cooldown_days" \
+  "$CHECKER" >"$output_file" 2>&1; then
+  cat "$output_file" >&2
+  printf '%s\n' 'error: malformed pinned release metadata passed the cooldown gate' >&2
+  exit 1
+fi
+expected_error="error: $FIXTURE_NPM_PACKAGE pinned release $FIXTURE_NPM_PINNED has a malformed publication timestamp"
+grep -Fq "$expected_error" "$output_file" || {
+  cat "$output_file" >&2
+  printf 'error: malformed pinned release timestamp was not rejected\nexpected: %s\n' \
+    "$expected_error" >&2
+  exit 1
+}
+
+# Normal policy remains a hold, not an error: an old committed pin is accepted
+# while the only newer stable release is still inside cooldown.
+if ! FIXTURE_MODE=fresh-available \
+  GH_AXI_BIN="$tmp_dir/gh-axi" \
+  NPM_BIN="$tmp_dir/npm" \
+  FIRSTMATE_FLOOR_EXCEPTIONS_FILE="$tmp_dir/exceptions.json" \
+  TOOL_UPDATE_NOW_EPOCH="$now_epoch" \
+  TOOL_UPDATE_COOLDOWN_DAYS="$cooldown_days" \
+  "$CHECKER" >"$output_file" 2>&1; then
+  cat "$output_file" >&2
+  printf '%s\n' 'error: normal cooldown rejected an old pin while only a fresh release was available' >&2
+  exit 1
+fi
+grep -Fq "$FIXTURE_NPM_PACKAGE $FIXTURE_NPM_LATEST is available but remains in the ${cooldown_days}-day cooldown (pinned: $FIXTURE_NPM_PINNED)" \
+  "$output_file" || {
+  cat "$output_file" >&2
+  printf '%s\n' 'error: normal cooldown did not report the held fresh release' >&2
+  exit 1
+}
+
+# The same fresh pinned release is allowed only when exact Firstmate commit
+# evidence declares that floor and the pin is the lowest satisfying release.
+FIXTURE_FIRSTMATE_COMMIT='2222222222222222222222222222222222222222'
+export FIXTURE_FIRSTMATE_COMMIT
+jq -n \
+  --arg version "$FIXTURE_NPM_PINNED" \
+  --arg commit "$FIXTURE_FIRSTMATE_COMMIT" \
+  --arg previous "$FIXTURE_NPM_PREVIOUS" \
+  '{
+    schema_version: 1,
+    exceptions: [{
+      dependency: "quota-axi",
+      previous_version: $previous,
+      adopted_version: $version,
+      required_version: $version,
+      firstmate_repository: "kunchenguid/firstmate",
+      firstmate_commit: $commit
+    }]
+  }' >"$tmp_dir/exceptions.json"
+if ! FIXTURE_MODE=pinned-latest \
+  GH_AXI_BIN="$tmp_dir/gh-axi" \
+  NPM_BIN="$tmp_dir/npm" \
+  FIRSTMATE_FLOOR_EXCEPTIONS_FILE="$tmp_dir/exceptions.json" \
+  TOOL_UPDATE_NOW_EPOCH="$now_epoch" \
+  TOOL_UPDATE_COOLDOWN_DAYS="$cooldown_days" \
+  "$CHECKER" >"$output_file" 2>&1; then
+  cat "$output_file" >&2
+  printf '%s\n' 'error: a valid Firstmate floor exception did not authorize the fresh pin' >&2
+  exit 1
+fi
+grep -Fq "$FIXTURE_NPM_PACKAGE pinned release $FIXTURE_NPM_PINNED is inside cooldown under a valid Firstmate floor exception" \
+  "$output_file" || {
+  cat "$output_file" >&2
+  printf '%s\n' 'error: the checker did not report its valid Firstmate floor exception' >&2
+  exit 1
+}
 
 if [[ "$(grep -c '^[[:space:]]*interval: daily$' "$DOTFILES_DIR/.github/dependabot.yml")" -ne 2 ]]; then
   printf '%s\n' 'error: npm Dependabot checks must run daily so updates are proposed when cooldown expires' >&2

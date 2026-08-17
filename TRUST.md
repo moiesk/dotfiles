@@ -30,7 +30,9 @@ Instead:
   **cooldown + review gate**: `scripts/check-privileged-tool-releases.sh` only
   surfaces a newer stable release after a **seven-day cooldown**
   (`TOOL_UPDATE_COOLDOWN_DAYS`, default 7), so a freshly-published — possibly
-  malicious — release is never adopted on the day it drops.
+  malicious — release is not ordinarily adopted on the day it drops. The only
+  early-adoption path is the exact-commit Firstmate dependency-floor exception
+  described below; package-only updates still wait.
 - This document is the disclosure half: the trust is written down, tiered, and
   reviewable rather than implicit.
 
@@ -68,7 +70,7 @@ gate** and are pinned to exact releases.
 |---|---|---|---|
 | [`kunchenguid/gh-axi`](https://github.com/kunchenguid/gh-axi) | `gh-axi-v0.1.30` (flake input + npm `gh-axi@0.1.30`) | **GitHub write** — files/edits issues and PRs, merges, triggers workflows, manages Actions secrets/variables, raw API access, all under the local `gh` auth. | Pinned to an exact release; behind the cooldown/review gate. It is the sanctioned GitHub path for every agent, so its behavior is exercised constantly and any regression surfaces fast. |
 | [`kunchenguid/chrome-devtools-axi`](https://github.com/kunchenguid/chrome-devtools-axi) | `chrome-devtools-axi-v0.1.29` (flake input + npm `chrome-devtools-axi@0.1.29`) | **Browser control** — navigates, clicks, fills forms, runs arbitrary JavaScript, and reads console/network in a real Chrome session. | Pinned to an exact release; behind the cooldown/review gate. Scoped to a driven browser session rather than the whole machine. |
-| [`kunchenguid/quota-axi`](https://github.com/kunchenguid/quota-axi) | `quota-axi-v0.1.18` (flake input + npm `quota-axi@0.1.18`) | **Reads local provider auth sources** — inspects Claude/Codex/Cursor/Copilot/Grok/Kimi quota windows from on-disk auth. Read-only: no routing, no provider mutation. | Pinned to an exact release; behind the cooldown/review gate. Documented as read-only, but it touches local credential material, which is why it is rated privileged rather than low-capability. |
+| [`kunchenguid/quota-axi`](https://github.com/kunchenguid/quota-axi) | `quota-axi-v0.1.25` (flake input + npm `quota-axi@0.1.25`) | **Reads local provider auth sources** — inspects Claude/Codex/Cursor/Copilot/Grok/Kimi quota windows from on-disk auth. Read-only: no routing, no provider mutation. | Pinned to an exact release; behind the cooldown/review gate. The current early adoption is bound to its exact Firstmate floor evidence in `security/firstmate-floor-exceptions.json`. Documented as read-only, but it touches local credential material, which is why it is rated privileged rather than low-capability. |
 
 ## Tier B — Code-exec / workflow
 
@@ -79,7 +81,7 @@ is written specifically around these two.
 | Upstream | Pinned at | Capability granted | Why it is trusted |
 |---|---|---|---|
 | [`kunchenguid/treehouse`](https://github.com/kunchenguid/treehouse) | `v2.1.1` (flake input) | **Code-exec / workflow** — provides disposable git worktrees that agents build and run code inside. | Pinned to an exact release; explicitly covered by the cooldown/review gate (`check_release treehouse …`). |
-| [`kunchenguid/no-mistakes`](https://github.com/kunchenguid/no-mistakes) | `v1.41.2` (flake input, `flake = false`) | **git push + PR** — the validation pipeline that runs review/tests/lint and then pushes branches and opens pull requests. | Pinned to an exact release; explicitly covered by the cooldown/review gate (`check_release no-mistakes …`). It is the mandatory gate every change passes through, so its output is reviewed on every run. |
+| [`kunchenguid/no-mistakes`](https://github.com/kunchenguid/no-mistakes) | `v1.48.0` (flake input, `flake = false`) | **git push + PR** — the validation pipeline that runs review/tests/lint and then pushes branches and opens pull requests. | Pinned to an exact release; explicitly covered by the cooldown/review gate (`check_release no-mistakes …`). It is the mandatory gate every change passes through, so its output is reviewed on every run. |
 
 ## Tier C — Low-capability
 
@@ -116,6 +118,30 @@ machine — and firstmate holds the most reach of anything in the stack, because
 orchestrates the agents that wield the Tier A and Tier B tools. An adopter must
 accept that ongoing, rolling trust in the `kunchenguid` account explicitly; the
 pinning + cooldown protections above **do not apply to firstmate.**
+
+A rolling Firstmate commit can nevertheless declare a hard dependency floor
+above a dotfiles pin. To avoid an availability deadlock without discarding the
+cooldown generally,
+[`security/firstmate-floor-exceptions.json`](security/firstmate-floor-exceptions.json)
+may authorize exactly the lowest released version satisfying that floor. Each
+record binds the previous and adopted pins, required floor, expected repository,
+and full candidate commit SHA. `scripts/check-firstmate-floor-exceptions.sh`
+reads the declaration from that immutable GitHub object, checks release
+metadata, rejects unrelated or broader records, and rejects the record once the
+ordinary cooldown has elapsed. A spent record is therefore retired, not kept:
+each validation run reports the remaining hours and warns inside the last two
+days, and `scripts/check-firstmate-floor-exceptions.sh --retire-expired` deletes
+every record whose adopted release has completed the cooldown (see `README.md`).
+`scripts/check-privileged-tool-releases.sh` therefore rejects every fresh
+committed privileged pin unless that evidence is currently valid, including when
+the fresh pin happens to equal npm `latest`.
+
+This is an availability exception, not a safety attestation. It deliberately
+reduces observation time for one dependency release and does not prove either
+the Firstmate commit or package is benign. The cooldown retains independent
+value against an npm-publisher/package-only compromise and for every use of the
+tool outside Firstmate; integrity, signature, vulnerability, exact-pin, and
+review gates remain unchanged.
 
 Why it is nonetheless trusted: it is the intended supervisor for this exact
 setup, its clone/update behavior is verified by `scripts/doctor.sh`, and its
