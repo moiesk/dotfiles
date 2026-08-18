@@ -162,10 +162,12 @@ state is kept separate from the tracked, pinned portable configuration.
 
 ## Other third-party upstreams (non-`kunchenguid`)
 
-Neovim coverage in this table is scoped to the plugins **configured directly in
-this repository** under `home/.config/nvim/lua/plugins/`. The rest of the
-LazyVim distribution's plugin graph — everything else `lazy-lock.json` resolves
-— is inherited from LazyVim and is deliberately not inventoried here.
+Neovim coverage in this table is scoped to the upstreams **this repository adds
+itself** in `home/.config/nvim/lua/plugins/`. Plugins that LazyVim already ships
+and that this repository only reconfigures there (for example `catppuccin/nvim`
+and `render-markdown.nvim`), along with the rest of the LazyVim distribution's
+plugin graph — everything else `lazy-lock.json` resolves — are inherited from
+LazyVim and deliberately not inventoried here.
 
 | Upstream | Pinned at | Capability granted | Why it is trusted |
 |---|---|---|---|
