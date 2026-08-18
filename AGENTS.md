@@ -14,13 +14,12 @@ Single-context: `CONTEXT.md` + `docs/adr/` at the repo root. See `docs/agents/do
 
 ### Trust inventory
 
-`TRUST.md` at the repo root tiers every third-party upstream (nine `kunchenguid`
-sources + `mattpocock/skills`) by capability. The first-party harnesses — the
+`TRUST.md` at the repo root tiers the third-party upstream inventory by
+capability and records each authoritative pin. The first-party harnesses — the
 `claude-code`/`codex` casks and Pi (`@earendil-works/pi-coding-agent`) —
 deliberately roll to latest (no pin, no cooldown) and are documented in TRUST.md's
 stance, not the third-party inventory. Update it when an upstream is added,
-removed, or moves tier; authoritative pins live in `flake.lock` and
-`agent-tools/package.json`.
+removed, or moves tier; authoritative pin locations are named in `TRUST.md`.
 
 ### AXI tool pins live in three places
 

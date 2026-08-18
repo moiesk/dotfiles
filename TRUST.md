@@ -20,12 +20,14 @@ The chosen mitigation is **tiered gating + disclosure, not de-concentration.**
 There is **no vendoring** and no attempt to spread trust across more publishers.
 Instead:
 
-- Every third-party upstream **except `firstmate`** is **pinned** to an exact
-  release/commit in [`flake.lock`](flake.lock) (and, for the npm agent tools,
-  exact versions in [`agent-tools/package.json`](agent-tools/package.json)). A
-  new upstream release does nothing until the pin is moved on purpose. (The
-  first-party harnesses — the `claude-code`/`codex` casks and Pi — deliberately
-  roll to latest instead; see the stance footnote below.)
+- Third-party source inputs, npm agent tools, and Neovim plugins are **pinned**
+  to exact releases/commits in [`flake.lock`](flake.lock),
+  [`agent-tools/package.json`](agent-tools/package.json), or
+  [`home/.config/nvim/lazy-lock.json`](home/.config/nvim/lazy-lock.json). Rolling
+  exceptions are called out below. A new upstream release does nothing until
+  its pin is moved on purpose. (The first-party harnesses — the
+  `claude-code`/`codex` casks and Pi — deliberately roll to latest instead; see
+  the stance footnote below.)
 - The privileged and code-exec/workflow tiers (A and B below) sit behind a
   **cooldown + review gate**: `scripts/check-privileged-tool-releases.sh` only
   surfaces a newer stable release after a **seven-day cooldown**
@@ -177,5 +179,6 @@ complete.
 *Maintaining this file: when a third-party upstream is added, removed, or moved
 between capability tiers, update the matching table here in the same change.
 Version pins in the tables are illustrative of the pinning discipline — the
-authoritative pins live in [`flake.lock`](flake.lock) and
-[`agent-tools/package.json`](agent-tools/package.json).*
+authoritative pins live in [`flake.lock`](flake.lock),
+[`agent-tools/package.json`](agent-tools/package.json), and
+[`home/.config/nvim/lazy-lock.json`](home/.config/nvim/lazy-lock.json).*
