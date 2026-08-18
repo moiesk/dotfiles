@@ -8,10 +8,6 @@ Issues and PRDs live as GitHub issues in this repo (`gh` CLI). See `docs/agents/
 
 Default five-role vocabulary (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See `docs/agents/triage-labels.md`.
 
-### Domain docs
-
-Single-context: `CONTEXT.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.
-
 ### Trust inventory
 
 `TRUST.md` at the repo root tiers the third-party upstream inventory by
