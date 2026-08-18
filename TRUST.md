@@ -43,9 +43,11 @@ Instead:
 - This document is the disclosure half: the trust is written down, tiered, and
   reviewable rather than implicit.
 
-`firstmate` is the one *third-party* upstream that escapes the pinning
-discipline — it is **accept-as-rolling** (see its section). That exception is the
-loudest single fact in this file.
+Among the **pin-enforced** tiers, `firstmate` is the one *third-party* upstream
+that escapes the pinning discipline — it is **accept-as-rolling** (see its
+section). That exception is the loudest single fact in this file. The directly
+configured Neovim plugins sit outside those tiers entirely, under the separate
+disclosed-but-not-pin-enforced stance described in the bullet above.
 
 ### First-party harnesses — deliberately rolling ⚠️
 
@@ -103,9 +105,11 @@ these are pinned but not placed behind the release cooldown.
 
 ## firstmate — accept-as-rolling ⚠️
 
-> **Among the third-party upstreams inventoried here, this is the one that is
-> NOT pinned.** (The first-party harnesses roll too, but by the separate,
-> deliberate decision described in the stance above.)
+> **Among the pin-enforced third-party upstreams inventoried here, this is the
+> one that is NOT pinned.** (The first-party harnesses roll too, but by the
+> separate, deliberate decision described in the stance above; the directly
+> configured Neovim plugins are disclosed rather than pin-enforced, per the
+> stance above.)
 
 [`kunchenguid/firstmate`](https://github.com/kunchenguid/firstmate) is an agent
 **distro** — the supervisor that dispatches and manages the crewmate agents doing
