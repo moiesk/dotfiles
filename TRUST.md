@@ -20,14 +20,19 @@ The chosen mitigation is **tiered gating + disclosure, not de-concentration.**
 There is **no vendoring** and no attempt to spread trust across more publishers.
 Instead:
 
-- Third-party source inputs, npm agent tools, and Neovim plugins are **pinned**
-  to exact releases/commits in [`flake.lock`](flake.lock),
-  [`agent-tools/package.json`](agent-tools/package.json), or
-  [`home/.config/nvim/lazy-lock.json`](home/.config/nvim/lazy-lock.json). Rolling
-  exceptions are called out below. A new upstream release does nothing until
-  its pin is moved on purpose. (The first-party harnesses — the
-  `claude-code`/`codex` casks and Pi — deliberately roll to latest instead; see
-  the stance footnote below.)
+- Third-party source inputs and npm agent tools are **pinned** to an exact
+  release/commit in [`flake.lock`](flake.lock) and
+  [`agent-tools/package.json`](agent-tools/package.json). Rolling exceptions are
+  called out below. A new upstream release does nothing until the pin is moved
+  on purpose. (The first-party harnesses — the `claude-code`/`codex` casks and
+  Pi — deliberately roll to latest instead; see the stance footnote below.)
+- Neovim plugins are **disclosed but not pin-enforced**.
+  [`home/.config/nvim/lazy-lock.json`](home/.config/nvim/lazy-lock.json) records
+  the commit each plugin currently resolves to; lazy.nvim applies it only on an
+  explicit `:Lazy restore`, so a fresh install clones the plugin's branch head
+  and rewrites the lockfile to whatever it fetched. Treat those commits as
+  reproducible *state* to review and restore from, not as a gate that holds a
+  new upstream release back.
 - The privileged and code-exec/workflow tiers (A and B below) sit behind a
   **cooldown + review gate**: `scripts/check-privileged-tool-releases.sh` only
   surfaces a newer stable release after a **seven-day cooldown**
@@ -153,11 +158,16 @@ state is kept separate from the tracked, pinned portable configuration.
 
 ## Other third-party upstreams (non-`kunchenguid`)
 
+Neovim coverage in this table is scoped to the plugins **configured directly in
+this repository** under `home/.config/nvim/lua/plugins/`. The rest of the
+LazyVim distribution's plugin graph — everything else `lazy-lock.json` resolves
+— is inherited from LazyVim and is deliberately not inventoried here.
+
 | Upstream | Pinned at | Capability granted | Why it is trusted |
 |---|---|---|---|
 | [`mattpocock/skills`](https://github.com/mattpocock/skills) | flake input (locked to a commit in `flake.lock`; tracks the default branch — advanced only when `nix flake update matt-pocock-skills` is run) | Supplies agent **skills** (instructions/workflows) exposed from `~/.agents/skills` and linked into Claude and Pi. Skills are prompts/workflows, not independently privileged binaries, but they can *instruct* the privileged tools above. | Well-known author (Matt Pocock); locked in `flake.lock` so updates are explicit. Deprecated and in-progress skills are deliberately excluded. |
-| [`OXY2DEV/markview.nvim`](https://github.com/OXY2DEV/markview.nvim) | `5d9fc2aa6dd1c2fbdc7a68bc79b300e9967b21ff` (`lazy-lock.json`) | Runs Lua inside Neovim to parse open Markdown buffers and draw preview extmarks. It has the same local-process access as any Neovim plugin, but no separate credentials or external service access. | Established upstream selected as the required rendering host for smart tables; locked to an exact commit so updates remain explicit. |
-| [`gunasekar/markview-smart-tables.nvim`](https://github.com/gunasekar/markview-smart-tables.nvim) | `01134a5bf48f1b7abe27b26a6b89262685bb309f` (`lazy-lock.json`) | Runs Lua inside Neovim to replace Markview's table renderer with fitted, wrapped virtual text. It operates on open Markdown buffers and window layout only. | User-selected, narrowly scoped display extension; locked to an exact commit while it is evaluated, with its required renderer hook covered by a health check. |
+| [`OXY2DEV/markview.nvim`](https://github.com/OXY2DEV/markview.nvim) | resolves to `5d9fc2aa6dd1c2fbdc7a68bc79b300e9967b21ff` (recorded in `lazy-lock.json`, not enforced — see the Neovim bullet above) | Runs Lua inside Neovim to parse open Markdown buffers and draw preview extmarks. It has the same local-process access as any Neovim plugin, but no separate credentials or external service access. | Established upstream selected as the required rendering host for smart tables; its resolved commit is recorded so what is running stays reviewable and restorable. |
+| [`gunasekar/markview-smart-tables.nvim`](https://github.com/gunasekar/markview-smart-tables.nvim) | resolves to `01134a5bf48f1b7abe27b26a6b89262685bb309f` (recorded in `lazy-lock.json`, not enforced — see the Neovim bullet above) | Runs Lua inside Neovim to replace Markview's table renderer with fitted, wrapped virtual text. It operates on open Markdown buffers and window layout only. | User-selected, narrowly scoped display extension, adopted as a trial while it is evaluated, with its required renderer hook covered by a health check. |
 
 ## Foundational Nix inputs (community infrastructure)
 
@@ -179,6 +189,7 @@ complete.
 *Maintaining this file: when a third-party upstream is added, removed, or moved
 between capability tiers, update the matching table here in the same change.
 Version pins in the tables are illustrative of the pinning discipline — the
-authoritative pins live in [`flake.lock`](flake.lock),
-[`agent-tools/package.json`](agent-tools/package.json), and
-[`home/.config/nvim/lazy-lock.json`](home/.config/nvim/lazy-lock.json).*
+authoritative pins live in [`flake.lock`](flake.lock) and
+[`agent-tools/package.json`](agent-tools/package.json).
+[`home/.config/nvim/lazy-lock.json`](home/.config/nvim/lazy-lock.json) is not an
+authoritative pin — it records the commits Neovim plugins currently resolve to.*
