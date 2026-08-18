@@ -21,7 +21,7 @@ return {
           modes = { "n", "no", "c", "i", "v", "V", "\22" },
           -- Reveal the source while the cursor is on a rendered node so tables
           -- remain easy to navigate and edit.
-          hybrid_modes = { "n", "v", "V", "i" },
+          hybrid_modes = { "n", "v", "V", "\22", "i" },
         },
         renderers = {
           markdown_table = function(buffer, item)
