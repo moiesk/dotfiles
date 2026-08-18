@@ -154,6 +154,8 @@ state is kept separate from the tracked, pinned portable configuration.
 | Upstream | Pinned at | Capability granted | Why it is trusted |
 |---|---|---|---|
 | [`mattpocock/skills`](https://github.com/mattpocock/skills) | flake input (locked to a commit in `flake.lock`; tracks the default branch — advanced only when `nix flake update matt-pocock-skills` is run) | Supplies agent **skills** (instructions/workflows) exposed from `~/.agents/skills` and linked into Claude and Pi. Skills are prompts/workflows, not independently privileged binaries, but they can *instruct* the privileged tools above. | Well-known author (Matt Pocock); locked in `flake.lock` so updates are explicit. Deprecated and in-progress skills are deliberately excluded. |
+| [`OXY2DEV/markview.nvim`](https://github.com/OXY2DEV/markview.nvim) | `5d9fc2aa6dd1c2fbdc7a68bc79b300e9967b21ff` (`lazy-lock.json`) | Runs Lua inside Neovim to parse open Markdown buffers and draw preview extmarks. It has the same local-process access as any Neovim plugin, but no separate credentials or external service access. | Established upstream selected as the required rendering host for smart tables; locked to an exact commit so updates remain explicit. |
+| [`gunasekar/markview-smart-tables.nvim`](https://github.com/gunasekar/markview-smart-tables.nvim) | `01134a5bf48f1b7abe27b26a6b89262685bb309f` (`lazy-lock.json`) | Runs Lua inside Neovim to replace Markview's table renderer with fitted, wrapped virtual text. It operates on open Markdown buffers and window layout only. | User-selected, narrowly scoped display extension; locked to an exact commit while it is evaluated, with its required renderer hook covered by a health check. |
 
 ## Foundational Nix inputs (community infrastructure)
 
