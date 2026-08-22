@@ -15,8 +15,9 @@ capability and records each authoritative pin. The first-party harnesses — the
 `claude-code`/`codex` casks and Pi (`@earendil-works/pi-coding-agent`) —
 deliberately roll to latest (no pin, no cooldown) and are documented in TRUST.md's
 stance, not the third-party inventory. Update it when an upstream is added,
-removed, or moves tier; authoritative pins live in `flake.lock` and
-`agent-tools/package.json`. Neovim plugins are disclosed in TRUST.md but not
+removed, or moves tier; authoritative pins live in `flake.lock`,
+`agent-tools/package.json`, and `home/.config/opencode/package.json`. Neovim
+plugins are disclosed in TRUST.md but not
 pinned: `lazy.nvim`'s lockfile only applies on an explicit `:Lazy restore`, so
 it is untracked.
 

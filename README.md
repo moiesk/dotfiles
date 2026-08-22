@@ -185,6 +185,18 @@ cooldown, then fails until the pin is deliberately advanced. That gate also
 fails on a committed privileged pin that is itself still inside the cooldown
 unless a valid Firstmate dependency-floor exception covers it (see `TRUST.md`
 and the preflight below).
+
+OpenCode's official `@opencode-ai/plugin` authoring package is a separate npm
+project, exact-pinned in `home/.config/opencode/package.json` with its dependency
+integrity lock beside it. The tracked configuration has no plugin/custom-tool
+source or runtime import, so `TRUST.md` classifies this installed support package
+as Tier C rather than inheriting the shell, SDK, auth, and tool reach that
+actual OpenCode plugins can receive. Its existing Dependabot entry still delays
+routine proposals by seven days and lets security updates bypass the delay, but
+Tier C does not add it to the fail-closed privileged release checker. The normal
+exact-pin, `ignore-scripts`, npm-audit, registry-signature, and PR review controls
+remain in force.
+
 Nix-managed wrappers invoke the exact mise-pinned Node runtime directly, so
 they do not depend on an agent session's inherited shell initialization or Node
 shim state.
