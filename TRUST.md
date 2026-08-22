@@ -135,6 +135,16 @@ directory contains only the npm manifests and `.npmrc`, whose `ignore-scripts`
 setting also prevents the repository's `npm ci` from creating an install-time
 execution path.
 
+Both halves of that boundary are mechanically enforced by
+[`scripts/check-opencode-trust.sh`](scripts/check-opencode-trust.sh), which
+`./scripts/validate.sh` runs: the row above and the release permalinks cited in
+this section must name the version that
+[`home/.config/opencode/package.json`](home/.config/opencode/package.json)
+installs, and while that row sits under Tier C the committed OpenCode directory
+must hold nothing but `package.json`, `package-lock.json`, and `.npmrc`. A
+merged Dependabot bump or a newly tracked plugin/tool file therefore fails
+validation until the inventory is brought back in line.
+
 Tier C does not require extending
 [`scripts/check-privileged-tool-releases.sh`](scripts/check-privileged-tool-releases.sh),
 which enforces the stronger fail-closed gate only for Tiers A and B. No existing
