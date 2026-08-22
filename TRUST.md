@@ -20,12 +20,21 @@ The chosen mitigation is **tiered gating + disclosure, not de-concentration.**
 There is **no vendoring** and no attempt to spread trust across more publishers.
 Instead:
 
-- Every third-party upstream **except `firstmate`** is **pinned** to an exact
-  release/commit in [`flake.lock`](flake.lock) (and, for the npm agent tools,
-  exact versions in [`agent-tools/package.json`](agent-tools/package.json)). A
-  new upstream release does nothing until the pin is moved on purpose. (The
-  first-party harnesses — the `claude-code`/`codex` casks and Pi — deliberately
-  roll to latest instead; see the stance footnote below.)
+- Third-party source inputs and npm agent tools are **pinned** to an exact
+  release/commit in [`flake.lock`](flake.lock) and
+  [`agent-tools/package.json`](agent-tools/package.json). Rolling exceptions are
+  called out below. A new upstream release does nothing until the pin is moved
+  on purpose. (The first-party harnesses — the `claude-code`/`codex` casks and
+  Pi — deliberately roll to latest instead; see the stance footnote below.)
+  <!-- markdownlint-disable-next-line MD033 -->
+- <a id="nvim-stance"></a>Neovim plugins are **disclosed but not pinned**.
+  This bullet is the single authoritative statement of that stance; every other
+  mention in this file points back here. lazy.nvim applies its `lazy-lock.json`
+  only on an explicit `:Lazy restore`, so a fresh install clones the plugin's
+  branch head and rewrites the lockfile to whatever it fetched. It never holds
+  a release back, so this repository does not track it (see `.gitignore`).
+  Neovim plugins are disclosed by upstream and purpose instead, under
+  [Neovim plugins](#neovim-plugins).
 - The privileged and code-exec/workflow tiers (A and B below) sit behind a
   **cooldown + review gate**: `scripts/check-privileged-tool-releases.sh` only
   surfaces a newer stable release after a **seven-day cooldown**
@@ -36,9 +45,11 @@ Instead:
 - This document is the disclosure half: the trust is written down, tiered, and
   reviewable rather than implicit.
 
-`firstmate` is the one *third-party* upstream that escapes the pinning
-discipline — it is **accept-as-rolling** (see its section). That exception is the
-loudest single fact in this file.
+Among the **pin-enforced** tiers, `firstmate` is the one *third-party* upstream
+that escapes the pinning discipline — it is **accept-as-rolling** (see its
+section). That exception is the loudest single fact in this file. The Neovim
+upstreams sit outside these tiers entirely, under the
+[disclosed-but-not-pinned stance](#nvim-stance).
 
 ### First-party harnesses — deliberately rolling ⚠️
 
@@ -96,9 +107,11 @@ these are pinned but not placed behind the release cooldown.
 
 ## firstmate — accept-as-rolling ⚠️
 
-> **Among the third-party upstreams inventoried here, this is the one that is
-> NOT pinned.** (The first-party harnesses roll too, but by the separate,
-> deliberate decision described in the stance above.)
+> **Among the pin-enforced third-party upstreams inventoried here, this is the
+> one that is NOT pinned.** (The first-party harnesses roll too, but by the
+> separate, deliberate decision described in the stance above; the Neovim
+> upstreams are disclosed rather than pin-enforced, per the
+> [stance bullet](#nvim-stance).)
 
 [`kunchenguid/firstmate`](https://github.com/kunchenguid/firstmate) is an agent
 **distro** — the supervisor that dispatches and manages the crewmate agents doing
@@ -155,6 +168,29 @@ state is kept separate from the tracked, pinned portable configuration.
 |---|---|---|---|
 | [`mattpocock/skills`](https://github.com/mattpocock/skills) | flake input (locked to a commit in `flake.lock`; tracks the default branch — advanced only when `nix flake update matt-pocock-skills` is run) | Supplies agent **skills** (instructions/workflows) exposed from `~/.agents/skills` and linked into Claude and Pi. Skills are prompts/workflows, not independently privileged binaries, but they can *instruct* the privileged tools above. | Well-known author (Matt Pocock); locked in `flake.lock` so updates are explicit. Deprecated and in-progress skills are deliberately excluded. |
 
+## Neovim plugins
+
+This section covers the Neovim upstreams **this repository adds itself**: the
+plugin manager and base distribution bootstrapped in
+[`home/.config/nvim/lua/config/lazy.lua`](home/.config/nvim/lua/config/lazy.lua),
+plus the plugins declared under `home/.config/nvim/lua/plugins/`. LazyVim's own
+downstream plugin graph is inherited rather than chosen here and is deliberately
+not inventoried individually — that includes plugins LazyVim already ships and
+that this repository only reconfigures under `lua/plugins/`, for example
+`catppuccin/nvim` and `render-markdown.nvim`.
+
+They are listed by upstream and purpose rather than by revision, because nothing
+pins them — see the [disclosed-but-not-pinned stance](#nvim-stance). Naming them
+here is what keeps this document's completeness claim true: every third-party
+upstream this repository deliberately adds appears somewhere in this file.
+
+| Upstream | Where it is declared | Capability granted | Why it is trusted |
+|---|---|---|---|
+| [`folke/lazy.nvim`](https://github.com/folke/lazy.nvim) | `lua/config/lazy.lua:4` — git-cloned from `--branch=stable` on first launch, then self-managed. | **Plugin manager** — resolves, clones, updates and loads every other Neovim plugin from GitHub, and runs their build steps. The broadest reach of anything in this section: everything below arrives through it. | Widely used, actively maintained plugin manager by folke, who also authors LazyVim. Tracks the `stable` branch rather than the default branch. |
+| [`LazyVim/LazyVim`](https://github.com/LazyVim/LazyVim) | `lua/config/lazy.lua:20`, imported as the base spec (`{ "LazyVim/LazyVim", import = "lazyvim.plugins" }`). | **Base distribution** — supplies the options, keymaps, autocmds and plugin graph this configuration builds on, and therefore decides which further upstreams get installed. | Same author as lazy.nvim and the mainstream Neovim starter distribution. Adopted wholesale and deliberately: its inherited plugin graph is the reason the section above scopes individual inventory to what this repository adds on top. |
+| [`OXY2DEV/markview.nvim`](https://github.com/OXY2DEV/markview.nvim) | [`home/.config/nvim/lua/plugins/markview-smart-tables.lua`](home/.config/nvim/lua/plugins/markview-smart-tables.lua), as a dependency. It is the Markdown previewer, replacing `render-markdown.nvim`. | Runs Lua inside Neovim to parse open Markdown buffers and draw preview extmarks. It has the same local-process access as any Neovim plugin, but no separate credentials or external service access. | Established, widely used Neovim Markdown renderer, and the required rendering host for smart tables. |
+| [`gunasekar/markview-smart-tables.nvim`](https://github.com/gunasekar/markview-smart-tables.nvim) | The same file, as the top-level spec. It is wired into Markview's `renderers.markdown_table` hook, without which it does nothing. | Runs Lua inside Neovim to replace Markview's table renderer with fitted, wrapped virtual text. It operates on open Markdown buffers and window layout only. | Small, narrowly scoped display extension adopted as a trial for one behavior: fitting oversized tables to the window. Its required renderer hook is verifiable with `:checkhealth markview-smart-tables`. |
+
 ## Foundational Nix inputs (community infrastructure)
 
 For completeness, the build also depends on standard, widely-used Nix community
@@ -176,4 +212,5 @@ complete.
 between capability tiers, update the matching table here in the same change.
 Version pins in the tables are illustrative of the pinning discipline — the
 authoritative pins live in [`flake.lock`](flake.lock) and
-[`agent-tools/package.json`](agent-tools/package.json).*
+[`agent-tools/package.json`](agent-tools/package.json). Neovim upstreams have no
+pin; see the [stance bullet](#nvim-stance).*

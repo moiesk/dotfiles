@@ -18,3 +18,8 @@ result-*
 # Local overrides stay machine-specific.
 home/.gitconfig.local
 home/.tool-versions
+
+# lazy.nvim rewrites this after every install/update/clean and only reads it
+# back on an explicit `:Lazy restore`. Since ~/.config/nvim symlinks into this
+# repo, tracking it would churn the working tree without pinning anything.
+home/.config/nvim/lazy-lock.json
