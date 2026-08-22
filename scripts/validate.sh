@@ -138,6 +138,7 @@ if rg -Fq -- 'runner.temp' "$npm_security_workflow"; then
 fi
 
 "$DOTFILES_DIR/scripts/check-agent-tool-pins.sh"
+"$DOTFILES_DIR/scripts/check-opencode-trust.sh"
 
 no_mistakes_version="$(sed -nE \
   's/^[[:space:]]*noMistakesVersion = "([^"]+)";/\1/p' home.nix)"
@@ -178,6 +179,7 @@ done
 "$DOTFILES_DIR/scripts/test-check-homebrew-current.sh"
 "$DOTFILES_DIR/scripts/test-firstmate-floor-exceptions.sh"
 "$DOTFILES_DIR/scripts/test-check-privileged-tool-releases.sh"
+"$DOTFILES_DIR/scripts/test-check-opencode-trust.sh"
 
 "$DOTFILES_DIR/scripts/check-secrets.sh"
 
