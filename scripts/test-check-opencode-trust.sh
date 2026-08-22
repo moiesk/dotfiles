@@ -140,6 +140,30 @@ if ! DOTFILES_DIR="$tmp_dir/repo" "$CHECKER" >/dev/null 2>&1; then
   checker_error 'a bare-ref permalink at the installed version was rejected'
 fi
 
+# Ordinary trailing punctuation around a bare URL or autolink is not part of
+# the ref, so a correct document must not be rejected for it.
+for current_link in \
+  "see https://github.com/anomalyco/opencode/releases/tag/v$pinned." \
+  "see <https://github.com/anomalyco/opencode/tree/v$pinned>." \
+  "see https://github.com/anomalyco/opencode/tree/v$pinned/packages/plugin, and more" \
+  "see \`https://github.com/anomalyco/opencode/tree/v$pinned\`"; do
+  copy_trust_files
+  printf '\n%s\n' "$current_link" >>"$tmp_dir/repo/TRUST.md"
+  if ! DOTFILES_DIR="$tmp_dir/repo" "$CHECKER" >/dev/null 2>&1; then
+    DOTFILES_DIR="$tmp_dir/repo" "$CHECKER" || true
+    checker_error "punctuation around a correct link was read as part of the ref: $current_link"
+  fi
+done
+
+# Stripping that punctuation must not stop a stale ref in the same shapes from failing.
+for stale_link in \
+  "see https://github.com/anomalyco/opencode/releases/tag/v$bumped." \
+  "see <https://github.com/anomalyco/opencode/tree/v$bumped>."; do
+  copy_trust_files
+  printf '\n%s\n' "$stale_link" >>"$tmp_dir/repo/TRUST.md"
+  expect_failure "error: TRUST.md cites anomalyco/opencode evidence at v$bumped but $CONFIG_DIR/package.json installs $pinned"
+done
+
 # The checker must fail closed when it stops running in pull-request CI.
 copy_trust_files
 grep -v -F -- 'run: ./scripts/check-opencode-trust.sh' \
@@ -148,7 +172,7 @@ mv "$tmp_dir/workflow.yml" "$tmp_dir/repo/$WORKFLOW_PATH"
 expect_failure "needs 1 occurrence(s) of run: ./scripts/check-opencode-trust.sh (found 0)"
 
 # Losing a path filter silently stops CI from firing on the drift it guards.
-for filter_path in "$CONFIG_DIR/package.json" "scripts/check-opencode-trust.sh" "TRUST.md"; do
+for filter_path in "$CONFIG_DIR/**" "scripts/check-opencode-trust.sh" "TRUST.md"; do
   copy_trust_files
   filter_line="      - \"$filter_path\""
   occurrences="$(grep -F -o -- "$filter_line" "$tmp_dir/repo/$WORKFLOW_PATH" | grep -c '' || true)"

@@ -60,9 +60,12 @@ if ! grep -Fq -- "$CONFIG_DIR/package.json" <<<"$row"; then
 fi
 
 evidence_kinds='tree|blob|releases/tag'
-evidence_refs="$(grep -o -E "github\.com/$UPSTREAM/($evidence_kinds)/[^]/)\"#?[:space:]]+" \
+# A ref may contain dots (v1.2.3), so sentence-ending punctuation is stripped
+# after extraction rather than excluded from the character class.
+evidence_ref_chars='[^]/)">`#?,[:space:]]'
+evidence_refs="$(grep -o -E "github\.com/$UPSTREAM/($evidence_kinds)/${evidence_ref_chars}+" \
   "$TRUST_FILE" |
-  sed -E "s|^github\.com/$UPSTREAM/(${evidence_kinds//|/\\|})/||" | sort -u)"
+  sed -E "s|^github\.com/$UPSTREAM/(${evidence_kinds//|/\\|})/||; s|\\.+$||" | sort -u)"
 if [[ -z "$evidence_refs" ]]; then
   printf 'error: TRUST.md must cite %s release evidence for %s\n' "$UPSTREAM" "$PACKAGE" >&2
   exit 1
@@ -122,8 +125,7 @@ fi
 for count_and_fragment in \
   "1|run: ./scripts/check-opencode-trust.sh" \
   "1|run: ./scripts/test-check-opencode-trust.sh" \
-  "2|- \"$CONFIG_DIR/package.json\"" \
-  "2|- \"$CONFIG_DIR/package-lock.json\"" \
+  "2|- \"$CONFIG_DIR/**\"" \
   "2|- \"scripts/check-opencode-trust.sh\"" \
   "2|- \"scripts/test-check-opencode-trust.sh\"" \
   "2|- \"TRUST.md\""; do
