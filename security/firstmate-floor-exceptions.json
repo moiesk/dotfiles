@@ -3,7 +3,7 @@
   "exceptions": [
     {
       "dependency": "quota-axi",
-      "previous_version": "0.1.28",
+      "previous_version": "0.1.25",
       "adopted_version": "0.1.29",
       "required_version": "0.1.29",
       "firstmate_repository": "kunchenguid/firstmate",
