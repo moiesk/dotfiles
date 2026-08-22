@@ -59,8 +59,10 @@ if ! grep -Fq -- "$CONFIG_DIR/package.json" <<<"$row"; then
   exit 1
 fi
 
-evidence_refs="$(grep -o -E "github\.com/$UPSTREAM/(tree|blob)/[^/]+/" "$TRUST_FILE" |
-  sed -E "s|github\.com/$UPSTREAM/(tree\|blob)/||; s|/$||" | sort -u)"
+evidence_kinds='tree|blob|releases/tag'
+evidence_refs="$(grep -o -E "github\.com/$UPSTREAM/($evidence_kinds)/[^]/)\"#?[:space:]]+" \
+  "$TRUST_FILE" |
+  sed -E "s|^github\.com/$UPSTREAM/(${evidence_kinds//|/\\|})/||" | sort -u)"
 if [[ -z "$evidence_refs" ]]; then
   printf 'error: TRUST.md must cite %s release evidence for %s\n' "$UPSTREAM" "$PACKAGE" >&2
   exit 1
@@ -107,5 +109,32 @@ if [[ "$tier" == "$LOW_CAPABILITY_TIER"* ]]; then
     esac
   done <<<"$tracked"
 fi
+
+workflow_path=".github/workflows/agent-tool-pins.yml"
+workflow="$DOTFILES_DIR/$workflow_path"
+if [[ ! -f "$workflow" ]]; then
+  printf 'error: missing pin-alignment workflow: %s\n' "$workflow_path" >&2
+  exit 1
+fi
+
+# Each entry is "<required occurrences>|<literal line fragment>". The path
+# filters appear once per trigger block (pull_request and push).
+for count_and_fragment in \
+  "1|run: ./scripts/check-opencode-trust.sh" \
+  "1|run: ./scripts/test-check-opencode-trust.sh" \
+  "2|- \"$CONFIG_DIR/package.json\"" \
+  "2|- \"$CONFIG_DIR/package-lock.json\"" \
+  "2|- \"scripts/check-opencode-trust.sh\"" \
+  "2|- \"scripts/test-check-opencode-trust.sh\"" \
+  "2|- \"TRUST.md\""; do
+  required_count="${count_and_fragment%%|*}"
+  required_fragment="${count_and_fragment#*|}"
+  actual_count="$(grep -F -o -- "$required_fragment" "$workflow" | grep -c '' || true)"
+  if [[ "$actual_count" -lt "$required_count" ]]; then
+    printf 'error: %s must reach PR CI: %s needs %s occurrence(s) of %s (found %s)\n' \
+      "$PACKAGE" "$workflow_path" "$required_count" "$required_fragment" "$actual_count" >&2
+    exit 1
+  fi
+done
 
 printf '%s\n' 'OpenCode trust inventory is aligned'

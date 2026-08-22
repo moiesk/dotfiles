@@ -137,13 +137,16 @@ execution path.
 
 Both halves of that boundary are mechanically enforced by
 [`scripts/check-opencode-trust.sh`](scripts/check-opencode-trust.sh), which
-`./scripts/validate.sh` runs: the row above and the release permalinks cited in
-this section must name the version that
+`./scripts/validate.sh` and the pull-request
+[pin-alignment workflow](.github/workflows/agent-tool-pins.yml) both run: the
+row above and the release permalinks cited in this section must name the
+version that
 [`home/.config/opencode/package.json`](home/.config/opencode/package.json)
 installs, and while that row sits under Tier C the committed OpenCode directory
 must hold nothing but `package.json`, `package-lock.json`, and `.npmrc`. A
-merged Dependabot bump or a newly tracked plugin/tool file therefore fails
-validation until the inventory is brought back in line.
+Dependabot bump or a newly tracked plugin/tool file therefore turns the pull
+request red until the inventory is brought back in line, and the checker itself
+fails if that workflow ever stops covering these paths.
 
 Tier C does not require extending
 [`scripts/check-privileged-tool-releases.sh`](scripts/check-privileged-tool-releases.sh),

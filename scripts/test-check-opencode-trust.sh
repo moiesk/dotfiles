@@ -7,6 +7,7 @@ set -euo pipefail
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 CHECKER="$DOTFILES_DIR/scripts/check-opencode-trust.sh"
 CONFIG_DIR="home/.config/opencode"
+WORKFLOW_PATH=".github/workflows/agent-tool-pins.yml"
 PACKAGE="@opencode-ai/plugin"
 tmp_dir="$(mktemp -d)"
 trap 'rm -rf "$tmp_dir"' EXIT
@@ -28,8 +29,9 @@ checker_error() {
 
 copy_trust_files() {
   rm -rf "$tmp_dir/repo"
-  mkdir -p "$tmp_dir/repo/$CONFIG_DIR"
+  mkdir -p "$tmp_dir/repo/$CONFIG_DIR" "$tmp_dir/repo/$(dirname "$WORKFLOW_PATH")"
   cp "$DOTFILES_DIR/TRUST.md" "$tmp_dir/repo/"
+  cp "$DOTFILES_DIR/$WORKFLOW_PATH" "$tmp_dir/repo/$WORKFLOW_PATH"
   cp "$DOTFILES_DIR/$CONFIG_DIR/package.json" \
     "$DOTFILES_DIR/$CONFIG_DIR/package-lock.json" \
     "$DOTFILES_DIR/$CONFIG_DIR/.npmrc" \
@@ -118,5 +120,45 @@ printf '%s\n' 'scratch' >"$tmp_dir/repo/$CONFIG_DIR/scratch.ts"
 if ! DOTFILES_DIR="$tmp_dir/repo" "$CHECKER" >/dev/null 2>&1; then
   checker_error 'an untracked scratch file was treated as a committed capability escalation'
 fi
+
+# A permalink that stops at the ref must be version-checked too, not skipped
+# because it has no trailing path segment.
+for stale_link in \
+  "https://github.com/anomalyco/opencode/tree/v$bumped" \
+  "https://github.com/anomalyco/opencode/releases/tag/v$bumped"; do
+  copy_trust_files
+  printf '\nStale evidence: [upstream](%s).\n' "$stale_link" >>"$tmp_dir/repo/TRUST.md"
+  expect_failure "error: TRUST.md cites anomalyco/opencode evidence at v$bumped but $CONFIG_DIR/package.json installs $pinned"
+done
+
+# A well-formed permalink at the installed version must still pass, so the
+# hardened pattern is not simply rejecting every bare-ref link.
+copy_trust_files
+printf '\nCurrent evidence: [upstream](https://github.com/anomalyco/opencode/tree/v%s).\n' \
+  "$pinned" >>"$tmp_dir/repo/TRUST.md"
+if ! DOTFILES_DIR="$tmp_dir/repo" "$CHECKER" >/dev/null 2>&1; then
+  checker_error 'a bare-ref permalink at the installed version was rejected'
+fi
+
+# The checker must fail closed when it stops running in pull-request CI.
+copy_trust_files
+grep -v -F -- 'run: ./scripts/check-opencode-trust.sh' \
+  "$tmp_dir/repo/$WORKFLOW_PATH" >"$tmp_dir/workflow.yml"
+mv "$tmp_dir/workflow.yml" "$tmp_dir/repo/$WORKFLOW_PATH"
+expect_failure "needs 1 occurrence(s) of run: ./scripts/check-opencode-trust.sh (found 0)"
+
+# Losing a path filter silently stops CI from firing on the drift it guards.
+for filter_path in "$CONFIG_DIR/package.json" "scripts/check-opencode-trust.sh" "TRUST.md"; do
+  copy_trust_files
+  filter_line="      - \"$filter_path\""
+  occurrences="$(grep -F -o -- "$filter_line" "$tmp_dir/repo/$WORKFLOW_PATH" | grep -c '' || true)"
+  [[ "$occurrences" == "2" ]] ||
+    fixture_error "expected $filter_path in both trigger blocks, found $occurrences"
+  awk -v line="$filter_line" 'BEGIN { dropped = 0 }
+    $0 == line && dropped == 0 { dropped = 1; next }
+    { print }' "$tmp_dir/repo/$WORKFLOW_PATH" >"$tmp_dir/workflow.yml"
+  mv "$tmp_dir/workflow.yml" "$tmp_dir/repo/$WORKFLOW_PATH"
+  expect_failure "needs 2 occurrence(s) of - \"$filter_path\" (found 1)"
+done
 
 printf '%s\n' 'OpenCode trust checker tests passed'
