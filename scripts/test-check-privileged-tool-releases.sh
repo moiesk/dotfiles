@@ -86,7 +86,17 @@ FIXTURE_NPM_PINNED="$(jq -er --arg package "$FIXTURE_NPM_PACKAGE" \
   fixture_error "the $FIXTURE_NPM_PACKAGE pin ($FIXTURE_NPM_PINNED) is not a plain major.minor.patch version"
 FIXTURE_NPM_INTERMEDIATE="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.$((BASH_REMATCH[3] + 1))"
 FIXTURE_NPM_LATEST="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.$((BASH_REMATCH[3] + 2))"
-history_revision="$(git -C "$DOTFILES_HISTORY_DIR" rev-parse --verify HEAD)"
+# Mirror the checker: the previous pin is the one the integration branch
+# shipped, so the walk starts at the merge base and skips branch-local pins.
+history_revision=''
+for history_ref in origin/main main; do
+  git -C "$DOTFILES_HISTORY_DIR" rev-parse --verify --quiet "$history_ref^{commit}" >/dev/null 2>&1 ||
+    continue
+  history_revision="$(git -C "$DOTFILES_HISTORY_DIR" merge-base HEAD "$history_ref" 2>/dev/null || true)"
+  [[ -n "$history_revision" ]] && break
+done
+[[ -n "$history_revision" ]] ||
+  history_revision="$(git -C "$DOTFILES_HISTORY_DIR" rev-parse --verify HEAD)"
 FIXTURE_NPM_PREVIOUS=''
 while [[ -n "$history_revision" ]]; do
   history_pin="$(git -C "$DOTFILES_HISTORY_DIR" show "$history_revision:agent-tools/package.json" |
