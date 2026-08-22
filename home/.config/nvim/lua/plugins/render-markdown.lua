@@ -9,9 +9,10 @@
 -- with it: render-markdown.nvim conceals HTML comments (`<!-- ... -->`) by
 -- default, so they're invisible except on the cursor line, where anti-conceal
 -- reveals them. Markdown has no other comment syntax, so concealing them hides
--- real content. markview.nvim ships no HTML parser or renderer at all (its only
--- comment handling is the experimental `fancy_comments` support for code
--- comments, off by default), so nothing regresses while this stays disabled.
+-- real content. markview.nvim parses and renders HTML elements (headings,
+-- elements, void elements) but has no HTML-comment handling at all, so
+-- `<!-- ... -->` stays fully visible under markview and there is nothing to
+-- un-conceal, so nothing regresses while this stays disabled.
 
 return {
   "MeanderingProgrammer/render-markdown.nvim",
