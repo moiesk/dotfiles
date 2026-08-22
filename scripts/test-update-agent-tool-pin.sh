@@ -307,4 +307,61 @@ grep -Fq -- "${first_prefix}${first_new}" "$fixture/TRUST.md" ||
 grep -Fq -- "${first_tool}@${first_new}" "$fixture/TRUST.md" ||
   helper_error 'row substitution skipped the TRUST.md npm pin'
 
+# The recorded floor exception must be checked against the real repository
+# history, not the temporary stage copy, which carries no git metadata.
+make_fixture
+jq '.exceptions = []' "$fixture/security/firstmate-floor-exceptions.json" \
+  >"$fixture/security/firstmate-floor-exceptions.json.next"
+mv "$fixture/security/firstmate-floor-exceptions.json.next" \
+  "$fixture/security/firstmate-floor-exceptions.json"
+git -C "$fixture" diff --quiet -- || commit_fixture
+make_mocks
+floor_row="$(awk -F '\t' '$1 !~ /^#/ && $2 == "npm" && $6 == "yes" { print; exit }' \
+  "$DOTFILES_DIR/scripts/firstmate-tool-floors.tsv")"
+[[ -n "$floor_row" ]] ||
+  fixture_error 'no cooldown-gated npm dependency floor is registered, so the exception path is untestable'
+IFS=$'\t' read -r floor_tool _ floor_pin_key _ _ _ _ _ <<<"$floor_row"
+awk -F '\t' -v tool="$floor_pin_key" \
+  '$1 !~ /^#/ && $2 == tool { found = 1 } END { exit found ? 0 : 1 }' \
+  "$DOTFILES_DIR/scripts/agent-tool-pins.tsv" ||
+  fixture_error "$floor_pin_key carries a Firstmate floor but is not a supported AXI pin"
+floor_old="$(jq -er --arg tool "$floor_pin_key" '.dependencies[$tool]' \
+  "$fixture/agent-tools/package.json")"
+floor_new="$(bumped_version "$floor_old")"
+floor_commit="$(printf 'd%039d' 9)"
+FIXTURE_FLOOR="$floor_new"
+FIXTURE_NPM_JSON="$(jq -n --arg old "$floor_old" --arg new "$floor_new" \
+  --arg old_at "$(node -e 'console.log(new Date(Date.now() - 30 * 86400000).toISOString())')" \
+  --arg new_at "$(node -e 'console.log(new Date(Date.now() - 86400000).toISOString())')" \
+  '{versions: [$old, $new], time: {($old): $old_at, ($new): $new_at}}')"
+cat >"$mock_bin/gh-axi" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+[[ "$1" == "api" && "$2" == "GET" && "$3" == */contents/*\?ref=* ]] || {
+  printf 'unexpected gh-axi invocation: %s\n' "$*" >&2
+  exit 28
+}
+printf '  truncated: false\n'
+printf '  body: "%s"\n' "$FIXTURE_FLOOR"
+EOF
+cat >"$mock_bin/npm" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+[[ "$1" == "view" && "$3" == "--json" ]] || {
+  printf 'unexpected npm invocation: %s\n' "$*" >&2
+  exit 29
+}
+printf '%s\n' "$FIXTURE_NPM_JSON"
+EOF
+chmod +x "$mock_bin/gh-axi" "$mock_bin/npm"
+export FIXTURE_FLOOR FIXTURE_NPM_JSON
+run_helper --firstmate-commit "$floor_commit" "$floor_pin_key" "$floor_new" >/dev/null
+unset FIXTURE_FLOOR FIXTURE_NPM_JSON
+recorded="$(jq -r --arg dependency "$floor_tool" \
+  '[.exceptions[] | select(.dependency == $dependency)
+    | [.previous_version, .adopted_version, .required_version, .firstmate_commit]
+    | join(" ")] | join(",")' "$fixture/security/firstmate-floor-exceptions.json")"
+[[ "$recorded" == "$floor_old $floor_new $floor_new $floor_commit" ]] ||
+  helper_error "exception record is wrong: $recorded"
+
 printf '%s\n' 'agent tool pin update helper checks passed'

@@ -13,6 +13,7 @@ set -euo pipefail
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 FIXTURE_NAME="$(basename "${BASH_SOURCE[0]}")"
 CHECKER="$DOTFILES_DIR/scripts/check-privileged-tool-releases.sh"
+DOTFILES_HISTORY_DIR="${DOTFILES_HISTORY_DIR:-$DOTFILES_DIR}"
 tmp_dir="$(mktemp -d)"
 trap 'rm -rf "$tmp_dir"' EXIT
 
@@ -85,17 +86,17 @@ FIXTURE_NPM_PINNED="$(jq -er --arg package "$FIXTURE_NPM_PACKAGE" \
   fixture_error "the $FIXTURE_NPM_PACKAGE pin ($FIXTURE_NPM_PINNED) is not a plain major.minor.patch version"
 FIXTURE_NPM_INTERMEDIATE="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.$((BASH_REMATCH[3] + 1))"
 FIXTURE_NPM_LATEST="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.$((BASH_REMATCH[3] + 2))"
-history_revision="$(git -C "$DOTFILES_DIR" rev-parse --verify HEAD)"
+history_revision="$(git -C "$DOTFILES_HISTORY_DIR" rev-parse --verify HEAD)"
 FIXTURE_NPM_PREVIOUS=''
 while [[ -n "$history_revision" ]]; do
-  history_pin="$(git -C "$DOTFILES_DIR" show "$history_revision:agent-tools/package.json" |
+  history_pin="$(git -C "$DOTFILES_HISTORY_DIR" show "$history_revision:agent-tools/package.json" |
     jq -er --arg package "$FIXTURE_NPM_PACKAGE" '.dependencies[$package]')" ||
     fixture_error "could not derive historical $FIXTURE_NPM_PACKAGE pin"
   if [[ "$history_pin" != "$FIXTURE_NPM_PINNED" ]]; then
     FIXTURE_NPM_PREVIOUS="$history_pin"
     break
   fi
-  history_revision="$(git -C "$DOTFILES_DIR" rev-parse --verify "$history_revision^" 2>/dev/null || true)"
+  history_revision="$(git -C "$DOTFILES_HISTORY_DIR" rev-parse --verify "$history_revision^" 2>/dev/null || true)"
 done
 [[ "$FIXTURE_NPM_PREVIOUS" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] ||
   fixture_error "no historical pin preceding $FIXTURE_NPM_PACKAGE $FIXTURE_NPM_PINNED was found"

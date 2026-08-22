@@ -105,6 +105,7 @@ write_exception() {
 
 run_checker() {
   DOTFILES_DIR="$tmp_dir/repo" \
+    DOTFILES_HISTORY_DIR="$tmp_dir/repo" \
     FIRSTMATE_FLOOR_REGISTRY="$tmp_dir/repo/floors.tsv" \
     FIRSTMATE_FLOOR_EXCEPTIONS_FILE="$tmp_dir/repo/exceptions.json" \
     GH_AXI_BIN="$tmp_dir/bin/gh-axi" \

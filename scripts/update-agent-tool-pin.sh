@@ -187,6 +187,7 @@ old_version="$(jq -er --arg tool "$npm_package" '.dependencies[$tool]' \
 old_ref="${tag_prefix}${old_version}"
 new_ref="${tag_prefix}${version}"
 
+history_dir="$DOTFILES_DIR"
 stage_dir="$(mktemp -d "${TMPDIR:-/tmp}/update-agent-tool-pin.XXXXXX")"
 backup_dir="$(mktemp -d "${TMPDIR:-/tmp}/update-agent-tool-pin-backup.XXXXXX")"
 git -C "$DOTFILES_DIR" archive "$head_at_start" | tar -xf - -C "$stage_dir"
@@ -292,12 +293,12 @@ if [[ -n "$firstmate_commit" ]]; then
       }]
     ' "$exceptions_file" >"$exceptions_file.next"
   mv "$exceptions_file.next" "$exceptions_file"
-  DOTFILES_DIR="$stage_dir" FIRSTMATE_DOTFILES_HISTORY_DIR="$DOTFILES_DIR" \
+  DOTFILES_DIR="$stage_dir" DOTFILES_HISTORY_DIR="$history_dir" \
     "$stage_dir/scripts/check-firstmate-floor-exceptions.sh"
 fi
 
 DOTFILES_DIR="$stage_dir" "$stage_dir/scripts/check-agent-tool-pins.sh"
-"$stage_dir/scripts/validate.sh"
+DOTFILES_HISTORY_DIR="$history_dir" "$stage_dir/scripts/validate.sh"
 
 [[ "$(git -C "$DOTFILES_DIR" rev-parse --verify HEAD)" == "$head_at_start" ]] ||
   fail "HEAD changed while the update was staged; no files were installed"
