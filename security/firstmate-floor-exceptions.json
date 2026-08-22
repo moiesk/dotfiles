@@ -1,4 +1,13 @@
 {
   "schema_version": 1,
-  "exceptions": []
+  "exceptions": [
+    {
+      "dependency": "quota-axi",
+      "previous_version": "0.1.28",
+      "adopted_version": "0.1.29",
+      "required_version": "0.1.29",
+      "firstmate_repository": "kunchenguid/firstmate",
+      "firstmate_commit": "d9ee8ea218d2d2693dbf260a4391589e97b544ea"
+    }
+  ]
 }
