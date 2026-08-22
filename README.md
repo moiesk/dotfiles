@@ -230,7 +230,7 @@ branch name or mutable `origin/main` for the full candidate SHA:
 ```sh
 candidate=f1a4af426d7199c1781bc91ccd143b8e1f732d10
 ./scripts/check-firstmate-floor-exceptions.sh --candidate "$candidate"
-./scripts/update-agent-tool-pin.sh --firstmate-commit "$candidate" quota-axi 0.1.25
+./scripts/update-agent-tool-pin.sh --firstmate-commit "$candidate" <tool> <version>
 git diff --check
 ./scripts/validate.sh
 ```

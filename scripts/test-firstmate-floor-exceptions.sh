@@ -105,6 +105,7 @@ write_exception() {
 
 run_checker() {
   DOTFILES_DIR="$tmp_dir/repo" \
+    DOTFILES_HISTORY_DIR="$tmp_dir/repo" \
     FIRSTMATE_FLOOR_REGISTRY="$tmp_dir/repo/floors.tsv" \
     FIRSTMATE_FLOOR_EXCEPTIONS_FILE="$tmp_dir/repo/exceptions.json" \
     GH_AXI_BIN="$tmp_dir/bin/gh-axi" \
@@ -291,5 +292,112 @@ DOTFILES_DIR="$github_repo" \
   FIXTURE_FRESH_AT="$fresh_release_at" \
   "$CHECKER" >/dev/null ||
   fail 'GitHub release gap did not select the lowest satisfying published version'
+
+# The recorded previous pin is the one the integration branch shipped, so the
+# same record must validate whether the checker sees the feature branch itself,
+# the pull-request merge ref, or the squashed commit on main.
+topology_pin_at() {
+  jq -n --arg pin "$1" '{dependencies: {"quota-axi": $pin}}'
+}
+
+topology_commit_pin() {
+  local repo="$1" pin="$2" message="$3"
+  topology_pin_at "$pin" >"$repo/agent-tools/package.json"
+  git -C "$repo" add agent-tools/package.json
+  git -C "$repo" commit -qm "$message"
+}
+
+topology_init() {
+  local repo="$1"
+  mkdir -p "$repo/agent-tools"
+  awk -F '\t' '$1 ~ /^#/ || $1 == "quota-axi"' \
+    "$DOTFILES_DIR/scripts/firstmate-tool-floors.tsv" >"$repo/floors.tsv"
+  git -C "$repo" init -q -b main
+  git -C "$repo" config user.name 'Fixture Test'
+  git -C "$repo" config user.email 'fixture@example.invalid'
+  git -C "$repo" add floors.tsv
+  git -C "$repo" commit -qm 'floor registry fixture'
+}
+
+topology_write_exception() {
+  local repo="$1" previous="$2"
+  jq -n \
+    --arg previous "$previous" \
+    --arg adopted "$adopted" \
+    --arg commit "$commit" \
+    '{schema_version: 1, exceptions: [{
+      dependency: "quota-axi",
+      previous_version: $previous,
+      adopted_version: $adopted,
+      required_version: $adopted,
+      firstmate_repository: "kunchenguid/firstmate",
+      firstmate_commit: $commit
+    }]}' >"$repo/exceptions.json"
+}
+
+run_topology_checker() {
+  local repo="$1"
+  DOTFILES_DIR="$repo" \
+    DOTFILES_HISTORY_DIR="$repo" \
+    FIRSTMATE_FLOOR_REGISTRY="$repo/floors.tsv" \
+    FIRSTMATE_FLOOR_EXCEPTIONS_FILE="$repo/exceptions.json" \
+    GH_AXI_BIN="$tmp_dir/bin/gh-axi" \
+    NPM_BIN="$tmp_dir/bin/npm" \
+    TOOL_UPDATE_NOW_EPOCH="$now_epoch" \
+    TOOL_UPDATE_COOLDOWN_DAYS=7 \
+    FIXTURE_COMMIT="$commit" \
+    FIXTURE_REQUIRED="$adopted" \
+    FIXTURE_PREVIOUS="$previous" \
+    FIXTURE_ADOPTED="$adopted" \
+    FIXTURE_BROADER="$broader" \
+    FIXTURE_LATEST="$latest" \
+    FIXTURE_FRESH_AT="$fresh_at" \
+    FIXTURE_OLD_AT="$old_at" \
+    "$CHECKER" >"$tmp_dir/output" 2>&1
+}
+
+# A branch that bumped the pin twice before landing: only $previous_previous was
+# ever shipped, and $previous is the intermediate that a squash merge discards.
+branch_repo="$tmp_dir/topology-branch"
+topology_init "$branch_repo"
+topology_commit_pin "$branch_repo" "$previous_previous" 'shipped base pin'
+git -C "$branch_repo" checkout -q -b adopt-release
+topology_commit_pin "$branch_repo" "$previous" 'intermediate branch pin'
+topology_commit_pin "$branch_repo" "$adopted" 'adopt the release'
+topology_write_exception "$branch_repo" "$previous_previous"
+run_topology_checker "$branch_repo" || {
+  cat "$tmp_dir/output" >&2
+  fail 'the shipped previous pin was rejected on the feature branch itself'
+}
+
+topology_write_exception "$branch_repo" "$previous"
+if run_topology_checker "$branch_repo"; then
+  fail "expected rejection of the unshipped intermediate pin $previous"
+fi
+grep -Fq "previous version $previous does not match historical pin $previous_previous" \
+  "$tmp_dir/output" || {
+  cat "$tmp_dir/output" >&2
+  fail 'the intermediate branch pin was not rejected as unshipped'
+}
+topology_write_exception "$branch_repo" "$previous_previous"
+
+# The same record on the pull-request merge ref GitHub Actions checks out.
+git -C "$branch_repo" checkout -q main
+git -C "$branch_repo" merge -q --no-ff -m 'merge ref' adopt-release
+run_topology_checker "$branch_repo" || {
+  cat "$tmp_dir/output" >&2
+  fail 'the shipped previous pin was rejected on the pull-request merge ref'
+}
+
+# And on main after the branch is squashed into a single commit.
+squash_repo="$tmp_dir/topology-squash"
+topology_init "$squash_repo"
+topology_commit_pin "$squash_repo" "$previous_previous" 'shipped base pin'
+topology_commit_pin "$squash_repo" "$adopted" 'adopt the release'
+topology_write_exception "$squash_repo" "$previous_previous"
+run_topology_checker "$squash_repo" || {
+  cat "$tmp_dir/output" >&2
+  fail 'the shipped previous pin was rejected on the squashed main commit'
+}
 
 printf '%s\n' 'Firstmate floor exception checks passed'

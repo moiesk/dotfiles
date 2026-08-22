@@ -10,7 +10,7 @@ NPM_BIN="${NPM_BIN:-npm}"
 COOLDOWN_DAYS="${TOOL_UPDATE_COOLDOWN_DAYS:-7}"
 NOW_EPOCH="${TOOL_UPDATE_NOW_EPOCH:-$(date -u +%s)}"
 FIRSTMATE_REPOSITORY='kunchenguid/firstmate'
-DOTFILES_HISTORY_DIR="${FIRSTMATE_DOTFILES_HISTORY_DIR:-$DOTFILES_DIR}"
+DOTFILES_HISTORY_DIR="${DOTFILES_HISTORY_DIR:-$DOTFILES_DIR}"
 
 usage() {
   cat <<'EOF'
@@ -110,10 +110,27 @@ version_at_revision() {
   esac
 }
 
+# The pin history that survives review is the integration branch's, so start the
+# walk at the merge base rather than at the branch tip: a feature branch's own
+# intermediate pins are squashed away and never shipped. Falling back to HEAD
+# keeps shallow checkouts working, where the first parent is already the base.
+integration_base_revision() {
+  local ref base
+  for ref in ${FIRSTMATE_FLOOR_BASE_REF:+"$FIRSTMATE_FLOOR_BASE_REF"} origin/main main; do
+    git -C "$DOTFILES_HISTORY_DIR" rev-parse --verify --quiet "$ref^{commit}" >/dev/null 2>&1 || continue
+    base="$(git -C "$DOTFILES_HISTORY_DIR" merge-base HEAD "$ref" 2>/dev/null)" || continue
+    [[ -n "$base" ]] || continue
+    printf '%s\n' "$base"
+    return 0
+  done
+  git -C "$DOTFILES_HISTORY_DIR" rev-parse --verify HEAD 2>/dev/null
+}
+
 historical_previous_pin() {
   local pin_kind="$1" pin_key="$2" tag_prefix="$3" adopted="$4"
   local revision value
-  revision="$(git -C "$DOTFILES_HISTORY_DIR" rev-parse --verify HEAD 2>/dev/null)" || return 1
+  revision="$(integration_base_revision)" || return 1
+  [[ -n "$revision" ]] || return 1
   while [[ -n "$revision" ]]; do
     value="$(version_at_revision "$revision" "$pin_kind" "$pin_key" "$tag_prefix")" || return 1
     if [[ "$value" != "$adopted" ]]; then
