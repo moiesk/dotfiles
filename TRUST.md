@@ -26,6 +26,7 @@ Instead:
   called out below. A new upstream release does nothing until the pin is moved
   on purpose. (The first-party harnesses — the `claude-code`/`codex` casks and
   Pi — deliberately roll to latest instead; see the stance footnote below.)
+  <!-- markdownlint-disable-next-line MD033 -->
 - <a id="nvim-stance"></a>Neovim plugins are **disclosed but not pinned**.
   This bullet is the single authoritative statement of that stance; every other
   mention in this file points back here. lazy.nvim applies its `lazy-lock.json`
