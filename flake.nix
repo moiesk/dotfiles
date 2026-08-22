@@ -45,12 +45,12 @@
     };
 
     lavish-axi = {
-      url = "github:kunchenguid/lavish-axi/lavish-axi-v0.1.46";
+      url = "github:kunchenguid/lavish-axi/lavish-axi-v0.1.50";
       flake = false;
     };
 
     quota-axi = {
-      url = "github:kunchenguid/quota-axi/quota-axi-v0.1.25";
+      url = "github:kunchenguid/quota-axi/quota-axi-v0.1.28";
       flake = false;
     };
 
