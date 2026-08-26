@@ -191,6 +191,16 @@ history_dir="$DOTFILES_DIR"
 stage_dir="$(mktemp -d "${TMPDIR:-/tmp}/update-agent-tool-pin.XXXXXX")"
 backup_dir="$(mktemp -d "${TMPDIR:-/tmp}/update-agent-tool-pin-backup.XXXXXX")"
 git -C "$DOTFILES_DIR" archive "$head_at_start" | tar -xf - -C "$stage_dir"
+# The staged copy must be a git work tree whose tracked set is exactly the
+# archived HEAD: validation includes checks that read `git ls-files` to confirm
+# a capability tier, and those refuse to run outside a work tree. `--force` with
+# no excludes file keeps the staged tracked set identical to HEAD's.
+git -C "$stage_dir" init -q
+git -C "$stage_dir" -c core.excludesFile=/dev/null add --all --force
+git -C "$stage_dir" \
+  -c user.name='Agent Tool Pin Staging' \
+  -c user.email='update-agent-tool-pin@invalid' \
+  commit -qm 'staged HEAD'
 
 replace_literal_once "$stage_dir/flake.nix" "/$old_ref\";" "/$new_ref\";"
 cp "$stage_dir/flake.lock" "$stage_dir/flake.lock.before-update"
