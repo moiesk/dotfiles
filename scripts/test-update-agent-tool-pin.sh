@@ -29,10 +29,32 @@ make_fixture() {
     "$DOTFILES_DIR/scripts/check-firstmate-floor-exceptions.sh" \
     "$DOTFILES_DIR/scripts/firstmate-tool-floors.tsv" "$fixture/scripts/"
   cp "$DOTFILES_DIR/security/firstmate-floor-exceptions.json" "$fixture/security/"
+  # Repository checks read `git ls-files` to establish a capability tier and
+  # refuse to run outside a work tree, so the stub asserts what they need: the
+  # staged copy is its own work tree whose tracked set is exactly the archived
+  # HEAD of the source repository.
   cat >"$fixture/scripts/validate.sh" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
+stage_fail() {
+  printf 'error: scripts/update-agent-tool-pin.sh regressed: %s\n' "$1" >&2
+  exit 1
+}
+[[ "$(git -C "$DOTFILES_DIR" rev-parse --is-inside-work-tree 2>/dev/null)" == "true" ]] ||
+  stage_fail 'the staged copy is not a git work tree'
+stage_root="$(git -C "$DOTFILES_DIR" rev-parse --show-toplevel)"
+[[ "$stage_root" -ef "$DOTFILES_DIR" ]] ||
+  stage_fail "the staged copy belongs to an enclosing work tree: $stage_root"
+[[ -n "${DOTFILES_HISTORY_DIR:-}" ]] ||
+  stage_fail 'validation did not receive DOTFILES_HISTORY_DIR'
+staged_tracked="$(git -C "$DOTFILES_DIR" ls-files | sort)"
+[[ -n "$staged_tracked" ]] || stage_fail 'the staged copy tracks no files'
+archived_tracked="$(git -C "$DOTFILES_HISTORY_DIR" ls-files | sort)"
+[[ "$staged_tracked" == "$archived_tracked" ]] || {
+  diff <(printf '%s\n' "$archived_tracked") <(printf '%s\n' "$staged_tracked") >&2 || true
+  stage_fail 'the staged tracked set differs from the archived HEAD tracked set'
+}
 DOTFILES_DIR="$DOTFILES_DIR" "$DOTFILES_DIR/scripts/check-agent-tool-pins.sh" >/dev/null
 printf '%s\n' 'fixture validation passed'
 EOF

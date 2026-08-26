@@ -2,6 +2,13 @@
 # Stage and validate a coordinated AXI flake/npm/trust pin update, then install it.
 set -euo pipefail
 
+# Every git command below must address the repository named by its -C path, and
+# the staging repository must be self-contained. An inherited git environment
+# (a hook, `git bisect run`) would silently redirect all of them at the caller's
+# repository, so it is dropped before the first git invocation.
+unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_COMMON_DIR \
+  GIT_OBJECT_DIRECTORY GIT_ALTERNATE_OBJECT_DIRECTORIES GIT_NAMESPACE
+
 DOTFILES_DIR="${DOTFILES_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)}"
 NIX_BIN="${NIX_BIN:-nix}"
 MISE_BIN="${MISE_BIN:-mise}"
