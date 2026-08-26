@@ -46,12 +46,20 @@ done
 [[ "$(rg -Fc -- '      - run: ./scripts/check-agent-tool-pins.sh' "$WORKFLOW" || true)" == "1" ]] ||
   fail 'workflow must invoke the repository checker exactly once'
 
-# The workflow installs nothing beyond actions/checkout, so the checker may only
-# use tools preinstalled on the runner; ripgrep is not one of them.
-[[ "$(rg -c '^      - (run|uses):' "$WORKFLOW" || true)" == "2" ]] ||
-  fail 'workflow must remain checkout plus the checker with no tool installation steps'
-if rg -qw 'rg' "$DOTFILES_DIR/scripts/check-agent-tool-pins.sh"; then
-  fail 'checker must not depend on ripgrep, which is absent from the CI runner'
-fi
+# The workflow installs nothing beyond actions/checkout, so every script it runs
+# may only use tools preinstalled on the runner; ripgrep is not one of them.
+[[ "$(rg -c '^      - uses:' "$WORKFLOW" || true)" == "1" ]] ||
+  fail 'workflow must use exactly one action, actions/checkout, and install no tools'
+run_steps="$(rg -o -r '$1' '^      - run: (.+)$' "$WORKFLOW" || true)"
+[[ -n "$run_steps" ]] || fail 'workflow must run at least one repository checker'
+while IFS= read -r run_step; do
+  [[ "$run_step" == ./scripts/*.sh ]] ||
+    fail "workflow steps must be repository checker scripts, not inline commands: $run_step"
+  checker="$DOTFILES_DIR/${run_step#./}"
+  [[ -x "$checker" ]] || fail "workflow runs a missing or non-executable script: $run_step"
+  if rg -qw 'rg' "$checker"; then
+    fail "$run_step must not depend on ripgrep, which is absent from the CI runner"
+  fi
+done <<<"$run_steps"
 
 printf '%s\n' 'agent tool pin workflow checks passed'
