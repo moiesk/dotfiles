@@ -2,6 +2,13 @@
 # Stage and validate a coordinated AXI flake/npm/trust pin update, then install it.
 set -euo pipefail
 
+# Every git command below must address the repository named by its -C path, and
+# the staging repository must be self-contained. An inherited git environment
+# (a hook, `git bisect run`) would silently redirect all of them at the caller's
+# repository, so it is dropped before the first git invocation.
+unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_COMMON_DIR \
+  GIT_OBJECT_DIRECTORY GIT_ALTERNATE_OBJECT_DIRECTORIES GIT_NAMESPACE
+
 DOTFILES_DIR="${DOTFILES_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)}"
 NIX_BIN="${NIX_BIN:-nix}"
 MISE_BIN="${MISE_BIN:-mise}"
@@ -191,6 +198,13 @@ history_dir="$DOTFILES_DIR"
 stage_dir="$(mktemp -d "${TMPDIR:-/tmp}/update-agent-tool-pin.XXXXXX")"
 backup_dir="$(mktemp -d "${TMPDIR:-/tmp}/update-agent-tool-pin-backup.XXXXXX")"
 git -C "$DOTFILES_DIR" archive "$head_at_start" | tar -xf - -C "$stage_dir"
+# The staged copy must be a git work tree whose tracked set is exactly the
+# archived HEAD: validation includes checks that read `git ls-files` to confirm
+# a capability tier, and those refuse to run outside a work tree. `--force` with
+# no excludes file keeps the staged tracked set identical to HEAD's. An index is
+# all those checks need, so the stage is deliberately left without any commit.
+git -C "$stage_dir" init -q
+git -C "$stage_dir" -c core.excludesFile=/dev/null add --all --force
 
 replace_literal_once "$stage_dir/flake.nix" "/$old_ref\";" "/$new_ref\";"
 cp "$stage_dir/flake.lock" "$stage_dir/flake.lock.before-update"

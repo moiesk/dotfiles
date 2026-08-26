@@ -47,11 +47,25 @@ done
   fail 'workflow must invoke the repository checker exactly once'
 
 # The workflow installs nothing beyond actions/checkout, so every script it runs
-# may only use tools preinstalled on the runner; ripgrep is not one of them.
-[[ "$(rg -c '^      - uses:' "$WORKFLOW" || true)" == "1" ]] ||
+# may only use tools preinstalled on the runner; ripgrep is not one of them. The
+# scan covers every step line, so a `- name:` step with a continuation `run:`
+# cannot smuggle an install past the uses/run counts.
+steps_block="$(awk '
+  /^    steps:$/ { in_steps = 1; next }
+  in_steps && /^ {0,3}[^ ]/ { in_steps = 0 }
+  in_steps { print }
+' "$WORKFLOW")"
+[[ -n "$steps_block" ]] || fail 'workflow must declare a steps block'
+step_count="$(printf '%s\n' "$steps_block" | rg -c '^      - ' || true)"
+[[ "$(printf '%s\n' "$steps_block" | rg -c '^      - uses: actions/checkout@' || true)" == "1" ]] ||
   fail 'workflow must use exactly one action, actions/checkout, and install no tools'
-run_steps="$(rg -o -r '$1' '^      - run: (.+)$' "$WORKFLOW" || true)"
+[[ -z "$(printf '%s\n' "$steps_block" | rg '^        ' || true)" ]] ||
+  fail 'workflow steps must be single-line uses/run steps, with no continuation keys'
+run_steps="$(printf '%s\n' "$steps_block" | rg -o -r '$1' '^      - run: (.+)$' || true)"
 [[ -n "$run_steps" ]] || fail 'workflow must run at least one repository checker'
+run_count="$(printf '%s\n' "$run_steps" | rg -c '.' || true)"
+[[ "$step_count" == "$((run_count + 1))" ]] ||
+  fail "every workflow step must be actions/checkout or a repository checker run step (found $step_count steps, $run_count checkers)"
 while IFS= read -r run_step; do
   [[ "$run_step" == ./scripts/*.sh ]] ||
     fail "workflow steps must be repository checker scripts, not inline commands: $run_step"
