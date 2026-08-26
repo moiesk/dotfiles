@@ -308,7 +308,8 @@ grep -Fq -- "${first_tool}@${first_new}" "$fixture/TRUST.md" ||
   helper_error 'row substitution skipped the TRUST.md npm pin'
 
 # The recorded floor exception must be checked against the real repository
-# history, not the temporary stage copy, which carries no git metadata.
+# history, not the temporary stage copy, which is an index-only work tree with
+# no commits and therefore no history to walk.
 make_fixture
 jq '.exceptions = []' "$fixture/security/firstmate-floor-exceptions.json" \
   >"$fixture/security/firstmate-floor-exceptions.json.next"
