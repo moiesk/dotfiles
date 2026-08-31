@@ -107,6 +107,7 @@ in
     p7zip
     pinentry_mac
     ripgrep
+    shellcheck
     silver-searcher
     smartmontools
     starship
