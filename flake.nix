@@ -45,7 +45,7 @@
     };
 
     lavish-axi = {
-      url = "github:kunchenguid/lavish-axi/lavish-axi-v0.1.53";
+      url = "github:kunchenguid/lavish-axi/lavish-axi-v0.1.59";
       flake = false;
     };
 
