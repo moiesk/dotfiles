@@ -177,7 +177,7 @@ in
     globalConfig = {
       settings.ruby.compile = false;
       tools = {
-        node = "24.18.0";
+        node = "24.20.0";
         ruby = "4.0.6";
       };
     };

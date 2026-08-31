@@ -109,7 +109,7 @@ rebuild. Homebrew cannot uninstall a package after its defining tap is gone.
 
 ## mise runtimes
 
-Home Manager enables mise, pins Node 24.6.0 and Ruby 4.0.6, and activates mise
+Home Manager enables mise, pins Node 24.20.0 and Ruby 4.0.6, and activates mise
 in new Zsh sessions. Runtime installation is serialized and retried once because
 parallel first-run GPG key imports can race. Ruby uses mise's precompiled Apple
 Silicon binaries, falling back to a source build when no binary is available.
