@@ -45,6 +45,14 @@ deletes the spent record and the removal must be shipped, or the daily
 privileged-tool run fails on stale evidence. The helper performs only a
 targeted Nix update (never a blanket `nix flake update`) and full validation.
 
+`validate.sh` only checks that the four surfaces name the *same* version; nothing
+checks that a `TRUST.md` capability cell still *describes* what the new release
+does. So a bump can be fully green while the inventory understates the tool's
+reach. Before pinning a privileged (Tier A) tool, read the release notes across
+the range and confirm the capability cell still covers them — resolve anything
+ambiguous against upstream source, not the changelog prose. Widening a capability
+description is a captain decision, not a maintainer one.
+
 Pins take effect only after the captain runs `./rebuild.sh`; agents must not run
 it.
 

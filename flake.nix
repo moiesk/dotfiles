@@ -20,7 +20,7 @@
     nix-homebrew.inputs.brew-src.follows = "brew-src";
 
     treehouse = {
-      url = "github:kunchenguid/treehouse/v2.1.1";
+      url = "github:kunchenguid/treehouse/v2.3.0";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -40,17 +40,17 @@
     };
 
     gh-axi = {
-      url = "github:kunchenguid/gh-axi/gh-axi-v0.1.30";
+      url = "github:kunchenguid/gh-axi/gh-axi-v0.1.33";
       flake = false;
     };
 
     lavish-axi = {
-      url = "github:kunchenguid/lavish-axi/lavish-axi-v0.1.53";
+      url = "github:kunchenguid/lavish-axi/lavish-axi-v0.1.59";
       flake = false;
     };
 
     quota-axi = {
-      url = "github:kunchenguid/quota-axi/quota-axi-v0.1.29";
+      url = "github:kunchenguid/quota-axi/quota-axi-v0.1.30";
       flake = false;
     };
 

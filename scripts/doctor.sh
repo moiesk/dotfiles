@@ -40,10 +40,10 @@ for skill_name in setup-matt-pocock-skills chrome-devtools-axi gh-axi lavish-axi
   fi
 done
 
-if [[ "$(mise exec -- node --version 2>/dev/null)" == "v24.18.0" ]]; then
-  pass "mise provides Node 24.18.0"
+if [[ "$(mise exec -- node --version 2>/dev/null)" == "v24.20.0" ]]; then
+  pass "mise provides Node 24.20.0"
 else
-  fail "mise does not provide Node 24.18.0"
+  fail "mise does not provide Node 24.20.0"
 fi
 
 if mise exec -- ruby --version 2>/dev/null | rg -q '^ruby 4\.0\.6'; then
