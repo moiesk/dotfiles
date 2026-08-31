@@ -11,9 +11,22 @@ NPM_BIN="${NPM_BIN:-npm}"
 COOLDOWN_DAYS="${TOOL_UPDATE_COOLDOWN_DAYS:-7}"
 NOW_EPOCH="${TOOL_UPDATE_NOW_EPOCH:-$(date -u +%s)}"
 EXCEPTIONS_FILE="${FIRSTMATE_FLOOR_EXCEPTIONS_FILE:-$DOTFILES_DIR/security/firstmate-floor-exceptions.json}"
+BLOCKED_RELEASES_FILE="${BLOCKED_TOOL_RELEASES_FILE:-$DOTFILES_DIR/security/blocked-tool-releases.json}"
 FAILURES=0
 
 "$DOTFILES_DIR/scripts/check-firstmate-floor-exceptions.sh"
+
+# A curated release is deliberately not adopted because it is broken upstream
+# (e.g. a released flake that no longer builds). While it stays latest, the
+# cooldown hold on the older reviewed pin is the intended state, not a failure.
+is_blocked_release() {
+  local dependency="$1" version="$2"
+  [[ -f "$BLOCKED_RELEASES_FILE" ]] || return 1
+  jq -e --arg dependency "$dependency" --arg version "$version" '
+    any(.blocked[];
+      .dependency == $dependency and .blocked_version == $version)
+  ' "$BLOCKED_RELEASES_FILE" >/dev/null
+}
 
 has_floor_exception() {
   local dependency="$1" pinned="$2"
@@ -114,6 +127,12 @@ check_release() {
   if ((age_seconds < cooldown_seconds)); then
     printf '%s %s is available but remains in the %s-day cooldown (pinned: %s)\n' \
       "$input_name" "$latest" "$COOLDOWN_DAYS" "$pinned"
+    return
+  fi
+
+  if is_blocked_release "$input_name" "$latest"; then
+    printf '%s stable release %s is blocked from adoption; pin held at %s (see %s)\n' \
+      "$input_name" "$latest" "$pinned" "$(basename "$BLOCKED_RELEASES_FILE")"
     return
   fi
 
