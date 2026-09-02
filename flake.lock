@@ -36,16 +36,16 @@
     "gh-axi": {
       "flake": false,
       "locked": {
-        "lastModified": 1787407575,
-        "narHash": "sha256-s+d+qTUAE8voiAzAwwtb2AQuYjVIIdow52hz1lRn2ys=",
+        "lastModified": 1787580163,
+        "narHash": "sha256-R6WmAN5cIbhJDIrMQz6egS0NDry1rELbUoWFU1Zur7E=",
         "owner": "kunchenguid",
         "repo": "gh-axi",
-        "rev": "d0ed7185e012f2bb5fbe64ec6e9f2ae01ace0ba4",
+        "rev": "84112b7897fc1d0833f2727a817ecc91a297c3ef",
         "type": "github"
       },
       "original": {
         "owner": "kunchenguid",
-        "ref": "gh-axi-v0.1.33",
+        "ref": "gh-axi-v0.1.34",
         "repo": "gh-axi",
         "type": "github"
       }
