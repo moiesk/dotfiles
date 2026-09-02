@@ -198,6 +198,11 @@ fi
 EOF
 chmod +x "$tmp_dir/gh-axi" "$tmp_dir/npm"
 printf '{"schema_version":1,"exceptions":[]}\n' >"$tmp_dir/exceptions.json"
+# The checker now consults a block list for npm tools too; isolate it from the
+# live security/blocked-tool-releases.json so these scenarios exercise the
+# cooldown paths, not whatever the repo currently holds. The block-honoring
+# path gets its own populated file in the dedicated case below.
+printf '{"schema_version":1,"blocked":[]}\n' >"$tmp_dir/blocked.json"
 
 export DOTFILES_DIR
 export FIXTURE_TREEHOUSE_TAG FIXTURE_NO_MISTAKES_TAG FIXTURE_GITHUB_PUBLISHED_AT
@@ -211,6 +216,7 @@ output_file="$tmp_dir/output"
 if GH_AXI_BIN="$tmp_dir/gh-axi" \
   NPM_BIN="$tmp_dir/npm" \
   FIRSTMATE_FLOOR_EXCEPTIONS_FILE="$tmp_dir/exceptions.json" \
+  BLOCKED_TOOL_RELEASES_FILE="$tmp_dir/blocked.json" \
   TOOL_UPDATE_NOW_EPOCH="$now_epoch" \
   TOOL_UPDATE_COOLDOWN_DAYS="$cooldown_days" \
   "$CHECKER" >"$output_file" 2>&1; then
@@ -235,12 +241,45 @@ reported_errors="$(grep -c '^error: ' "$output_file" || true)"
 ((reported_errors == 1)) ||
   fixture_error "the stubbed tools produced $reported_errors checker errors, but only $FIXTURE_NPM_PACKAGE is under test"
 
+# Block-honoring for the npm-tool class: the same past-cooldown release that
+# fails above is instead HELD when the block list names it, reported like the
+# flake-tool path (is_blocked_release) rather than raising a checker error. This
+# is the branch-under-test for the Tier A block support.
+printf '{"schema_version":1,"blocked":[{"dependency":"%s","blocked_version":"%s","pinned_fallback":"%s","reason":"fixture"}]}\n' \
+  "$FIXTURE_NPM_PACKAGE" "$FIXTURE_NPM_INTERMEDIATE" "$FIXTURE_NPM_PINNED" \
+  >"$tmp_dir/blocked-intermediate.json"
+if ! GH_AXI_BIN="$tmp_dir/gh-axi" \
+  NPM_BIN="$tmp_dir/npm" \
+  FIRSTMATE_FLOOR_EXCEPTIONS_FILE="$tmp_dir/exceptions.json" \
+  BLOCKED_TOOL_RELEASES_FILE="$tmp_dir/blocked-intermediate.json" \
+  TOOL_UPDATE_NOW_EPOCH="$now_epoch" \
+  TOOL_UPDATE_COOLDOWN_DAYS="$cooldown_days" \
+  "$CHECKER" >"$output_file" 2>&1; then
+  cat "$output_file" >&2
+  printf '%s\n' 'error: a blocked npm release must hold the pin, not fail the gate' >&2
+  exit 1
+fi
+expected_block="$FIXTURE_NPM_PACKAGE stable release $FIXTURE_NPM_INTERMEDIATE is blocked from adoption; pin held at $FIXTURE_NPM_PINNED"
+grep -Fq "$expected_block" "$output_file" || {
+  cat "$output_file" >&2
+  printf 'error: the release check did not hold the blocked npm release\nexpected: %s\n' \
+    "$expected_block" >&2
+  exit 1
+}
+blocked_case_errors="$(grep -c '^error: ' "$output_file" || true)"
+((blocked_case_errors == 0)) || {
+  cat "$output_file" >&2
+  printf '%s\n' 'error: holding a blocked npm release must not itself raise a checker error' >&2
+  exit 1
+}
+
 # A pin moved to a release that is still inside cooldown is itself a policy
 # violation. In particular, pinned == latest must not make that adoption pass.
 if FIXTURE_MODE=pinned-latest \
   GH_AXI_BIN="$tmp_dir/gh-axi" \
   NPM_BIN="$tmp_dir/npm" \
   FIRSTMATE_FLOOR_EXCEPTIONS_FILE="$tmp_dir/exceptions.json" \
+  BLOCKED_TOOL_RELEASES_FILE="$tmp_dir/blocked.json" \
   TOOL_UPDATE_NOW_EPOCH="$now_epoch" \
   TOOL_UPDATE_COOLDOWN_DAYS="$cooldown_days" \
   "$CHECKER" >"$output_file" 2>&1; then
@@ -260,6 +299,7 @@ if FIXTURE_MODE=malformed-pinned \
   GH_AXI_BIN="$tmp_dir/gh-axi" \
   NPM_BIN="$tmp_dir/npm" \
   FIRSTMATE_FLOOR_EXCEPTIONS_FILE="$tmp_dir/exceptions.json" \
+  BLOCKED_TOOL_RELEASES_FILE="$tmp_dir/blocked.json" \
   TOOL_UPDATE_NOW_EPOCH="$now_epoch" \
   TOOL_UPDATE_COOLDOWN_DAYS="$cooldown_days" \
   "$CHECKER" >"$output_file" 2>&1; then
@@ -281,6 +321,7 @@ if ! FIXTURE_MODE=fresh-available \
   GH_AXI_BIN="$tmp_dir/gh-axi" \
   NPM_BIN="$tmp_dir/npm" \
   FIRSTMATE_FLOOR_EXCEPTIONS_FILE="$tmp_dir/exceptions.json" \
+  BLOCKED_TOOL_RELEASES_FILE="$tmp_dir/blocked.json" \
   TOOL_UPDATE_NOW_EPOCH="$now_epoch" \
   TOOL_UPDATE_COOLDOWN_DAYS="$cooldown_days" \
   "$CHECKER" >"$output_file" 2>&1; then
@@ -318,6 +359,7 @@ if ! FIXTURE_MODE=pinned-latest \
   GH_AXI_BIN="$tmp_dir/gh-axi" \
   NPM_BIN="$tmp_dir/npm" \
   FIRSTMATE_FLOOR_EXCEPTIONS_FILE="$tmp_dir/exceptions.json" \
+  BLOCKED_TOOL_RELEASES_FILE="$tmp_dir/blocked.json" \
   TOOL_UPDATE_NOW_EPOCH="$now_epoch" \
   TOOL_UPDATE_COOLDOWN_DAYS="$cooldown_days" \
   "$CHECKER" >"$output_file" 2>&1; then

@@ -20,7 +20,7 @@
     nix-homebrew.inputs.brew-src.follows = "brew-src";
 
     treehouse = {
-      url = "github:kunchenguid/treehouse/v2.1.1";
+      url = "github:kunchenguid/treehouse/v2.2.0";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -35,12 +35,12 @@
     };
 
     chrome-devtools-axi = {
-      url = "github:kunchenguid/chrome-devtools-axi/chrome-devtools-axi-v0.1.29";
+      url = "github:kunchenguid/chrome-devtools-axi/chrome-devtools-axi-v0.1.30";
       flake = false;
     };
 
     gh-axi = {
-      url = "github:kunchenguid/gh-axi/gh-axi-v0.1.33";
+      url = "github:kunchenguid/gh-axi/gh-axi-v0.1.34";
       flake = false;
     };
 
