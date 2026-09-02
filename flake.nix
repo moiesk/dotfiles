@@ -20,7 +20,7 @@
     nix-homebrew.inputs.brew-src.follows = "brew-src";
 
     treehouse = {
-      url = "github:kunchenguid/treehouse/v2.3.0";
+      url = "github:kunchenguid/treehouse/v2.1.1";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 

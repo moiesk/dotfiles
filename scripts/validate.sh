@@ -78,6 +78,7 @@ for json_file in \
   agent-tools/package.json \
   agent-tools/package-lock.json \
   security/firstmate-floor-exceptions.json \
+  security/blocked-tool-releases.json \
   home/.claude/settings.portable.json \
   home/.config/opencode/package.json \
   home/.config/opencode/package-lock.json; do
