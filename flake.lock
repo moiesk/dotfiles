@@ -237,16 +237,16 @@
         ]
       },
       "locked": {
-        "lastModified": 1787404973,
-        "narHash": "sha256-8C6bg2jfqTSmI3N4tdzyIRuJKN12DA/SjcuL9hBPgEg=",
+        "lastModified": 1787274825,
+        "narHash": "sha256-3BqjnaVxgKRIW03SpUycoCx50Eo/IIqKnUBsoyq4310=",
         "owner": "kunchenguid",
         "repo": "treehouse",
-        "rev": "35b8a41d8b0f5cb10d46673441255086f45088bf",
+        "rev": "4dfed5955c6a9ed96bec5ef8b38e493fe8c446a6",
         "type": "github"
       },
       "original": {
         "owner": "kunchenguid",
-        "ref": "v2.3.0",
+        "ref": "v2.2.0",
         "repo": "treehouse",
         "type": "github"
       }
