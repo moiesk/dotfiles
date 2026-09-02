@@ -4,8 +4,8 @@
     {
       "dependency": "treehouse",
       "blocked_version": "v2.3.0",
-      "pinned_fallback": "v2.1.1",
-      "reason": "treehouse v2.3.0's released flake supplies git but not Python, so the non-activating darwin-rebuild build gate fails deterministically in treehouse's own Go tests when the no-mistakes gate runs its Python-dependent script. Upstream fixed the Nix packaging after v2.3.0 but cut no newer exact release, so the pin is held at the last reviewed buildable v2.1.1 until an exact fixed release clears cooldown."
+      "pinned_fallback": "v2.2.0",
+      "reason": "treehouse v2.3.0's released flake supplies git but not Python, so the non-activating darwin-rebuild build gate fails deterministically in treehouse's own Go tests when the no-mistakes gate runs its Python-dependent script. Upstream fixed the Nix packaging after v2.3.0 but cut no newer exact release, so the pin is held at the last reviewed buildable v2.2.0 until an exact fixed release clears cooldown."
     }
   ]
 }

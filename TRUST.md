@@ -98,7 +98,7 @@ is written specifically around these two.
 
 | Upstream | Pinned at | Capability granted | Why it is trusted |
 |---|---|---|---|
-| [`kunchenguid/treehouse`](https://github.com/kunchenguid/treehouse) | `v2.1.1` (flake input) | **Code-exec / workflow** — provides disposable git worktrees that agents build and run code inside. | Pinned to an exact release; explicitly covered by the cooldown/review gate (`check_release treehouse …`). The newer `v2.3.0` is held out of adoption in `security/blocked-tool-releases.json` because its released flake omits Python and fails the darwin-rebuild build gate; the pin stays at the last reviewed buildable release until an exact fixed release clears cooldown. |
+| [`kunchenguid/treehouse`](https://github.com/kunchenguid/treehouse) | `v2.2.0` (flake input) | **Code-exec / workflow** — provides disposable git worktrees that agents build and run code inside. | Pinned to an exact release; explicitly covered by the cooldown/review gate (`check_release treehouse …`). The newer `v2.3.0` is held out of adoption in `security/blocked-tool-releases.json` because its released flake omits Python and fails the darwin-rebuild build gate; the pin stays at the last reviewed buildable release `v2.2.0` until an exact fixed release clears cooldown. |
 | [`kunchenguid/no-mistakes`](https://github.com/kunchenguid/no-mistakes) | `v1.48.0` (flake input, `flake = false`) | **git push + PR** — the validation pipeline that runs review/tests/lint and then pushes branches and opens pull requests. | Pinned to an exact release; explicitly covered by the cooldown/review gate (`check_release no-mistakes …`). It is the mandatory gate every change passes through, so its output is reviewed on every run. |
 
 ## Tier C — Low-capability
