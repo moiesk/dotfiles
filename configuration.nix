@@ -37,12 +37,24 @@
     inherit user;
   };
 
-  # nix-homebrew keeps Homebrew's source in the Nix store, outside the mutable
-  # prefix. Restore the completion target expected by Homebrew's standard
-  # share/zsh/site-functions/_brew symlink.
-  system.activationScripts.homebrewZshCompletion.text = ''
-    mkdir -p /opt/homebrew/completions/zsh
-    ln -sfn ${brew-src}/completions/zsh/_brew /opt/homebrew/completions/zsh/_brew
+  # A native Homebrew prefix IS the brew repository, so its own
+  # share/zsh/site-functions/_brew -> ../../../completions/zsh/_brew link ships
+  # with the checkout. nix-homebrew instead keeps the source in the Nix store and
+  # only links Library/Homebrew into the prefix, so neither hop exists and
+  # `brew shellenv`'s fpath entry (HOMEBREW_PREFIX/share/zsh/site-functions) is
+  # empty. Create that entry directly, as a single hop to the store: the
+  # interpolation below is a genuine reference of the activation script, so
+  # brew-src is retained as part of the system closure and the link cannot dangle.
+  # Only site-functions is maintained -- nothing on this machine reads the
+  # prefix's completions/ directory, so a second link there would be an
+  # unreferenced copy of the same failure mode.
+  #
+  # This must live in postActivation: nix-darwin 26.05 runs a fixed list of named
+  # fragments, so a self-named system.activationScripts.<name> entry is evaluated
+  # but never executed.
+  system.activationScripts.postActivation.text = ''
+    mkdir -p /opt/homebrew/share/zsh/site-functions
+    ln -sfn ${brew-src}/completions/zsh/_brew /opt/homebrew/share/zsh/site-functions/_brew
   '';
 
   system.stateVersion = 6;
