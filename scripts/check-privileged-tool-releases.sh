@@ -189,12 +189,23 @@ check_npm_release() {
   age_seconds=$((now - published_epoch))
   cooldown_seconds=$((COOLDOWN_DAYS * 86400))
 
+  # A curated npm release can be held out of adoption because it is broken
+  # upstream or widens capability beyond its reviewed TRUST.md description. Gather
+  # this package's block list so the eligible-release scan skips it, mirroring the
+  # flake-tool path (check_release / is_blocked_release).
+  local blocked_versions
+  blocked_versions="$(jq -r --arg dependency "$package_name" '
+    [.blocked[]? | select(.dependency == $dependency) | .blocked_version] | join(",")
+  ' "$BLOCKED_RELEASES_FILE" 2>/dev/null || true)"
+
   # A newly published latest release must not hide an older release that has
-  # already completed the cooldown. Select the highest stable eligible version.
+  # already completed the cooldown. Select the highest stable eligible version
+  # above the pin, skipping any release named in the block list.
   eligible="$(node -e '
     const metadata = JSON.parse(process.argv[1]);
     const pinned = process.argv[2].split(".").map(Number);
     const cutoff = Number(process.argv[3]) * 1000;
+    const blocked = new Set((process.argv[4] || "").split(",").filter(Boolean));
     const parse = value => /^\d+\.\d+\.\d+$/.test(value)
       ? value.split(".").map(Number)
       : null;
@@ -202,11 +213,23 @@ check_npm_release() {
     const candidates = (metadata.versions || [])
       .map(value => ({ value, parsed: parse(value), published: Date.parse(metadata.time?.[value]) }))
       .filter(item => item.parsed && Number.isFinite(item.published) && item.published <= cutoff)
+      .filter(item => compare(item.parsed, pinned) > 0)
       .sort((a, b) => compare(b.parsed, a.parsed));
-    if (candidates[0] && compare(candidates[0].parsed, pinned) > 0) {
-      process.stdout.write(candidates[0].value);
+    const adoptable = candidates.filter(item => !blocked.has(item.value));
+    if (adoptable[0]) {
+      process.stdout.write(adoptable[0].value);
+    } else if (candidates[0]) {
+      // Every eligible release above the pin is blocked; name the highest so the
+      // held state is legible, matching the flake-tool block message.
+      process.stdout.write("BLOCKED:" + candidates[0].value);
     }
-  ' "$metadata" "$pinned" "$((now - cooldown_seconds))")"
+  ' "$metadata" "$pinned" "$((now - cooldown_seconds))" "$blocked_versions")"
+
+  if [[ "$eligible" == BLOCKED:* ]]; then
+    printf '%s stable release %s is blocked from adoption; pin held at %s (see %s)\n' \
+      "$package_name" "${eligible#BLOCKED:}" "$pinned" "$(basename "$BLOCKED_RELEASES_FILE")"
+    return
+  fi
 
   if [[ -n "$eligible" ]]; then
     printf 'error: %s stable release %s is past cooldown; pinned release is %s\n' \
