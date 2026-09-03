@@ -70,10 +70,27 @@ The asymmetry is intentional, not an oversight. These are first-party /
 lab-grade vendors shipping frequent bug-fixes to daily-driver tools, so holding a
 new release through a cooldown would mostly *delay the fixes the cooldown exists
 to deliver* — for these upstreams rolling is the safer path. The rolling
-exception is narrow: the `kunchenguid` tools retain their capability-tiered
-pin/cooldown treatment, Matt Pocock's skills stay pinned, and OpenCode's official
-plugin-authoring package stays exact-pinned under the Tier C posture below.
-(`firstmate` also rolls, but for the distinct reason in its own section.)
+exceptions are narrow: the two approved third-party Homebrew tools below roll
+under their own disclosed posture, while the `kunchenguid` tools retain their
+capability-tiered pin/cooldown treatment, Matt Pocock's skills stay pinned, and
+OpenCode's official plugin-authoring package stays exact-pinned under the Tier C
+posture below. (`firstmate` also rolls, but for the distinct reason in its own
+section.)
+
+### Third-party Homebrew tools — deliberately rolling ⚠️
+
+The two tools below are owner-approved exceptions to the third-party pinning and
+cooldown policy. Their trusted Homebrew taps advance under `autoUpdate`, and
+`upgrade` installs the formula version selected by the new tap revision on every
+activation. Each current formula verifies its source or release artifact with a
+SHA-256 digest, but the tap revisions, formula versions, and digests are not
+pinned by this repository. A tap update is therefore trusted immediately, with
+no seven-day observation window.
+
+| Upstream | Pinned at | Capability granted | Why it is trusted |
+|---|---|---|---|
+| [`can1357/oh-my-pi`](https://github.com/can1357/oh-my-pi), installed through [`can1357/homebrew-tap`](https://github.com/can1357/homebrew-tap) | Homebrew formula (rolling; trusted tap + `autoUpdate` + `upgrade`) | **Full coding-agent execution** — reads and writes files, runs shell commands and persistent Python/Bun kernels, loads extensions, custom tools, skills, and MCP servers, and can use provider credentials plus network and browser integrations. | Deliberately adopted as an open-source, Pi-derived daily-driver coding harness. The formula verifies the selected release binary, but the owner accepts the tap and harness as rolling, without a repository pin or cooldown. |
+| [`jundot/omlx`](https://github.com/jundot/omlx) | Homebrew formula (rolling; trusted tap + `autoUpdate` + `upgrade`) | **Local model serving** — when launched, reads local model files, downloads models and resources, writes settings, logs, and disk-backed caches, and exposes OpenAI-compatible and administration endpoints on localhost by default; optional clustering can connect to other Macs. | Deliberately adopted as an open-source, Apache-licensed Apple Silicon inference server. The formula verifies the selected tagged source archive, but the owner accepts the tap and server as rolling, without a repository pin or cooldown. |
 
 ---
 
