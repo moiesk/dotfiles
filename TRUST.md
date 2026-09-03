@@ -51,11 +51,10 @@ Instead:
 - This document is the disclosure half: the trust is written down, tiered, and
   reviewable rather than implicit.
 
-Among the **pin-enforced** tiers, `firstmate` is the one *third-party* upstream
-that escapes the pinning discipline — it is **accept-as-rolling** (see its
-section). That exception is the loudest single fact in this file. The Neovim
-upstreams sit outside these tiers entirely, under the
-[disclosed-but-not-pinned stance](#nvim-stance).
+Rolling third-party exceptions are explicit: oMLX and `baby-menu` are disclosed
+in Tier C, while `firstmate` has a dedicated **accept-as-rolling** section
+because it supervises the agent harnesses. The Neovim upstreams sit outside the
+tiers entirely, under the [disclosed-but-not-pinned stance](#nvim-stance).
 
 ### First-party harnesses — deliberately rolling ⚠️
 
@@ -159,11 +158,9 @@ the exact pin, lockfile, audit, signature, and PR review controls remain.
 
 ## firstmate — accept-as-rolling ⚠️
 
-> **Among the pin-enforced third-party upstreams inventoried here, this is the
-> one that is NOT pinned.** (The first-party harnesses roll too, but by the
-> separate, deliberate decision described in the stance above; the Neovim
-> upstreams are disclosed rather than pin-enforced, per the
-> [stance bullet](#nvim-stance).)
+> **Firstmate is an unpinned, continuously trusted third-party supervisor.**
+> Tier C also contains the rolling oMLX and `baby-menu` Homebrew entries, but
+> Firstmate is treated separately because it orchestrates the agent harnesses.
 
 [`kunchenguid/firstmate`](https://github.com/kunchenguid/firstmate) is an agent
 **distro** — the supervisor that dispatches and manages the crewmate agents doing
