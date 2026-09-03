@@ -59,7 +59,7 @@ else
 fi
 
 homebrew_check=""
-if homebrew_check="$($DOTFILES_DIR/scripts/check-homebrew-current.sh)"; then
+if homebrew_check="$("$DOTFILES_DIR"/scripts/check-homebrew-current.sh)"; then
   pass "Homebrew packages are current"
 else
   fail "$homebrew_check"

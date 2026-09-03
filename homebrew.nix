@@ -26,12 +26,10 @@
         trusted = true;
       }
       {
-        # This is for OMP
         name = "can1357/tap";
         trusted = true;
       }
       {
-        # This is for omlx
         name = "jundot/omlx";
         clone_target = "https://github.com/jundot/omlx.git";
         trusted = true;
