@@ -4,8 +4,9 @@
     enable = true;
     enableZshIntegration = true;
 
-    # Homebrew is reserved for native macOS apps and tap-specific tools. The
-    # portable CLI inventory lives in home.packages instead.
+    # Homebrew is reserved for native macOS apps, tap-specific tools, and
+    # dependencies retained for strict cleanup. Other portable CLI tools live
+    # in home.packages instead.
     taps = [
       {
         name = "felixkratz/formulae";

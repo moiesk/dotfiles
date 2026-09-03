@@ -30,8 +30,8 @@ Instead:
   [`home/.config/opencode/package.json`](home/.config/opencode/package.json)
   manifest. Rolling exceptions are called out below. A new upstream release
   does nothing until the matching pin is moved on purpose. (The first-party
-  harnesses — the `claude-code`/`codex` casks and Pi — deliberately roll to
-  latest instead; see the stance footnote below.)
+  harnesses — the `claude-code`/`codex` casks, OMP formula, and Pi —
+  deliberately roll to latest instead; see the stance footnote below.)
   <!-- markdownlint-disable-next-line MD033 -->
 - <a id="nvim-stance"></a>Neovim plugins are **disclosed but not pinned**.
   This bullet is the single authoritative statement of that stance; every other
@@ -60,37 +60,21 @@ upstreams sit outside these tiers entirely, under the
 ### First-party harnesses — deliberately rolling ⚠️
 
 The agent harnesses this repo treats as **first-party** — the `claude-code` and
-`codex` Homebrew casks and the Pi npm runtime
-(`@earendil-works/pi-coding-agent`) — are **deliberately not pinned**. They roll
-to the latest published release on every rebuild, with **no pin and no cooldown**
-(decisions #34/#36). Pi is therefore **absent from the third-party inventory
-below** — it carries no row; it joins the casks.
+`codex` Homebrew casks, the OMP formula from
+[`can1357/homebrew-tap`](https://github.com/can1357/homebrew-tap), and the Pi npm
+runtime (`@earendil-works/pi-coding-agent`) — are **deliberately not pinned**.
+They roll to the latest published release on every rebuild, with **no pin and no
+cooldown** (decisions #34/#36 and the OMP adoption decision). OMP and Pi are
+therefore **absent from the third-party inventory below** — they carry no rows.
 
 The asymmetry is intentional, not an oversight. These are first-party /
 lab-grade vendors shipping frequent bug-fixes to daily-driver tools, so holding a
 new release through a cooldown would mostly *delay the fixes the cooldown exists
-to deliver* — for these upstreams rolling is the safer path. The rolling
-exceptions are narrow: the two approved third-party Homebrew tools below roll
-under their own disclosed posture, while the `kunchenguid` tools retain their
-capability-tiered pin/cooldown treatment, Matt Pocock's skills stay pinned, and
-OpenCode's official plugin-authoring package stays exact-pinned under the Tier C
-posture below. (`firstmate` also rolls, but for the distinct reason in its own
-section.)
-
-### Third-party Homebrew tools — deliberately rolling ⚠️
-
-The two tools below are owner-approved exceptions to the third-party pinning and
-cooldown policy. Their trusted Homebrew taps advance under `autoUpdate`, and
-`upgrade` installs the formula version selected by the new tap revision on every
-activation. Each current formula verifies its source or release artifact with a
-SHA-256 digest, but the tap revisions, formula versions, and digests are not
-pinned by this repository. A tap update is therefore trusted immediately, with
-no seven-day observation window.
-
-| Upstream | Pinned at | Capability granted | Why it is trusted |
-|---|---|---|---|
-| [`can1357/oh-my-pi`](https://github.com/can1357/oh-my-pi), installed through [`can1357/homebrew-tap`](https://github.com/can1357/homebrew-tap) | Homebrew formula (rolling; trusted tap + `autoUpdate` + `upgrade`) | **Full coding-agent execution** — reads and writes files, runs shell commands and persistent Python/Bun kernels, loads extensions, custom tools, skills, and MCP servers, and can use provider credentials plus network and browser integrations. | Deliberately adopted as an open-source, Pi-derived daily-driver coding harness. The formula verifies the selected release binary, but the owner accepts the tap and harness as rolling, without a repository pin or cooldown. |
-| [`jundot/omlx`](https://github.com/jundot/omlx) | Homebrew formula (rolling; trusted tap + `autoUpdate` + `upgrade`) | **Local model serving** — when launched, reads local model files, downloads models and resources, writes settings, logs, and disk-backed caches, and exposes OpenAI-compatible and administration endpoints on localhost by default; optional clustering can connect to other Macs. | Deliberately adopted as an open-source, Apache-licensed Apple Silicon inference server. The formula verifies the selected tagged source archive, but the owner accepts the tap and server as rolling, without a repository pin or cooldown. |
+to deliver* — for these upstreams rolling is the safer path. OMP receives the
+same treatment as Pi. Outside this first-party harness group, rolling upstreams
+remain disclosed in their capability tier or dedicated stance: oMLX and
+`baby-menu` sit in Tier C, Neovim plugins follow their separate stance, and
+`firstmate` follows its own accept-as-rolling policy.
 
 ---
 
@@ -130,6 +114,7 @@ still be retained for a particular manifest, as noted below.
 | [`kunchenguid/lavish-axi`](https://github.com/kunchenguid/lavish-axi) | `lavish-axi-v0.1.59` (flake input + npm `lavish-axi@0.1.59`) | Renders agent responses into reviewable HTML artifacts. | Pinned to an exact release; output-only presentation, no privileged capability. |
 | [`kunchenguid/tasks-axi`](https://github.com/kunchenguid/tasks-axi) | `tasks-axi-v0.2.5` (flake input + npm `tasks-axi@0.2.5`) | Manages a local, hand-editable `backlog.md` task list. | Pinned to an exact release; operates on a local text backlog, no privileged capability. |
 | [`kunchenguid/tap/baby-menu`](https://github.com/kunchenguid/homebrew-tap) | Homebrew cask (unversioned; `greedyCasks` converges to latest) | Native macOS menu-bar app installed via Homebrew. | From the same `kunchenguid` tap. Rated low-capability as an ordinary user-space menu-bar app. Note: as a `greedyCask` it is **not** pinned to a version and self-updates to Homebrew's latest — the concentration risk applies, but the capability is low. |
+| [`jundot/omlx`](https://github.com/jundot/omlx) | Homebrew formula (rolling; trusted tap + `autoUpdate` + `upgrade`) | **Local model serving** — when launched, reads local model files, downloads models and resources, writes settings, logs, and disk-backed caches, and exposes OpenAI-compatible and administration endpoints on localhost by default; optional clustering can connect to other Macs. | Owner-approved rolling exception for an open-source, Apache-licensed Apple Silicon inference server. The formula verifies the selected tagged source archive, but the tap, version, and digest advance without a repository pin or cooldown. |
 | [`anomalyco/opencode` (`@opencode-ai/plugin`)](https://github.com/anomalyco/opencode/tree/v1.18.19/packages/plugin) | npm `@opencode-ai/plugin@1.18.19` (exact, in [`home/.config/opencode/package.json`](home/.config/opencode/package.json); locked beside it) | **OpenCode plugin-authoring support.** In this checkout it is installed but not loaded: there is no tracked OpenCode plugin/custom-tool source or import, and its public runtime entry points are schema/identity and TUI helpers while the shell, SDK, auth, permission, and tool-hook surfaces are TypeScript interfaces for plugin authors. The separate package pin therefore has no direct privileged reach today. | The official package is published from the same monorepo and release train as the OpenCode harness. The repository's `npm ci` path disables lifecycle scripts and verifies lock integrity, vulnerabilities, and registry signatures. Tier C reflects its effective configured use; adding a runtime import or local plugin must re-evaluate the tier. The manifest retains its existing seven-day Dependabot delay for routine update proposals, but is not subject to the privileged release checker. |
 
 ### OpenCode package boundary
