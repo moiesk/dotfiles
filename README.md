@@ -191,13 +191,8 @@ fails on a committed privileged pin that is itself still inside the cooldown
 unless a valid Firstmate dependency-floor exception covers it (see `TRUST.md`
 and the preflight below).
 
-`quota-axi@0.1.32` still exact-pins the vulnerable
-`@toon-format/toon@2.1.0`, so `package.json` scopes a 2.3.1 override to that
-package until quota-axi adopts a fixed TOON release itself. The captain accepted
-the resulting machine-output change: empty `quota`, `attention`, and
-`exhaustion` arrays use TOON 2.3's `key: []` form instead of `key[0]:`. Removing
-the override requires another output-contract review as well as a non-vulnerable
-upstream dependency.
+`quota-axi` has a narrowly scoped transitive security override. Its accepted
+output-contract and credential-refresh boundaries are documented in `TRUST.md`.
 
 OpenCode's official `@opencode-ai/plugin` authoring package is a separate npm
 project, exact-pinned in `home/.config/opencode/package.json` with its dependency

@@ -80,9 +80,9 @@ remain disclosed in their capability tier or dedicated stance: oMLX and
 ## Tier A — Privileged
 
 Wired into **every** agent harness. These can act on GitHub, drive a real
-browser, or read local provider auth. A compromised Tier A tool is the highest-
-impact failure in the stack, so all three sit **behind the cooldown/review
-gate** and are pinned to exact releases.
+browser, or access local provider auth, including delegated credential refresh.
+A compromised Tier A tool is the highest-impact failure in the stack, so all
+three sit **behind the cooldown/review gate** and are pinned to exact releases.
 
 | Upstream | Pinned at | Capability granted | Why it is trusted |
 |---|---|---|---|
