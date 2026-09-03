@@ -6,9 +6,9 @@ configuration and macOS preferences here are derived from my own machine.
 
 One repository manages:
 
-- Codex, Claude Code, Pi, and OpenCode with shared tools and portable settings
+- Codex, Claude Code, OMP, Pi, and OpenCode with shared tools and portable settings
 - Ghostty, Herdr, zsh, Starship, fzf, mise, and Neovim/LazyVim
-- Portable CLI tools with Nix and native macOS apps with Homebrew
+- Portable CLI tools with Nix, plus native and tap-specific tools with Homebrew
 - Matt Pocock's agent skills plus Treehouse, Firstmate, no-mistakes, and Lavish
 - Dock auto-hide, automatic light/dark appearance, and Finder tabs
 
@@ -16,7 +16,7 @@ One repository manages:
 
 Prerequisites:
 
-- Apple Silicon Mac
+- Apple Silicon Mac running macOS 15 (Sequoia) or newer
 - macOS administrator access
 - Git and internet access
 
@@ -67,13 +67,14 @@ still recorded in the lock file, so the applied system remains reproducible and
 the lock-file change should be committed with the next project change. This
 intentionally favors the latest available release, including for self-updating
 or unversioned apps such as agent harnesses. The final doctor check fails if any
-Homebrew formula or cask is still outdated. The first-party
-agent harnesses roll to latest by the same deliberate policy — no pin, no
-cooldown: the `claude-code`/`codex` casks upgrade greedily, and Pi
-(`@earendil-works/pi-coding-agent`) is installed from its latest npm release on
-every rebuild by `scripts/post-switch.sh`, with the doctor confirming it is
-present. The third-party `kunchenguid` and `mattpocock` upstreams stay pinned
-and gated instead (see `TRUST.md`); the asymmetry is intentional.
+Homebrew formula or cask is still outdated. The first-party agent harnesses roll
+to latest by the same deliberate policy — no pin, no cooldown: the
+`claude-code`/`codex` casks and `can1357/tap/omp` formula upgrade through
+Homebrew, while Pi (`@earendil-works/pi-coding-agent`) is installed from its
+latest npm release on every rebuild by `scripts/post-switch.sh`, with the doctor
+confirming it is present. Third-party trust decisions, including oMLX's rolling
+Tier C exception and the pinned `kunchenguid` and `mattpocock` tools, are
+documented in `TRUST.md`.
 
 ## Daily use
 
@@ -98,10 +99,14 @@ Check the live result:
 
 ## Package ownership
 
-Portable command-line tools are declared in `home.packages` and pinned by the
-flake lock. Homebrew is reserved for macOS app bundles, fonts, native window
-management, Herdr, ScummVM, and the Borders tap. The Homebrew list contains only
-direct installs; dependencies are allowed to converge automatically.
+Portable command-line tools are normally declared in `home.packages` and pinned
+by the flake lock. Homebrew owns macOS app bundles, fonts, native tools, and
+tools whose chosen distribution is a dedicated tap. OMP is intentionally a
+rolling first-party harness formula, while oMLX is an Apple Silicon-native model
+server distributed from its own tap. The Homebrew list otherwise contains
+direct installs; `rust` is the one retained build dependency because oMLX needs
+it and the strict preflight treats installed build-only leaves as undeclared
+unless they are explicit.
 
 Remove tap-backed packages in two rebuilds: first remove the formula or cask
 while leaving its tap declared, then remove the now-unused tap in the following
@@ -185,6 +190,9 @@ cooldown, then fails until the pin is deliberately advanced. That gate also
 fails on a committed privileged pin that is itself still inside the cooldown
 unless a valid Firstmate dependency-floor exception covers it (see `TRUST.md`
 and the preflight below).
+
+`quota-axi` has a narrowly scoped transitive security override. Its accepted
+output-contract and credential-refresh boundaries are documented in `TRUST.md`.
 
 OpenCode's official `@opencode-ai/plugin` authoring package is a separate npm
 project, exact-pinned in `home/.config/opencode/package.json` with its dependency

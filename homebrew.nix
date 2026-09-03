@@ -4,8 +4,9 @@
     enable = true;
     enableZshIntegration = true;
 
-    # Homebrew is reserved for native macOS apps and tap-specific tools. The
-    # portable CLI inventory lives in home.packages instead.
+    # Homebrew is reserved for native macOS apps, tap-specific tools, and
+    # dependencies retained for strict cleanup. Other portable CLI tools live
+    # in home.packages instead.
     taps = [
       {
         name = "felixkratz/formulae";
@@ -21,8 +22,17 @@
         trusted = true;
       }
       {
-          name = "basecamp/tap";
-          trusted = true;
+        name = "basecamp/tap";
+        trusted = true;
+      }
+      {
+        name = "can1357/tap";
+        trusted = true;
+      }
+      {
+        name = "jundot/omlx";
+        clone_target = "https://github.com/jundot/omlx.git";
+        trusted = true;
       }
     ];
 
@@ -42,6 +52,9 @@
         trusted = true;
       }
       "mole"
+      "rust"
+      "jundot/omlx/omlx"
+      "can1357/tap/omp"
     ];
 
     casks = [
@@ -51,7 +64,6 @@
       "basecamp/tap/basecamp-cli"
       "claude-code"
       "codex"
-      "comfy"
       "font-fira-code"
       {
         name = "font-fira-mono";

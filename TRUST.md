@@ -30,8 +30,8 @@ Instead:
   [`home/.config/opencode/package.json`](home/.config/opencode/package.json)
   manifest. Rolling exceptions are called out below. A new upstream release
   does nothing until the matching pin is moved on purpose. (The first-party
-  harnesses — the `claude-code`/`codex` casks and Pi — deliberately roll to
-  latest instead; see the stance footnote below.)
+  harnesses — the `claude-code`/`codex` casks, OMP formula, and Pi —
+  deliberately roll to latest instead; see the stance footnote below.)
   <!-- markdownlint-disable-next-line MD033 -->
 - <a id="nvim-stance"></a>Neovim plugins are **disclosed but not pinned**.
   This bullet is the single authoritative statement of that stance; every other
@@ -51,44 +51,44 @@ Instead:
 - This document is the disclosure half: the trust is written down, tiered, and
   reviewable rather than implicit.
 
-Among the **pin-enforced** tiers, `firstmate` is the one *third-party* upstream
-that escapes the pinning discipline — it is **accept-as-rolling** (see its
-section). That exception is the loudest single fact in this file. The Neovim
-upstreams sit outside these tiers entirely, under the
-[disclosed-but-not-pinned stance](#nvim-stance).
+Rolling third-party exceptions are explicit: oMLX and `baby-menu` are disclosed
+in Tier C, while `firstmate` has a dedicated **accept-as-rolling** section
+because it supervises the agent harnesses. The Neovim upstreams sit outside the
+tiers entirely, under the [disclosed-but-not-pinned stance](#nvim-stance).
 
 ### First-party harnesses — deliberately rolling ⚠️
 
 The agent harnesses this repo treats as **first-party** — the `claude-code` and
-`codex` Homebrew casks and the Pi npm runtime
-(`@earendil-works/pi-coding-agent`) — are **deliberately not pinned**. They roll
-to the latest published release on every rebuild, with **no pin and no cooldown**
-(decisions #34/#36). Pi is therefore **absent from the third-party inventory
-below** — it carries no row; it joins the casks.
+`codex` Homebrew casks, the OMP formula from
+[`can1357/homebrew-tap`](https://github.com/can1357/homebrew-tap), and the Pi npm
+runtime (`@earendil-works/pi-coding-agent`) — are **deliberately not pinned**.
+They roll to the latest published release on every rebuild, with **no pin and no
+cooldown** (decisions #34/#36 and the OMP adoption decision). OMP and Pi are
+therefore **absent from the third-party inventory below** — they carry no rows.
 
 The asymmetry is intentional, not an oversight. These are first-party /
 lab-grade vendors shipping frequent bug-fixes to daily-driver tools, so holding a
 new release through a cooldown would mostly *delay the fixes the cooldown exists
-to deliver* — for these upstreams rolling is the safer path. The rolling
-exception is narrow: the `kunchenguid` tools retain their capability-tiered
-pin/cooldown treatment, Matt Pocock's skills stay pinned, and OpenCode's official
-plugin-authoring package stays exact-pinned under the Tier C posture below.
-(`firstmate` also rolls, but for the distinct reason in its own section.)
+to deliver* — for these upstreams rolling is the safer path. OMP receives the
+same treatment as Pi. Outside this first-party harness group, rolling upstreams
+remain disclosed in their capability tier or dedicated stance: oMLX and
+`baby-menu` sit in Tier C, Neovim plugins follow their separate stance, and
+`firstmate` follows its own accept-as-rolling policy.
 
 ---
 
 ## Tier A — Privileged
 
 Wired into **every** agent harness. These can act on GitHub, drive a real
-browser, or read local provider auth. A compromised Tier A tool is the highest-
-impact failure in the stack, so all three sit **behind the cooldown/review
-gate** and are pinned to exact releases.
+browser, or access local provider auth, including delegated credential refresh.
+A compromised Tier A tool is the highest-impact failure in the stack, so all
+three sit **behind the cooldown/review gate** and are pinned to exact releases.
 
 | Upstream | Pinned at | Capability granted | Why it is trusted |
 |---|---|---|---|
 | [`kunchenguid/gh-axi`](https://github.com/kunchenguid/gh-axi) | `gh-axi-v0.1.34` (flake input + npm `gh-axi@0.1.34`) | **GitHub write** — files/edits issues and PRs, merges, triggers workflows, manages Actions secrets/variables, raw API access, all under the local `gh` auth. Since 0.1.31 its `stack` command also reaches the **local Git work tree**: it is a non-interactive adapter over the separate [`github/gh-stack`](https://github.com/github/gh-stack) `gh` extension, which restacks and rebases branches in the current working directory. gh-axi ships no stack engine of its own and the command is inert unless that extension is installed, which this configuration does not install. | Pinned to an exact release; behind the cooldown/review gate. It is the sanctioned GitHub path for every agent, so its behavior is exercised constantly and any regression surfaces fast. The delegated stack extension is first-party GitHub, and the Git mutation it performs stays inside the repository the agent is already working in. |
-| [`kunchenguid/chrome-devtools-axi`](https://github.com/kunchenguid/chrome-devtools-axi) | `chrome-devtools-axi-v0.1.30` (flake input + npm `chrome-devtools-axi@0.1.30`) | **Browser control** — navigates, clicks, fills forms, runs arbitrary JavaScript, and reads console/network in a real Chrome session. | Pinned to an exact release; behind the cooldown/review gate. Scoped to a driven browser session rather than the whole machine. |
-| [`kunchenguid/quota-axi`](https://github.com/kunchenguid/quota-axi) | `quota-axi-v0.1.30` (flake input + npm `quota-axi@0.1.30`) | **Reads local provider credentials and queries provider quota APIs** — reports Claude/Codex/Cursor/Copilot/Grok/Kimi/Z.AI/Antigravity quota windows. For most providers it reads the credential from on-disk auth and calls that provider's own quota endpoint with it (`api.anthropic.com`, `api2.cursor.sh`, `api.github.com`, `api.kimi.com`, …). Antigravity, added in 0.1.30, has no on-disk quota file, so it is instead **discovered from the running process table**: quota-axi runs `ps` to find the local Antigravity process and read its `--extension_server_port` and `--extension_server_csrf_token` arguments, runs `lsof` to confirm that port is listening, then calls that endpoint on `127.0.0.1` with the token it found. Read-only in every case: it reports quota and performs no routing and no provider mutation. | Pinned to an exact release; behind the cooldown/review gate. The 0.1.29 pin was adopted early under a Firstmate dependency-floor exception; that release has since completed the ordinary cooldown, so the record was retired and no exception is in force for it. Documented as read-only, but it touches local credential material, which is why it is rated privileged rather than low-capability. The 0.1.30 Antigravity path widens that reach from on-disk auth to process enumeration and a loopback call carrying a token lifted from another process's command line; it was reviewed and approved on adoption as equivalent in kind to the on-disk-credential reads the row already covers, and the harvested token is sent only to `127.0.0.1`, never off the machine. The tier is unchanged. |
+| [`kunchenguid/chrome-devtools-axi`](https://github.com/kunchenguid/chrome-devtools-axi) | `chrome-devtools-axi-v0.1.31` (flake input + npm `chrome-devtools-axi@0.1.31`) | **Browser control** — navigates, clicks, fills forms, runs arbitrary JavaScript, and reads console/network in a real Chrome session. | Pinned to an exact release; behind the cooldown/review gate. Scoped to a driven browser session rather than the whole machine. |
+| [`kunchenguid/quota-axi`](https://github.com/kunchenguid/quota-axi) | `quota-axi-v0.1.32` (flake input + npm `quota-axi@0.1.32`) | **Reads local provider credentials, queries provider quota APIs, and can delegate credential refresh** — reports Claude/Codex/Cursor/Copilot/Grok/Kimi/Z.AI/Antigravity quota windows. For most providers it reads credentials from on-disk auth and calls first-party quota or credential-liveness endpoints (`api.anthropic.com`, `api2.cursor.sh`, `api.github.com`, `api.kimi.com`, `grok.com`, …); the Grok path can also read Pi's stored xAI OAuth credential. Antigravity has no on-disk quota file, so quota-axi runs `ps` to find its local process and read the `--extension_server_port` and `--extension_server_csrf_token` arguments, runs `lsof` to confirm that port is listening, then calls that endpoint on `127.0.0.1` with the discovered token. Starting in 0.1.32, quota and model reports default to delegated refresh after a stored, refreshable access token is expired and definitively rejected: quota-axi can spawn `claude doctor`, `grok models`, or the existing Codex app-server probe, and those vendor-owned commands may rewrite or clear their on-disk credential stores. `--no-credential-refresh` disables the delegates, and the `auth` command remains read-only. It reports quota and performs no routing. | Pinned to an exact release; behind the cooldown/review gate. The credential reads, process enumeration, loopback token, Grok endpoint, and default-on vendor CLI execution keep this tool in the privileged tier. The captain accepted the 0.1.32 credential-store mutation boundary. quota-axi still declares the vulnerable `@toon-format/toon@2.1.0`, so the npm manifest narrowly overrides that transitive dependency to 2.3.1 for GHSA-p95v-992w-h6c3. The captain also accepted TOON 2.3's empty-array wire format (`key: []` instead of `key[0]:`); remove the override only after quota-axi adopts a non-vulnerable TOON release and its output contract is reviewed again. |
 
 ## Tier B — Code-exec / workflow
 
@@ -113,6 +113,7 @@ still be retained for a particular manifest, as noted below.
 | [`kunchenguid/lavish-axi`](https://github.com/kunchenguid/lavish-axi) | `lavish-axi-v0.1.59` (flake input + npm `lavish-axi@0.1.59`) | Renders agent responses into reviewable HTML artifacts. | Pinned to an exact release; output-only presentation, no privileged capability. |
 | [`kunchenguid/tasks-axi`](https://github.com/kunchenguid/tasks-axi) | `tasks-axi-v0.2.5` (flake input + npm `tasks-axi@0.2.5`) | Manages a local, hand-editable `backlog.md` task list. | Pinned to an exact release; operates on a local text backlog, no privileged capability. |
 | [`kunchenguid/tap/baby-menu`](https://github.com/kunchenguid/homebrew-tap) | Homebrew cask (unversioned; `greedyCasks` converges to latest) | Native macOS menu-bar app installed via Homebrew. | From the same `kunchenguid` tap. Rated low-capability as an ordinary user-space menu-bar app. Note: as a `greedyCask` it is **not** pinned to a version and self-updates to Homebrew's latest — the concentration risk applies, but the capability is low. |
+| [`jundot/omlx`](https://github.com/jundot/omlx) | Homebrew formula (rolling; trusted tap + `autoUpdate` + `upgrade`) | **Local model serving** — when launched, reads local model files, downloads models and resources, writes settings, logs, and disk-backed caches, and exposes OpenAI-compatible and administration endpoints on localhost by default; optional clustering can connect to other Macs. | Owner-approved rolling exception for an open-source, Apache-licensed Apple Silicon inference server. The formula verifies the selected tagged source archive, but the tap, version, and digest advance without a repository pin or cooldown. |
 | [`anomalyco/opencode` (`@opencode-ai/plugin`)](https://github.com/anomalyco/opencode/tree/v1.18.19/packages/plugin) | npm `@opencode-ai/plugin@1.18.19` (exact, in [`home/.config/opencode/package.json`](home/.config/opencode/package.json); locked beside it) | **OpenCode plugin-authoring support.** In this checkout it is installed but not loaded: there is no tracked OpenCode plugin/custom-tool source or import, and its public runtime entry points are schema/identity and TUI helpers while the shell, SDK, auth, permission, and tool-hook surfaces are TypeScript interfaces for plugin authors. The separate package pin therefore has no direct privileged reach today. | The official package is published from the same monorepo and release train as the OpenCode harness. The repository's `npm ci` path disables lifecycle scripts and verifies lock integrity, vulnerabilities, and registry signatures. Tier C reflects its effective configured use; adding a runtime import or local plugin must re-evaluate the tier. The manifest retains its existing seven-day Dependabot delay for routine update proposals, but is not subject to the privileged release checker. |
 
 ### OpenCode package boundary
@@ -157,11 +158,9 @@ the exact pin, lockfile, audit, signature, and PR review controls remain.
 
 ## firstmate — accept-as-rolling ⚠️
 
-> **Among the pin-enforced third-party upstreams inventoried here, this is the
-> one that is NOT pinned.** (The first-party harnesses roll too, but by the
-> separate, deliberate decision described in the stance above; the Neovim
-> upstreams are disclosed rather than pin-enforced, per the
-> [stance bullet](#nvim-stance).)
+> **Firstmate is an unpinned, continuously trusted third-party supervisor.**
+> Tier C also contains the rolling oMLX and `baby-menu` Homebrew entries, but
+> Firstmate is treated separately because it orchestrates the agent harnesses.
 
 [`kunchenguid/firstmate`](https://github.com/kunchenguid/firstmate) is an agent
 **distro** — the supervisor that dispatches and manages the crewmate agents doing

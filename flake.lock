@@ -3,11 +3,11 @@
     "brew-src": {
       "flake": false,
       "locked": {
-        "lastModified": 1786434090,
-        "narHash": "sha256-KFe+6R2OhSOJcxvqRSn+b6mR5eh9q7tG+Wx+8xa2QsY=",
+        "lastModified": 1788375018,
+        "narHash": "sha256-7Da9jvXvNkzSoEMLQyOcDjcREWhCaY7RLJlgnHnXbkw=",
         "owner": "Homebrew",
         "repo": "brew",
-        "rev": "5d49126d14081cd59ae36f83b8306bfdca7f1770",
+        "rev": "a8820d02e41d63fd63a46e1e116b1be7505c9585",
         "type": "github"
       },
       "original": {
@@ -19,16 +19,16 @@
     "chrome-devtools-axi": {
       "flake": false,
       "locked": {
-        "lastModified": 1787578887,
-        "narHash": "sha256-hlaT6ropJJM9/KpcU9aURI54uR2toeY9ibJUseKLr3E=",
+        "lastModified": 1787782217,
+        "narHash": "sha256-+zKWuLDNXmblH7eq+ndLl8tIP+Th44VN19M39xBrUek=",
         "owner": "kunchenguid",
         "repo": "chrome-devtools-axi",
-        "rev": "b3d8f8acfbfd5fd17d2f7b83fbdcb91fe793e0ca",
+        "rev": "6a089b1c777bb8e15a24777d9df1b321a4d8d4dd",
         "type": "github"
       },
       "original": {
         "owner": "kunchenguid",
-        "ref": "chrome-devtools-axi-v0.1.30",
+        "ref": "chrome-devtools-axi-v0.1.31",
         "repo": "chrome-devtools-axi",
         "type": "github"
       }
@@ -182,16 +182,16 @@
     "quota-axi": {
       "flake": false,
       "locked": {
-        "lastModified": 1787277358,
-        "narHash": "sha256-fyBOHIS6cRK4iwH+RI3qE2O/72zAWcYIPe14xgflsUA=",
+        "lastModified": 1787694299,
+        "narHash": "sha256-GBDF4JEaDXCPXiuTTyqWgmznMRVRPOCYPtMKCjQjag4=",
         "owner": "kunchenguid",
         "repo": "quota-axi",
-        "rev": "5bd45593792980dd4a9a66af3823c44cfdd900a1",
+        "rev": "8dd35fae156bf8cc2e7cc5ed5ce435182f011f82",
         "type": "github"
       },
       "original": {
         "owner": "kunchenguid",
-        "ref": "quota-axi-v0.1.30",
+        "ref": "quota-axi-v0.1.32",
         "repo": "quota-axi",
         "type": "github"
       }

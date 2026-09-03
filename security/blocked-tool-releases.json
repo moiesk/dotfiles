@@ -6,18 +6,6 @@
       "blocked_version": "v2.3.0",
       "pinned_fallback": "v2.2.0",
       "reason": "treehouse v2.3.0's released flake supplies git but not Python, so the non-activating darwin-rebuild build gate fails deterministically in treehouse's own Go tests when the no-mistakes gate runs its Python-dependent script. Upstream fixed the Nix packaging after v2.3.0 but cut no newer exact release, so the pin is held at the last reviewed buildable v2.2.0 until an exact fixed release clears cooldown."
-    },
-    {
-      "dependency": "quota-axi",
-      "blocked_version": "0.1.32",
-      "pinned_fallback": "0.1.30",
-      "reason": "quota-axi 0.1.32 introduces default-on delegated credential refresh - it spawns vendor CLIs (claude doctor, grok models) that rewrite on-disk credential stores - which widens the TRUST.md read-only/no-provider-mutation capability description; held at reviewed 0.1.30 pending a separate captain decision on the widening. No off-machine exfiltration found."
-    },
-    {
-      "dependency": "quota-axi",
-      "blocked_version": "0.1.31",
-      "pinned_fallback": "0.1.30",
-      "reason": "quota-axi 0.1.31 adds a read of Pi's stored xAI OAuth credential and a new grok.com credits endpoint, part of the same capability widening held for review at 0.1.32; blocked so the eligible-release scan cannot fall back to it while quota-axi is held at reviewed 0.1.30."
     }
   ]
 }
