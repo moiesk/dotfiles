@@ -51,7 +51,6 @@
       "basecamp/tap/basecamp-cli"
       "claude-code"
       "codex"
-      "comfy"
       "font-fira-code"
       {
         name = "font-fira-mono";
