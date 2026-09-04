@@ -134,6 +134,7 @@ in
     SUDO_EDITOR = "nvim";
     GDRIVE_CREDS_DIR = "$HOME/.config/mcp-gdrive";
     BUN_INSTALL = "$HOME/.bun";
+    LAVISH_AXI_HOST = "127.0.0.1";
     # Nix owns the binary; self-update cannot replace a store path.
     NO_MISTAKES_NO_UPDATE_CHECK = "1";
   };
