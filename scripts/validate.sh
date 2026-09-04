@@ -154,6 +154,7 @@ if rg -Fq -- 'runner.temp' "$npm_security_workflow"; then
 fi
 
 "$DOTFILES_DIR/scripts/check-agent-tool-pins.sh"
+"$DOTFILES_DIR/scripts/check-lavish-trust.sh"
 "$DOTFILES_DIR/scripts/check-opencode-trust.sh"
 
 no_mistakes_version="$(sed -nE \
