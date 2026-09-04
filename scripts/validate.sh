@@ -109,6 +109,21 @@ if jq -e '.dependencies | has("@earendil-works/pi-coding-agent")' \
   exit 1
 fi
 
+# Pi rolls independently of this repository, so its internal dist layout is
+# not a stable interface. Keep the Nix wrapper on npm's package-managed bin,
+# which follows the executable declared by each published Pi release.
+if ! rg -Fq 'piWrapper = pkgs.writeShellScriptBin "pi"' home.nix ||
+  ! rg -Fq '"$HOME/.local/share/agent-tools/node_modules/.bin/pi"' home.nix ||
+  ! rg -Fq '    piWrapper' home.nix; then
+  printf '%s\n' 'error: the Pi wrapper must invoke its package-managed npm bin' >&2
+  exit 1
+fi
+
+if rg -n 'agentHelper "pi"|@earendil-works/pi-coding-agent.*dist/' home.nix; then
+  printf '%s\n' 'error: the Pi wrapper must not hard-code an internal package entrypoint' >&2
+  exit 1
+fi
+
 npm_security_workflow=".github/workflows/npm-security.yml"
 # Each entry is "<required occurrences>|<literal line>".
 for count_and_line in \

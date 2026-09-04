@@ -7,6 +7,11 @@ let
       "$HOME/.local/share/agent-tools/node_modules/${package}/${entrypoint}" \
       "$@"
   '';
+  piWrapper = pkgs.writeShellScriptBin "pi" ''
+    exec ${pkgs.mise}/bin/mise exec -- \
+      "$HOME/.local/share/agent-tools/node_modules/.bin/pi" \
+      "$@"
+  '';
   # Activation runs this reviewed script from the store, not from the mutable
   # working tree. shellcheck runs at build time; jq/coreutils come from the store.
   materializeAgentConfigsApp = pkgs.writeShellApplication {
@@ -116,7 +121,7 @@ in
     inputs.treehouse.packages.${pkgs.stdenv.hostPlatform.system}.default
     uv
     wget
-    (agentHelper "pi" "@earendil-works/pi-coding-agent" "dist/cli.js")
+    piWrapper
     (agentHelper "gh-axi" "gh-axi" "dist/bin/gh-axi.js")
     (agentHelper "chrome-devtools-axi" "chrome-devtools-axi" "dist/bin/chrome-devtools-axi.js")
     (agentHelper "lavish-axi" "lavish-axi" "dist/cli.mjs")
