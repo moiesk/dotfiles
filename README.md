@@ -191,8 +191,8 @@ fails on a committed privileged pin that is itself still inside the cooldown
 unless a valid Firstmate dependency-floor exception covers it (see `TRUST.md`
 and the preflight below).
 
-`quota-axi` has a narrowly scoped transitive security override. Its accepted
-output-contract and credential-refresh boundaries are documented in `TRUST.md`.
+`quota-axi` has narrowly scoped transitive security overrides. Their accepted
+output-contract and execution boundaries are documented in `TRUST.md`.
 
 OpenCode's official `@opencode-ai/plugin` authoring package is a separate npm
 project, exact-pinned in `home/.config/opencode/package.json` with its dependency
