@@ -19,16 +19,16 @@
     "chrome-devtools-axi": {
       "flake": false,
       "locked": {
-        "lastModified": 1787924539,
-        "narHash": "sha256-80A8UIwaXeSy6YAAzL5WLy0I/1PPeSAGAzK7dyl3pwA=",
+        "lastModified": 1788530672,
+        "narHash": "sha256-Lv4e2OLXpO3aCZ/08ju3WZjeEtG9TicBNcpGnCfwkDw=",
         "owner": "kunchenguid",
         "repo": "chrome-devtools-axi",
-        "rev": "bb6f36c3ce28765c95628b620e10456c99eca522",
+        "rev": "d688a3ede0707110e19dfd9bb540b71146ea1ddf",
         "type": "github"
       },
       "original": {
         "owner": "kunchenguid",
-        "ref": "chrome-devtools-axi-v0.1.32",
+        "ref": "chrome-devtools-axi-v0.1.34",
         "repo": "chrome-devtools-axi",
         "type": "github"
       }
@@ -36,16 +36,16 @@
     "gh-axi": {
       "flake": false,
       "locked": {
-        "lastModified": 1787580163,
-        "narHash": "sha256-R6WmAN5cIbhJDIrMQz6egS0NDry1rELbUoWFU1Zur7E=",
+        "lastModified": 1788099102,
+        "narHash": "sha256-zuShaNLCh+u5c+CTeX5cgMCk1PUTK8nd7D5zTjTqt9E=",
         "owner": "kunchenguid",
         "repo": "gh-axi",
-        "rev": "84112b7897fc1d0833f2727a817ecc91a297c3ef",
+        "rev": "13e81833fae5d844812d2e04b01272aed1df386c",
         "type": "github"
       },
       "original": {
         "owner": "kunchenguid",
-        "ref": "gh-axi-v0.1.34",
+        "ref": "gh-axi-v0.1.35",
         "repo": "gh-axi",
         "type": "github"
       }
@@ -74,16 +74,16 @@
     "lavish-axi": {
       "flake": false,
       "locked": {
-        "lastModified": 1787667934,
-        "narHash": "sha256-kgVL0gFqj3r9aJY+dsAt2KPgubZ7DVZuedLJLSF0nf4=",
+        "lastModified": 1788618656,
+        "narHash": "sha256-7Qob4dkWSRWTZi9yYDJShqjLo2Y6AGtSnKYUtCJzEyo=",
         "owner": "kunchenguid",
         "repo": "lavish-axi",
-        "rev": "a7ddbbaf585e101793938c6dacf8bb0c11e09003",
+        "rev": "4226958edb22bd3a266dd0286f8e9cda001b36d5",
         "type": "github"
       },
       "original": {
         "owner": "kunchenguid",
-        "ref": "lavish-axi-v0.1.62",
+        "ref": "lavish-axi-v0.1.65",
         "repo": "lavish-axi",
         "type": "github"
       }
@@ -182,16 +182,16 @@
     "quota-axi": {
       "flake": false,
       "locked": {
-        "lastModified": 1787950717,
-        "narHash": "sha256-YAQ57Ufh6JHBtWiqMeDKngJQsE+aOL7SGnqigKAFH38=",
+        "lastModified": 1788641949,
+        "narHash": "sha256-96GeLzMs9Bj7bvC4V4T9esY1wW7D0YJENJ8sb1BJeEY=",
         "owner": "kunchenguid",
         "repo": "quota-axi",
-        "rev": "36444db7518f3ae08df5f630b6f343efe7257066",
+        "rev": "f3d3a96aec4ddfa9d2a4e0912b26fe4935f26b9f",
         "type": "github"
       },
       "original": {
         "owner": "kunchenguid",
-        "ref": "quota-axi-v0.1.33",
+        "ref": "quota-axi-v0.1.38",
         "repo": "quota-axi",
         "type": "github"
       }
