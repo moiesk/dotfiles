@@ -74,16 +74,16 @@
     "lavish-axi": {
       "flake": false,
       "locked": {
-        "lastModified": 1788618656,
-        "narHash": "sha256-7Qob4dkWSRWTZi9yYDJShqjLo2Y6AGtSnKYUtCJzEyo=",
+        "lastModified": 1788792581,
+        "narHash": "sha256-IVB37AuN7vKW+RXHIlny+aBQOPTe0BhHP/pHMDIOPpQ=",
         "owner": "kunchenguid",
         "repo": "lavish-axi",
-        "rev": "4226958edb22bd3a266dd0286f8e9cda001b36d5",
+        "rev": "ca4c59d5b3ef84ae7f6f7f93fcaa415ade8a9c73",
         "type": "github"
       },
       "original": {
         "owner": "kunchenguid",
-        "ref": "lavish-axi-v0.1.65",
+        "ref": "lavish-axi-v0.1.67",
         "repo": "lavish-axi",
         "type": "github"
       }
