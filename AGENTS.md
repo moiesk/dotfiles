@@ -14,7 +14,7 @@ Default five-role vocabulary (`needs-triage`, `needs-info`, `ready-for-agent`, `
 
 `TRUST.md` at the repo root tiers the third-party upstream inventory by
 capability and records each authoritative pin. The first-party harnesses — the
-`claude-code`/`codex` casks, OMP (`can1357/tap/omp`), and Pi
+`claude-code`/`codex`/`grok-build` casks, OMP (`can1357/tap/omp`), and Pi
 (`@earendil-works/pi-coding-agent`) — deliberately roll to latest (no pin, no
 cooldown) and are documented in TRUST.md's stance, not the third-party
 inventory. Update it when an upstream is added, removed, or moves tier;
