@@ -68,13 +68,12 @@ still recorded in the lock file, so the applied system remains reproducible and
 the lock-file change should be committed with the next project change. This
 intentionally favors the latest available release, including for self-updating
 or unversioned apps such as agent harnesses. The final doctor check fails if any
-Homebrew formula or cask is still outdated. The first-party agent harnesses roll
-to latest by the same deliberate policy — no pin, no cooldown: the
-`claude-code`, `codex`, and `grok-build` casks and the `can1357/tap/omp` formula
+Homebrew formula or cask is still outdated. Cask and formula harnesses
 upgrade through Homebrew, while Pi (`@earendil-works/pi-coding-agent`) is
 installed from its latest npm release on every rebuild by
-`scripts/post-switch.sh`, with the doctor confirming it is present. Third-party
-trust decisions, including oMLX's rolling Tier C exception and the pinned
+`scripts/post-switch.sh`, with the doctor confirming it is present. The
+[first-party harness policy](TRUST.md)
+and third-party trust decisions, including oMLX's rolling Tier C exception and the pinned
 `kunchenguid` and `mattpocock` tools, are documented in `TRUST.md`.
 
 ## Daily use

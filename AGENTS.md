@@ -13,11 +13,9 @@ Default five-role vocabulary (`needs-triage`, `needs-info`, `ready-for-agent`, `
 ### Trust inventory
 
 `TRUST.md` at the repo root tiers the third-party upstream inventory by
-capability and records each authoritative pin. The first-party harnesses — the
-`claude-code`/`codex`/`grok-build` casks, OMP (`can1357/tap/omp`), and Pi
-(`@earendil-works/pi-coding-agent`) — deliberately roll to latest (no pin, no
-cooldown) and are documented in TRUST.md's stance, not the third-party
-inventory. Update it when an upstream is added, removed, or moves tier;
+capability and records each authoritative pin. See its
+[first-party harness stance](TRUST.md)
+for the harness exceptions. Update it when an upstream is added, removed, or moves tier;
 authoritative pins live in `flake.lock`,
 `agent-tools/package.json`, and `home/.config/opencode/package.json`. Neovim
 plugins are disclosed in TRUST.md but not

@@ -29,9 +29,9 @@ Instead:
   [`agent-tools/package.json`](agent-tools/package.json), or the separate
   [`home/.config/opencode/package.json`](home/.config/opencode/package.json)
   manifest. Rolling exceptions are called out below. A new upstream release
-  does nothing until the matching pin is moved on purpose. (The first-party
-  harnesses — the `claude-code`/`codex`/`grok-build` casks, OMP formula, and
-  Pi — deliberately roll to latest instead; see the stance footnote below.)
+  does nothing until the matching pin is moved on purpose. See the
+  first-party harness stance below
+  for harness exceptions.
   <!-- markdownlint-disable-next-line MD033 -->
 - <a id="nvim-stance"></a>Neovim plugins are **disclosed but not pinned**.
   This bullet is the single authoritative statement of that stance; every other
@@ -74,8 +74,8 @@ entry that downloads a per-version binary from `https://x.ai/cli/` under a
 checksum recorded in the cask, and installs it as both `grok` and `agent`. As a
 full coding agent it has the same reach as the others in this group: it runs as
 the local user, reads and writes the working tree, executes commands, and manages
-its own credentials and state under `~/.grok`, which this repository neither
-tracks nor materializes.
+its own credentials and state. See [agent settings guidance](README.md#agent-instructions)
+for what this repository manages.
 
 The asymmetry is intentional, not an oversight. These are first-party /
 lab-grade vendors shipping frequent bug-fixes to daily-driver tools, so holding a
