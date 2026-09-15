@@ -29,9 +29,9 @@ Instead:
   [`agent-tools/package.json`](agent-tools/package.json), or the separate
   [`home/.config/opencode/package.json`](home/.config/opencode/package.json)
   manifest. Rolling exceptions are called out below. A new upstream release
-  does nothing until the matching pin is moved on purpose. (The first-party
-  harnesses — the `claude-code`/`codex` casks, OMP formula, and Pi —
-  deliberately roll to latest instead; see the stance footnote below.)
+  does nothing until the matching pin is moved on purpose. See the
+  first-party harness stance below
+  for harness exceptions.
   <!-- markdownlint-disable-next-line MD033 -->
 - <a id="nvim-stance"></a>Neovim plugins are **disclosed but not pinned**.
   This bullet is the single authoritative statement of that stance; every other
@@ -58,20 +58,31 @@ tiers entirely, under the [disclosed-but-not-pinned stance](#nvim-stance).
 
 ### First-party harnesses — deliberately rolling ⚠️
 
-The agent harnesses this repo treats as **first-party** — the `claude-code` and
-`codex` Homebrew casks, the OMP formula from
+The agent harnesses this repo treats as **first-party** — the `claude-code`,
+`codex`, and `grok-build` Homebrew casks, the OMP formula from
 [`can1357/homebrew-tap`](https://github.com/can1357/homebrew-tap), and the Pi npm
 runtime (`@earendil-works/pi-coding-agent`) — are **deliberately not pinned**.
 They roll to the latest published release on every rebuild, with **no pin and no
-cooldown** (decisions #34/#36 and the OMP adoption decision). OMP and Pi are
-therefore **absent from the third-party inventory below** — they carry no rows.
+cooldown** (decisions #34/#36, the OMP adoption decision, and the Grok Build
+adoption decision). OMP and Pi are therefore **absent from the third-party
+inventory below** — they carry no rows, and neither does Grok Build.
+
+`grok-build` is xAI's terminal coding agent
+([`x.ai/build`](https://x.ai/build)), distributed as an official
+[homebrew-cask](https://github.com/Homebrew/homebrew-cask/blob/HEAD/Casks/g/grok-build.rb)
+entry that downloads a per-version binary from `https://x.ai/cli/` under a
+checksum recorded in the cask, and installs it as both `grok` and `agent`. As a
+full coding agent it has the same reach as the others in this group: it runs as
+the local user, reads and writes the working tree, executes commands, and manages
+its own credentials and state. See [agent settings guidance](README.md#agent-instructions)
+for what this repository manages.
 
 The asymmetry is intentional, not an oversight. These are first-party /
 lab-grade vendors shipping frequent bug-fixes to daily-driver tools, so holding a
 new release through a cooldown would mostly *delay the fixes the cooldown exists
-to deliver* — for these upstreams rolling is the safer path. OMP receives the
-same treatment as Pi. Outside this first-party harness group, rolling upstreams
-remain disclosed in their capability tier or dedicated stance: oMLX and
+to deliver* — for these upstreams rolling is the safer path. OMP and Grok Build
+receive the same treatment as Pi. Outside this first-party harness group, rolling
+upstreams remain disclosed in their capability tier or dedicated stance: oMLX and
 `baby-menu` sit in Tier C, Neovim plugins follow their separate stance, and
 `firstmate` follows its own accept-as-rolling policy.
 

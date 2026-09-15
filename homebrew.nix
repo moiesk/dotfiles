@@ -74,6 +74,9 @@
       "ghostty"
       "gnucash"
       "gpgfrontend"
+      # Grok Build, xAI's terminal coding agent. The cask installs two
+      # binaries, `grok` and `agent`; the generic `agent` name is upstream's.
+      "grok-build"
       "libreoffice"
       "obsidian"
       "porting-kit"

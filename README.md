@@ -6,7 +6,8 @@ configuration and macOS preferences here are derived from my own machine.
 
 One repository manages:
 
-- Codex, Claude Code, OMP, Pi, and OpenCode with shared tools and portable settings
+- Codex, Claude Code, Grok Build, OMP, Pi, and OpenCode with shared tools and
+  portable settings
 - Ghostty, Herdr, zsh, Starship, fzf, mise, and Neovim/LazyVim
 - Portable CLI tools with Nix, plus native and tap-specific tools with Homebrew
 - Matt Pocock's agent skills plus Treehouse, Firstmate, no-mistakes, and Lavish
@@ -67,14 +68,13 @@ still recorded in the lock file, so the applied system remains reproducible and
 the lock-file change should be committed with the next project change. This
 intentionally favors the latest available release, including for self-updating
 or unversioned apps such as agent harnesses. The final doctor check fails if any
-Homebrew formula or cask is still outdated. The first-party agent harnesses roll
-to latest by the same deliberate policy — no pin, no cooldown: the
-`claude-code`/`codex` casks and `can1357/tap/omp` formula upgrade through
-Homebrew, while Pi (`@earendil-works/pi-coding-agent`) is installed from its
-latest npm release on every rebuild by `scripts/post-switch.sh`, with the doctor
-confirming it is present. Third-party trust decisions, including oMLX's rolling
-Tier C exception and the pinned `kunchenguid` and `mattpocock` tools, are
-documented in `TRUST.md`.
+Homebrew formula or cask is still outdated. Cask and formula harnesses
+upgrade through Homebrew, while Pi (`@earendil-works/pi-coding-agent`) is
+installed from its latest npm release on every rebuild by
+`scripts/post-switch.sh`, with the doctor confirming it is present. The
+[first-party harness policy](TRUST.md)
+and third-party trust decisions, including oMLX's rolling Tier C exception and the pinned
+`kunchenguid` and `mattpocock` tools, are documented in `TRUST.md`.
 
 ## Daily use
 
@@ -151,7 +151,7 @@ together; see `AGENTS.md` for the full bump procedure.
 | `configuration.nix` | Platform, user, and the three requested macOS behaviors |
 | `homebrew.nix` | Complete reviewed Homebrew inventory and strict convergence policy |
 | `home.nix` | Shell, Git, environment variables, and out-of-store symlinks |
-| `AGENTS.md` / `CLAUDE.md` | Project-local instructions (`CLAUDE.md` links to `AGENTS.md`) |
+| `AGENTS.md` / `CLAUDE.md` | Project-local instructions (`CLAUDE.md` imports `AGENTS.md`) |
 | `home/.*` | Portable app configurations copied from the working Mac |
 | `bootstrap.sh` | One-time fresh-machine setup |
 | `rebuild.sh` | Normal apply workflow |
@@ -164,9 +164,9 @@ together; see `AGENTS.md` for the full bump procedure.
 
 ## Agent instructions
 
-The root `AGENTS.md` and its `CLAUDE.md` symlink contain instructions for this
-project only. Home Manager deliberately does not install them into any agent's
-top-level configuration directory.
+The root `AGENTS.md` and the `CLAUDE.md` import pointing at it contain
+instructions for this project only. Home Manager deliberately does not install
+them into any agent's top-level configuration directory.
 
 If global instructions are added later, keep each source in its explicit path
 under `home/` (for example, `home/.codex/AGENTS.md`) and link that file from
@@ -310,6 +310,9 @@ Tool-specific portable preferences remain separate from mutable harness state:
   model, effort, and other harness-written keys.
 - Pi: `settings.json` and `models.json` are entirely machine-local because the
   current contents select a local provider, model catalog, and thinking level.
+- Grok Build: nothing is tracked. The harness keeps its own configuration,
+  credentials, and state under `~/.grok`, and this repository neither links nor
+  materializes any of it.
 - OpenCode: the plugin package manifest remains portable.
 
 `scripts/materialize-agent-configs.sh` performs the migration after Home
