@@ -17,11 +17,6 @@
         trusted = true;
       }
       {
-        # Home of the kunchenguid/tap/baby-menu cask declared below.
-        name = "kunchenguid/tap";
-        trusted = true;
-      }
-      {
         name = "basecamp/tap";
         trusted = true;
       }
@@ -60,7 +55,6 @@
     casks = [
       "nikitabobko/tap/aerospace"
       "anki"
-      "kunchenguid/tap/baby-menu"
       "basecamp/tap/basecamp-cli"
       "claude-code"
       "codex"
