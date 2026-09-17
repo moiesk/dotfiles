@@ -51,7 +51,7 @@ Instead:
 - This document is the disclosure half: the trust is written down, tiered, and
   reviewable rather than implicit.
 
-Rolling third-party exceptions are explicit: oMLX and `baby-menu` are disclosed
+Rolling third-party exceptions are explicit: oMLX is disclosed
 in Tier C, while `firstmate` has a dedicated **accept-as-rolling** section
 because it supervises the agent harnesses. The Neovim upstreams sit outside the
 tiers entirely, under the [disclosed-but-not-pinned stance](#nvim-stance).
@@ -82,8 +82,8 @@ lab-grade vendors shipping frequent bug-fixes to daily-driver tools, so holding 
 new release through a cooldown would mostly *delay the fixes the cooldown exists
 to deliver* — for these upstreams rolling is the safer path. OMP and Grok Build
 receive the same treatment as Pi. Outside this first-party harness group, rolling
-upstreams remain disclosed in their capability tier or dedicated stance: oMLX and
-`baby-menu` sit in Tier C, Neovim plugins follow their separate stance, and
+upstreams remain disclosed in their capability tier or dedicated stance: oMLX
+sits in Tier C, Neovim plugins follow their separate stance, and
 `firstmate` follows its own accept-as-rolling policy.
 
 ---
@@ -123,7 +123,6 @@ still be retained for a particular manifest, as noted below.
 |---|---|---|---|
 | [`kunchenguid/lavish-axi`](https://github.com/kunchenguid/lavish-axi) | `lavish-axi-v0.1.67` (flake input + npm `lavish-axi@0.1.67`) | Renders agent responses into reviewable HTML artifacts. Upstream 0.1.60+ automatically adds a Tailscale listener when available unless `LAVISH_AXI_HOST` is explicitly set; this managed configuration sets `LAVISH_AXI_HOST=127.0.0.1`, which disables automatic Tailscale binding and keeps the review server loopback-only by default. The `share` command preserves hosted publishing as an explicit opt-in. | Pinned to an exact release; the managed loopback default prevents automatic network exposure, and hosted sharing remains output-only and explicitly initiated. |
 | [`kunchenguid/tasks-axi`](https://github.com/kunchenguid/tasks-axi) | `tasks-axi-v0.2.5` (flake input + npm `tasks-axi@0.2.5`) | Manages a local, hand-editable `backlog.md` task list. | Pinned to an exact release; operates on a local text backlog, no privileged capability. |
-| [`kunchenguid/tap/baby-menu`](https://github.com/kunchenguid/homebrew-tap) | Homebrew cask (unversioned; `greedyCasks` converges to latest) | Native macOS menu-bar app installed via Homebrew. | From the same `kunchenguid` tap. Rated low-capability as an ordinary user-space menu-bar app. Note: as a `greedyCask` it is **not** pinned to a version and self-updates to Homebrew's latest — the concentration risk applies, but the capability is low. |
 | [`jundot/omlx`](https://github.com/jundot/omlx) | Homebrew formula (rolling; trusted tap + `autoUpdate` + `upgrade`) | **Local model serving** — when launched, reads local model files, downloads models and resources, writes settings, logs, and disk-backed caches, and exposes OpenAI-compatible and administration endpoints on localhost by default; optional clustering can connect to other Macs. | Owner-approved rolling exception for an open-source, Apache-licensed Apple Silicon inference server. The formula verifies the selected tagged source archive, but the tap, version, and digest advance without a repository pin or cooldown. |
 | [`anomalyco/opencode` (`@opencode-ai/plugin`)](https://github.com/anomalyco/opencode/tree/v1.18.30/packages/plugin) | npm `@opencode-ai/plugin@1.18.30` (exact, in [`home/.config/opencode/package.json`](home/.config/opencode/package.json); locked beside it) | **OpenCode plugin-authoring support.** In this checkout it is installed but not loaded: there is no tracked OpenCode plugin/custom-tool source or import, and its public runtime entry points are schema/identity and TUI helpers while the shell, SDK, auth, permission, and tool-hook surfaces are TypeScript interfaces for plugin authors. The separate package pin therefore has no direct privileged reach today. | The official package is published from the same monorepo and release train as the OpenCode harness. The repository's `npm ci` path disables lifecycle scripts and verifies lock integrity, vulnerabilities, and registry signatures. Tier C reflects its effective configured use; adding a runtime import or local plugin must re-evaluate the tier. The manifest retains its existing seven-day Dependabot delay for routine update proposals, but is not subject to the privileged release checker. |
 
@@ -170,7 +169,7 @@ the exact pin, lockfile, audit, signature, and PR review controls remain.
 ## firstmate — accept-as-rolling ⚠️
 
 > **Firstmate is an unpinned, continuously trusted third-party supervisor.**
-> Tier C also contains the rolling oMLX and `baby-menu` Homebrew entries, but
+> Tier C also contains the rolling oMLX Homebrew entry, but
 > Firstmate is treated separately because it orchestrates the agent harnesses.
 
 [`kunchenguid/firstmate`](https://github.com/kunchenguid/firstmate) is an agent
