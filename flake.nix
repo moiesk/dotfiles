@@ -55,7 +55,7 @@
     };
 
     tasks-axi = {
-      url = "github:kunchenguid/tasks-axi/tasks-axi-v0.2.5";
+      url = "github:kunchenguid/tasks-axi/tasks-axi-v0.2.6";
       flake = false;
     };
   };
