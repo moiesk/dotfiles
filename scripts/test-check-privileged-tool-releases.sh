@@ -53,6 +53,7 @@ version_gt() {
 
 # Age the synthetic releases against the cooldown the checker will actually
 # apply rather than restating it here, so the two cannot drift apart.
+# shellcheck disable=SC2016  # The sed pattern matches a literal shell expression.
 cooldown_days="$(sed -n \
   's/^COOLDOWN_DAYS="\${TOOL_UPDATE_COOLDOWN_DAYS:-\([0-9]\{1,\}\)}"$/\1/p' \
   "$CHECKER")"
@@ -196,7 +197,12 @@ else
     }'
 fi
 EOF
-chmod +x "$tmp_dir/gh-axi" "$tmp_dir/npm"
+cat >"$tmp_dir/npm-array" <<EOF
+#!/usr/bin/env bash
+set -euo pipefail
+"$tmp_dir/npm" "\$@" | jq -s '.'
+EOF
+chmod +x "$tmp_dir/gh-axi" "$tmp_dir/npm" "$tmp_dir/npm-array"
 printf '{"schema_version":1,"exceptions":[]}\n' >"$tmp_dir/exceptions.json"
 # The checker now consults a block list for npm tools too; isolate it from the
 # live security/blocked-tool-releases.json so these scenarios exercise the
@@ -333,6 +339,27 @@ grep -Fq "$FIXTURE_NPM_PACKAGE $FIXTURE_NPM_LATEST is available but remains in t
   "$output_file" || {
   cat "$output_file" >&2
   printf '%s\n' 'error: normal cooldown did not report the held fresh release' >&2
+  exit 1
+}
+
+# npm 12 may wrap a single-package view response in a one-element array. That
+# shape must make the same cooldown decision as the traditional object response.
+if ! FIXTURE_MODE=fresh-available \
+  GH_AXI_BIN="$tmp_dir/gh-axi" \
+  NPM_BIN="$tmp_dir/npm-array" \
+  FIRSTMATE_FLOOR_EXCEPTIONS_FILE="$tmp_dir/exceptions.json" \
+  BLOCKED_TOOL_RELEASES_FILE="$tmp_dir/blocked.json" \
+  TOOL_UPDATE_NOW_EPOCH="$now_epoch" \
+  TOOL_UPDATE_COOLDOWN_DAYS="$cooldown_days" \
+  "$CHECKER" >"$output_file" 2>&1; then
+  cat "$output_file" >&2
+  printf '%s\n' 'error: one-element npm metadata array was not normalized' >&2
+  exit 1
+fi
+grep -Fq "$FIXTURE_NPM_PACKAGE $FIXTURE_NPM_LATEST is available but remains in the ${cooldown_days}-day cooldown (pinned: $FIXTURE_NPM_PINNED)" \
+  "$output_file" || {
+  cat "$output_file" >&2
+  printf '%s\n' 'error: normalized npm metadata array changed the cooldown result' >&2
   exit 1
 }
 

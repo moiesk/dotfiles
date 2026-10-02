@@ -160,6 +160,19 @@ check_npm_release() {
     FAILURES=$((FAILURES + 1))
     return
   fi
+  # npm 12 may wrap a single package's view response in a one-element array.
+  # Normalize that wire shape while remaining fail-closed for any ambiguous or
+  # malformed response.
+  if ! metadata="$(jq -ce '
+    if type == "object" then .
+    elif type == "array" and length == 1 and (.[0] | type) == "object" then .[0]
+    else error("expected one npm package metadata object")
+    end
+  ' <<<"$metadata" 2>/dev/null)"; then
+    printf 'error: malformed npm metadata for %s\n' "$package_name" >&2
+    FAILURES=$((FAILURES + 1))
+    return
+  fi
   latest="$(jq -r '.["dist-tags"].latest // empty' <<<"$metadata")"
   published="$(jq -r --arg v "$latest" '.time[$v] // empty' <<<"$metadata")"
 
