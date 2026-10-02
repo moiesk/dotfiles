@@ -53,6 +53,7 @@ version_gt() {
 
 # Age the synthetic releases against the cooldown the checker will actually
 # apply rather than restating it here, so the two cannot drift apart.
+# shellcheck disable=SC2016  # The sed pattern matches a literal shell expression.
 cooldown_days="$(sed -n \
   's/^COOLDOWN_DAYS="\${TOOL_UPDATE_COOLDOWN_DAYS:-\([0-9]\{1,\}\)}"$/\1/p' \
   "$CHECKER")"
