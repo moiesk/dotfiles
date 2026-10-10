@@ -145,9 +145,14 @@ expect_failure() {
 write_exception
 run_checker >/dev/null || fail 'valid exact-commit floor exception was rejected'
 fixture_npm_shape=singleton
-run_checker >/dev/null || fail 'one-element npm metadata array was rejected'
+run_checker >"$tmp_dir/singleton-output" 2>&1 ||
+  fail 'one-element npm metadata array was rejected'
 run_checker --retire-expired >"$tmp_dir/output" 2>&1 ||
   fail 'retirement check rejected a one-element npm metadata array'
+printf '%s\n' 'One-element npm metadata array, active floor exception:'
+cat "$tmp_dir/singleton-output"
+printf '%s\n' 'One-element npm metadata array, retirement check:'
+cat "$tmp_dir/output"
 for fixture_npm_shape in empty multiple nonobject; do
   expect_failure 'could not verify npm release evidence'
   if run_checker --retire-expired >"$tmp_dir/output" 2>&1; then
