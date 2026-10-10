@@ -145,6 +145,7 @@ historical_previous_pin() {
 npm_release_evidence() {
   local dependency="$1" adopted="$2" required="$3" metadata lowest published
   metadata="$($NPM_BIN view "$dependency" --json 2>/dev/null)" || return 1
+  metadata="$(normalize_npm_metadata "$metadata")" || return 1
   lowest="$(node -e '
     const metadata = JSON.parse(process.argv[1]);
     const required = process.argv[2].split(".").map(Number);
@@ -167,11 +168,21 @@ npm_release_evidence() {
   printf '%s\n' "$published"
 }
 
+normalize_npm_metadata() {
+  jq -ce '
+    if type == "object" then .
+    elif type == "array" and length == 1 and (.[0] | type) == "object" then .[0]
+    else error("expected one npm package metadata object")
+    end
+  ' <<<"$1" 2>/dev/null
+}
+
 release_published_at() {
   local pin_kind="$1" release_key="$2" tag_prefix="$3" version="$4" metadata published
   case "$pin_kind" in
     npm)
       metadata="$($NPM_BIN view "$release_key" --json 2>/dev/null)" || return 1
+      metadata="$(normalize_npm_metadata "$metadata")" || return 1
       published="$(jq -r --arg version "$version" '.time[$version] // empty' <<<"$metadata")"
       ;;
     flake)

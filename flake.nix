@@ -25,7 +25,7 @@
     };
 
     no-mistakes = {
-      url = "github:kunchenguid/no-mistakes/v1.72.0";
+      url = "github:kunchenguid/no-mistakes/v1.84.0";
       flake = false;
     };
 
@@ -35,7 +35,7 @@
     };
 
     chrome-devtools-axi = {
-      url = "github:kunchenguid/chrome-devtools-axi/chrome-devtools-axi-v0.1.34";
+      url = "github:kunchenguid/chrome-devtools-axi/chrome-devtools-axi-v0.1.38";
       flake = false;
     };
 
@@ -45,17 +45,17 @@
     };
 
     lavish-axi = {
-      url = "github:kunchenguid/lavish-axi/lavish-axi-v0.1.67";
+      url = "github:kunchenguid/lavish-axi/lavish-axi-v0.1.81";
       flake = false;
     };
 
     quota-axi = {
-      url = "github:kunchenguid/quota-axi/quota-axi-v0.1.43";
+      url = "github:kunchenguid/quota-axi/quota-axi-v0.1.56";
       flake = false;
     };
 
     tasks-axi = {
-      url = "github:kunchenguid/tasks-axi/tasks-axi-v0.2.5";
+      url = "github:kunchenguid/tasks-axi/tasks-axi-v0.2.6";
       flake = false;
     };
   };
