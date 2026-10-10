@@ -5,7 +5,13 @@
       "dependency": "treehouse",
       "blocked_version": "v2.3.0",
       "pinned_fallback": "v2.2.0",
-      "reason": "treehouse v2.3.0's released flake supplies git but not Python, so the non-activating darwin-rebuild build gate fails deterministically in treehouse's own Go tests when the no-mistakes gate runs its Python-dependent script. Upstream fixed the Nix packaging after v2.3.0 but cut no newer exact release, so the pin is held at the last reviewed buildable v2.2.0 until an exact fixed release clears cooldown."
+      "reason": "treehouse v2.3.0's released flake supplies git but not Python, so the non-activating darwin-rebuild build gate fails deterministically in treehouse's own Go tests when the no-mistakes gate runs its Python-dependent script. Upstream fixed the Nix packaging in v3.0.0, but the 3.x line is a separately held major release (see the v3.1.2 entry), so the pin stays at the last reviewed buildable v2.2.0."
+    },
+    {
+      "dependency": "treehouse",
+      "blocked_version": "v3.1.2",
+      "pinned_fallback": "v2.2.0",
+      "reason": "treehouse v3.1.2 builds and stays within the reviewed capability, but it is a major release with behavior changes held pending captain adoption: its first use migrates the shared worktree pools' state one way to version 4, return --force refuses to reset a worktree with a live foreign writer, the get subshell becomes a login shell, and get/return add exit status 3 for a retained dirty worktree. Firstmate is validated on 2.x, so the pin stays at v2.2.0 until the captain adopts 3.x."
     }
   ]
 }
