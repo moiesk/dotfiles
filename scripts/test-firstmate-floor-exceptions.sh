@@ -63,7 +63,7 @@ EOF
 cat >"$tmp_dir/bin/npm" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
-jq -n \
+metadata="$(jq -n \
   --arg previous "$FIXTURE_PREVIOUS" \
   --arg adopted "$FIXTURE_ADOPTED" \
   --arg broader "$FIXTURE_BROADER" \
@@ -79,7 +79,14 @@ jq -n \
       ($broader): $fresh_at,
       ($latest): $fresh_at
     }
-  }'
+  }')"
+case "${FIXTURE_NPM_SHAPE:-object}" in
+  object) printf '%s\n' "$metadata" ;;
+  singleton) jq -cn --argjson metadata "$metadata" '[$metadata]' ;;
+  empty) printf '%s\n' '[]' ;;
+  multiple) jq -cn --argjson metadata "$metadata" '[$metadata, $metadata]' ;;
+  nonobject) printf '%s\n' '[null]' ;;
+esac
 EOF
 chmod +x "$tmp_dir/bin/gh-axi" "$tmp_dir/bin/npm"
 
@@ -120,6 +127,7 @@ run_checker() {
     FIXTURE_LATEST="$latest" \
     FIXTURE_FRESH_AT="$fresh_at" \
     FIXTURE_OLD_AT="$old_at" \
+    FIXTURE_NPM_SHAPE="${fixture_npm_shape:-object}" \
     "$CHECKER" "$@"
 }
 
@@ -136,6 +144,17 @@ expect_failure() {
 
 write_exception
 run_checker >/dev/null || fail 'valid exact-commit floor exception was rejected'
+fixture_npm_shape=singleton
+run_checker >/dev/null || fail 'one-element npm metadata array was rejected'
+run_checker --retire-expired >"$tmp_dir/output" 2>&1 ||
+  fail 'retirement check rejected a one-element npm metadata array'
+for fixture_npm_shape in empty multiple nonobject; do
+  expect_failure 'could not verify npm release evidence'
+  if run_checker --retire-expired >"$tmp_dir/output" 2>&1; then
+    fail "retirement check accepted $fixture_npm_shape npm metadata"
+  fi
+done
+fixture_npm_shape=object
 
 write_exception quota-axi "$broader" "$adopted"
 jq --arg pin "$broader" '.dependencies["quota-axi"] = $pin' "$tmp_dir/repo/agent-tools/package.json" \
