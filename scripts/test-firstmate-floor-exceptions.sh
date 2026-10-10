@@ -205,6 +205,7 @@ fresh_at="$fresh_release_at"
 jq -n --arg pin "$previous" '{dependencies: {"quota-axi": $pin}}' \
   >"$tmp_dir/repo/agent-tools/package.json"
 if DOTFILES_DIR="$tmp_dir/repo" \
+  DOTFILES_HISTORY_DIR="$tmp_dir/repo" \
   FIRSTMATE_FLOOR_REGISTRY="$tmp_dir/repo/floors.tsv" \
   GH_AXI_BIN="$tmp_dir/bin/gh-axi" \
   FIXTURE_COMMIT="$commit" \
@@ -279,6 +280,7 @@ esac
 EOF
 chmod +x "$tmp_dir/bin/gh-axi-github"
 DOTFILES_DIR="$github_repo" \
+  DOTFILES_HISTORY_DIR="$github_repo" \
   FIRSTMATE_FLOOR_REGISTRY="$github_repo/floors.tsv" \
   FIRSTMATE_FLOOR_EXCEPTIONS_FILE="$github_repo/exceptions.json" \
   GH_AXI_BIN="$tmp_dir/bin/gh-axi-github" \
