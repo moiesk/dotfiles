@@ -19,12 +19,12 @@ let
     runtimeInputs = [ pkgs.jq pkgs.coreutils ];
     text = builtins.readFile ./scripts/materialize-agent-configs.sh;
   };
-  noMistakesVersion = "1.72.0";
+  noMistakesVersion = "1.84.0";
   noMistakes = pkgs.buildGoModule {
     pname = "no-mistakes";
     version = noMistakesVersion;
     src = inputs.no-mistakes;
-    vendorHash = "sha256-NZOYxNYvt4192uqKBdKRxdgrKFvWx3585psdCnRdPSM=";
+    vendorHash = "sha256-maAVBptEtdrGanJHwAPAmuGBorzIMUgK6T+NmIz1kS0=";
     subPackages = [ "cmd/no-mistakes" ];
     ldflags = [
       "-s"

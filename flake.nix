@@ -25,7 +25,7 @@
     };
 
     no-mistakes = {
-      url = "github:kunchenguid/no-mistakes/v1.72.0";
+      url = "github:kunchenguid/no-mistakes/v1.84.0";
       flake = false;
     };
 
