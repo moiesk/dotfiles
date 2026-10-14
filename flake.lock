@@ -19,16 +19,16 @@
     "chrome-devtools-axi": {
       "flake": false,
       "locked": {
-        "lastModified": 1791034737,
-        "narHash": "sha256-sN2nvkQYqJ1rngVNq7Sxh5nzelTASWVNEUXxMb5dmOg=",
+        "lastModified": 1791208114,
+        "narHash": "sha256-XP/+6qumcJHmX5UrZb8R00mmwXVPtLtNCJUnYNsqGgc=",
         "owner": "kunchenguid",
         "repo": "chrome-devtools-axi",
-        "rev": "99696727fd3554cd7ef2b4223c0c0d8873de2228",
+        "rev": "06688b18adf5c0855fca6ed4efe2dbd0ad0e2ec6",
         "type": "github"
       },
       "original": {
         "owner": "kunchenguid",
-        "ref": "chrome-devtools-axi-v0.1.38",
+        "ref": "chrome-devtools-axi-v0.1.39",
         "repo": "chrome-devtools-axi",
         "type": "github"
       }
@@ -74,16 +74,16 @@
     "lavish-axi": {
       "flake": false,
       "locked": {
-        "lastModified": 1791037443,
-        "narHash": "sha256-7BtRdcR2WaoRPGDIWafzbglQCKt7L23GJwkNxyLwy2c=",
+        "lastModified": 1791297779,
+        "narHash": "sha256-/m95bKdjU+UC9tzCEHwkJbxOP5SwZYjrWB0AYYEvXiI=",
         "owner": "kunchenguid",
         "repo": "lavish-axi",
-        "rev": "7369205ec9c04136813f6c808dad548633dd1aff",
+        "rev": "6474c6ace59f81a10c94c59b57b436bcbff79e06",
         "type": "github"
       },
       "original": {
         "owner": "kunchenguid",
-        "ref": "lavish-axi-v0.1.81",
+        "ref": "lavish-axi-v0.1.83",
         "repo": "lavish-axi",
         "type": "github"
       }
@@ -182,16 +182,16 @@
     "quota-axi": {
       "flake": false,
       "locked": {
-        "lastModified": 1791036766,
-        "narHash": "sha256-UingBvYxdudiHp1lI2culgCe5Xlx8x5DIgB6RsLn2QQ=",
+        "lastModified": 1791210205,
+        "narHash": "sha256-Ayzp5Ru1R7yw/z413Y1bxevpN8uOcnWlrN7Pr+1TOHw=",
         "owner": "kunchenguid",
         "repo": "quota-axi",
-        "rev": "1f5875c3f3ebf09b0fa04e124e9f395fcec68b25",
+        "rev": "0c56e627204fa55abd3de30c8d0fb51bb2ee4918",
         "type": "github"
       },
       "original": {
         "owner": "kunchenguid",
-        "ref": "quota-axi-v0.1.56",
+        "ref": "quota-axi-v0.1.58",
         "repo": "quota-axi",
         "type": "github"
       }
