@@ -32,7 +32,7 @@ let
       "-X github.com/kunchenguid/no-mistakes/internal/buildinfo.Version=v${noMistakesVersion}"
     ];
   };
-  mattSkillGroups = [ "engineering" "productivity" "misc" "personal" ];
+  mattSkillGroups = [ "engineering" "productivity" "misc" ];
   mattSkillPathsForGroup = group:
     let
       groupRoot = "${inputs.matt-pocock-skills}/skills/${group}";
