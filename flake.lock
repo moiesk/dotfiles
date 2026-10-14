@@ -19,16 +19,16 @@
     "chrome-devtools-axi": {
       "flake": false,
       "locked": {
-        "lastModified": 1791034737,
-        "narHash": "sha256-sN2nvkQYqJ1rngVNq7Sxh5nzelTASWVNEUXxMb5dmOg=",
+        "lastModified": 1791208114,
+        "narHash": "sha256-XP/+6qumcJHmX5UrZb8R00mmwXVPtLtNCJUnYNsqGgc=",
         "owner": "kunchenguid",
         "repo": "chrome-devtools-axi",
-        "rev": "99696727fd3554cd7ef2b4223c0c0d8873de2228",
+        "rev": "06688b18adf5c0855fca6ed4efe2dbd0ad0e2ec6",
         "type": "github"
       },
       "original": {
         "owner": "kunchenguid",
-        "ref": "chrome-devtools-axi-v0.1.38",
+        "ref": "chrome-devtools-axi-v0.1.39",
         "repo": "chrome-devtools-axi",
         "type": "github"
       }
