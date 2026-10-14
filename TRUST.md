@@ -225,7 +225,7 @@ state is kept separate from the tracked, pinned portable configuration.
 
 | Upstream | Pinned at | Capability granted | Why it is trusted |
 |---|---|---|---|
-| [`mattpocock/skills`](https://github.com/mattpocock/skills) | flake input (locked to a commit in `flake.lock`; tracks the default branch — advanced only when `nix flake update matt-pocock-skills` is run) | Supplies agent **skills** (instructions/workflows) exposed from `~/.agents/skills` and linked into Claude and Pi. Skills are prompts/workflows, not independently privileged binaries, but they can *instruct* the privileged tools above. | Well-known author (Matt Pocock); locked in `flake.lock` so updates are explicit. Deprecated and in-progress skills are deliberately excluded. |
+| [`mattpocock/skills`](https://github.com/mattpocock/skills) | flake input (pinned to a tagged release in `flake.nix` and locked to its commit in `flake.lock`; advanced only by a reviewed tag bump plus `nix flake update matt-pocock-skills`) | Supplies agent **skills** (instructions/workflows) exposed from `~/.agents/skills` and linked into Claude and Pi. Skills are prompts/workflows, not independently privileged binaries, but they can *instruct* the privileged tools above. | Well-known author (Matt Pocock); locked in `flake.lock` so updates are explicit. Deprecated and in-progress skills are deliberately excluded. |
 
 ## Neovim plugins
 

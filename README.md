@@ -225,7 +225,7 @@ module-only findings outside a reachable call path, fail unless they have a
 scoped, expiring entry in `security/go-vulnerability-exceptions.json`.
 
 Matt Pocock's engineering, productivity,
-misc, and personal skills plus every installable skill bundled with the pinned
+and misc skills plus every installable skill bundled with the pinned
 npm agent tools are pinned as flake inputs, exposed from
 `~/.agents/skills`, and linked into Claude and Pi. Deprecated and in-progress
 Matt Pocock skills are deliberately excluded. The `matt-pocock-skills` input is
