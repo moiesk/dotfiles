@@ -35,17 +35,17 @@
     };
 
     chrome-devtools-axi = {
-      url = "github:kunchenguid/chrome-devtools-axi/chrome-devtools-axi-v0.1.39";
+      url = "github:kunchenguid/chrome-devtools-axi/chrome-devtools-axi-v0.1.40";
       flake = false;
     };
 
     gh-axi = {
-      url = "github:kunchenguid/gh-axi/gh-axi-v0.1.36";
+      url = "github:kunchenguid/gh-axi/gh-axi-v0.1.38";
       flake = false;
     };
 
     lavish-axi = {
-      url = "github:kunchenguid/lavish-axi/lavish-axi-v0.1.85";
+      url = "github:kunchenguid/lavish-axi/lavish-axi-v0.1.86";
       flake = false;
     };
 
