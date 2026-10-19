@@ -95,6 +95,7 @@ in
     fx
     fzf
     gh
+    gitleaks
     gnupg
     go
     httpie
