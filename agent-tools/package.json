@@ -2,7 +2,7 @@
   "name": "agent-tools",
   "private": true,
   "dependencies": {
-    "chrome-devtools-axi": "0.1.39",
+    "chrome-devtools-axi": "0.1.40",
     "gh-axi": "0.1.38",
     "lavish-axi": "0.1.85",
     "quota-axi": "0.1.60",
