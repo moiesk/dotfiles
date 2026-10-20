@@ -4,8 +4,8 @@
   "dependencies": {
     "chrome-devtools-axi": "0.1.40",
     "gh-axi": "0.1.38",
-    "lavish-axi": "0.1.86",
-    "quota-axi": "0.1.60",
+    "lavish-axi": "0.1.87",
+    "quota-axi": "0.1.61",
     "tasks-axi": "0.2.6"
   },
   "engines": {
