@@ -265,12 +265,17 @@ broadly reviewed, and outside the `kunchenguid` concentration that is this
 document's concern — but they are named here so those high-level build trust
 decisions are not implicit.
 
+[`home.nix`](home.nix) temporarily pins the Go 1.26.10 toolchain source
+(`go.dev/dl/go1.26.10.src.tar.gz`, by hash) used only to build treehouse and
+no-mistakes, until the followed nixpkgs channel carries Go >= 1.26.10.
+
 ---
 
 *Maintaining this file: when a direct upstream in this inventory's scope is
 added, removed, or moved between capability tiers, update the matching table
 here in the same change. Version pins in the tables are illustrative of the
 pinning discipline — the authoritative pins live in [`flake.lock`](flake.lock),
-[`agent-tools/package.json`](agent-tools/package.json), and
-[`home/.config/opencode/package.json`](home/.config/opencode/package.json).
+[`agent-tools/package.json`](agent-tools/package.json),
+[`home/.config/opencode/package.json`](home/.config/opencode/package.json), and
+[`home.nix`](home.nix) for the temporary Go toolchain source pin.
 Neovim upstreams have no pin; see the [stance bullet](#nvim-stance).*

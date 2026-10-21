@@ -219,8 +219,9 @@ Treehouse and no-mistakes use the equivalent Go/Nix policy. Their release tags,
 source revisions, and NAR hashes are pinned through `flake.lock`. Daily CI scans
 the exact locked source commits with pinned `govulncheck`, compiles and smoke
 tests both commands using a current Go security patch, and reports a newer
-stable release only after a seven-day cooldown. The pinned nixpkgs toolchain is
-kept on a security-patched Go release as well. Go findings, including
+stable release only after a seven-day cooldown. The installed commands also use
+a security-patched Go toolchain; see [the build-source disclosure](TRUST.md#foundational-nix-inputs-community-infrastructure).
+Go findings, including
 module-only findings outside a reachable call path, fail unless they have a
 scoped, expiring entry in `security/go-vulnerability-exceptions.json`.
 
