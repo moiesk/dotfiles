@@ -19,8 +19,28 @@ let
     runtimeInputs = [ pkgs.jq pkgs.coreutils ];
     text = builtins.readFile ./scripts/materialize-agent-configs.sh;
   };
+  # GO-2026-6809 (crypto/x509) is fixed in Go 1.26.10, but the followed
+  # nixpkgs-26.05-darwin channel still ships an older Go. Only the treehouse and
+  # no-mistakes builds use this; drop it and go back to pkgs.buildGoModule (and
+  # the upstream treehouse package) once that channel carries Go >= 1.26.10.
+  go_1_26_10 = pkgs.go_1_26.overrideAttrs (_: {
+    version = "1.26.10";
+    src = pkgs.fetchurl {
+      url = "https://go.dev/dl/go1.26.10.src.tar.gz";
+      hash = "sha256-/WPog7ovK/ypPBZGsx6+9j4rHk0rMXyXidl2po2B828=";
+    };
+  });
+  buildGoModuleGo1_26_10 = pkgs.buildGoModule.override { go = go_1_26_10; };
+  upstreamTreehouse = inputs.treehouse.packages.${pkgs.stdenv.hostPlatform.system}.default;
+  treehouse = buildGoModuleGo1_26_10 {
+    inherit (upstreamTreehouse) pname version src vendorHash;
+    # buildGoModule appends -buildid= itself and warns when it is passed in.
+    ldflags = pkgs.lib.remove "-buildid=" upstreamTreehouse.ldflags;
+    # Mirrors the upstream package; mkDerivation does not expose it as an attr.
+    nativeCheckInputs = [ pkgs.git ];
+  };
   noMistakesVersion = "1.84.0";
-  noMistakes = pkgs.buildGoModule {
+  noMistakes = buildGoModuleGo1_26_10 {
     pname = "no-mistakes";
     version = noMistakesVersion;
     src = inputs.no-mistakes;
@@ -119,7 +139,7 @@ in
     starship
     tabiew
     tmux
-    inputs.treehouse.packages.${pkgs.stdenv.hostPlatform.system}.default
+    treehouse
     uv
     wget
     piWrapper
