@@ -16,8 +16,7 @@ Default five-role vocabulary (`needs-triage`, `needs-info`, `ready-for-agent`, `
 capability and records each authoritative pin. See its
 [first-party harness stance](TRUST.md)
 for the harness exceptions. Update it when an upstream is added, removed, or moves tier;
-authoritative pins live in `flake.lock`,
-`agent-tools/package.json`, and `home/.config/opencode/package.json`. Neovim
+consult its maintenance footer for authoritative pin locations. Neovim
 plugins are disclosed in TRUST.md but not
 pinned: `lazy.nvim`'s lockfile only applies on an explicit `:Lazy restore`, so
 it is untracked.
