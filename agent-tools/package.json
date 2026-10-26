@@ -12,6 +12,12 @@
     "node": ">=24.18.0 <25"
   },
   "overrides": {
+    "@earendil-works/pi-coding-agent": {
+      "undici": "8.12.3",
+      "openai": {
+        "undici": "6.29.1"
+      }
+    },
     "quota-axi": {
       "@toon-format/toon": "2.3.1",
       "undici": "6.29.1"
