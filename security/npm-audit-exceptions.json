@@ -1,1 +1,42 @@
-{}
+{
+  "GHSA-27r3-jxmh-p828": {
+    "projects": [
+      "agent-tools"
+    ],
+    "expires": "2026-10-29",
+    "reason": "fix in TRUST.md cooldown; captain-approved 2026-10-26; removed by follow-up df-upkeep-oct29",
+    "compensatingControl": "body-parser <2.4.0 at agent-tools/node_modules/body-parser (lavish-axi -> express@5.2.1, also reachable through @modelcontextprotocol/sdk's express, whose server transport chrome-devtools-axi does not start); the only fix, 2.4.0, clears the seven-day cooldown on 2026-10-29T11:40Z. The lavish review server is bound to 127.0.0.1 by LAVISH_AXI_HOST, so the compressed-body DoS is reachable only from local clients."
+  },
+  "GHSA-w74x-v6f9-j3xg": {
+    "projects": [
+      "agent-tools"
+    ],
+    "expires": "2026-10-29",
+    "reason": "fix in TRUST.md cooldown; captain-approved 2026-10-26; removed by follow-up df-upkeep-oct29",
+    "compensatingControl": "fast-uri <3.1.9 at agent-tools/node_modules/fast-uri (chrome-devtools-axi -> @modelcontextprotocol/sdk -> ajv); the fixed fast-uri 3.1.9 clears the seven-day cooldown on 2026-10-26T23:06Z. In this setup ajv receives its schemas from the local chrome-devtools-mcp server over stdio rather than from untrusted network input."
+  },
+  "GHSA-xhq7-xmqj-769h": {
+    "projects": [
+      "agent-tools"
+    ],
+    "expires": "2026-10-29",
+    "reason": "fix in TRUST.md cooldown; captain-approved 2026-10-26; removed by follow-up df-upkeep-oct29",
+    "compensatingControl": "fast-uri <3.1.9 at agent-tools/node_modules/fast-uri (chrome-devtools-axi -> @modelcontextprotocol/sdk -> ajv); the fixed fast-uri 3.1.9 clears the seven-day cooldown on 2026-10-26T23:06Z. In this setup ajv receives its schemas from the local chrome-devtools-mcp server over stdio rather than from untrusted network input."
+  },
+  "GHSA-wjr9-j795-jxcr": {
+    "projects": [
+      "agent-tools"
+    ],
+    "expires": "2026-10-29",
+    "reason": "fix in TRUST.md cooldown; captain-approved 2026-10-26; removed by follow-up df-upkeep-oct29",
+    "compensatingControl": "fast-uri <3.1.9 at agent-tools/node_modules/fast-uri (chrome-devtools-axi -> @modelcontextprotocol/sdk -> ajv); the fixed fast-uri 3.1.9 clears the seven-day cooldown on 2026-10-26T23:06Z. In this setup ajv receives its schemas from the local chrome-devtools-mcp server over stdio rather than from untrusted network input."
+  },
+  "GHSA-333x-w4r6-6crp": {
+    "projects": [
+      "agent-tools"
+    ],
+    "expires": "2026-10-29",
+    "reason": "fix in TRUST.md cooldown; captain-approved 2026-10-26; removed by follow-up df-upkeep-oct29",
+    "compensatingControl": "fast-uri <3.1.9 at agent-tools/node_modules/fast-uri (chrome-devtools-axi -> @modelcontextprotocol/sdk -> ajv); the fixed fast-uri 3.1.9 clears the seven-day cooldown on 2026-10-26T23:06Z. In this setup ajv receives its schemas from the local chrome-devtools-mcp server over stdio rather than from untrusted network input."
+  }
+}

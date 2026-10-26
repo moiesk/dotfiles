@@ -2,19 +2,25 @@
   "name": "agent-tools",
   "private": true,
   "dependencies": {
-    "chrome-devtools-axi": "0.1.41",
-    "gh-axi": "0.1.39",
-    "lavish-axi": "0.1.87",
-    "quota-axi": "0.1.61",
+    "chrome-devtools-axi": "0.1.44",
+    "gh-axi": "0.1.43",
+    "lavish-axi": "0.1.90",
+    "quota-axi": "0.1.64",
     "tasks-axi": "0.2.6"
   },
   "engines": {
     "node": ">=24.18.0 <25"
   },
   "overrides": {
+    "@earendil-works/pi-coding-agent": {
+      "undici": "8.12.3",
+      "openai": {
+        "undici": "6.29.1"
+      }
+    },
     "quota-axi": {
       "@toon-format/toon": "2.3.1",
-      "undici": "6.28.1"
+      "undici": "6.29.1"
     }
   }
 }

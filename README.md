@@ -180,9 +180,9 @@ Pi (`@earendil-works/pi-coding-agent`) at its latest release on top: Pi is a
 deliberately rolling first-party harness (no pin, no cooldown — see `TRUST.md`),
 so it is intentionally absent from `package.json`/`package-lock.json`. The
 npm-audit and registry-signature gates then cover the whole installed tree, Pi
-included, rejecting any known production vulnerability. A
-vulnerability without a compatible fix must have a documented, expiring entry
-in `security/npm-audit-exceptions.json`; the audit gate fails again when that
+included. A production vulnerability that cannot yet be cleared by the
+reviewed pins must have a documented, expiring entry in
+`security/npm-audit-exceptions.json`; the audit gate fails again when that
 exception expires. The privileged `gh-axi`, `chrome-devtools-axi`, and
 `quota-axi` pins additionally carry the same release-cooldown hold as Treehouse
 and no-mistakes below: the daily CI gate holds a newer npm release through the
