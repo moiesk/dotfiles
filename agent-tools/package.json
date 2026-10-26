@@ -5,7 +5,7 @@
     "chrome-devtools-axi": "0.1.44",
     "gh-axi": "0.1.43",
     "lavish-axi": "0.1.90",
-    "quota-axi": "0.1.61",
+    "quota-axi": "0.1.64",
     "tasks-axi": "0.2.6"
   },
   "engines": {
