@@ -182,16 +182,16 @@
     "quota-axi": {
       "flake": false,
       "locked": {
-        "lastModified": 1792160014,
-        "narHash": "sha256-zgCVCXXZAwJCu62QetygNa94zCGFaYt36oygvynDtZU=",
+        "lastModified": 1792505936,
+        "narHash": "sha256-TLzGRYEGw1ele+0HOHgHoBFIs7HPDQUsUKj6EzmBfmQ=",
         "owner": "kunchenguid",
         "repo": "quota-axi",
-        "rev": "0fda9d80e81820053b4091f743633f5b81f7571a",
+        "rev": "af783dcb7c00bb7ce0b17c3db49b027d131345b3",
         "type": "github"
       },
       "original": {
         "owner": "kunchenguid",
-        "ref": "quota-axi-v0.1.64",
+        "ref": "quota-axi-v0.1.65",
         "repo": "quota-axi",
         "type": "github"
       }
