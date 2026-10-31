@@ -2,7 +2,7 @@
   "name": "opencode-plugins",
   "private": true,
   "dependencies": {
-    "@opencode-ai/plugin": "1.19.3"
+    "@opencode-ai/plugin": "1.19.4"
   },
   "overrides": {
     "@opencode-ai/plugin": {
