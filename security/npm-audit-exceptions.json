@@ -1,1 +1,8 @@
-{}
+{
+  "GHSA-g3hv-75wg-m249": {
+    "projects": ["agent-tools"],
+    "expires": "2026-11-06",
+    "reason": "Pi 1.4.0, installed as a deliberately rolling first-party harness after npm ci, directly pins minimatch 10.2.6. The advisory published on 2026-10-30 affects versions below 11.0.1. The reviewed agent-tools lockfile does not contain minimatch; await a Pi release that adopts the fixed major version, then remove this exception.",
+    "compensatingControl": "The vulnerable path requires minimatch optimizationLevel >= 2. Pi 1.4.0 calls minimatch with default options or nocase: true only, and does not set optimizationLevel in its matching call sites. The exception is scoped to agent-tools and expires after one week."
+  }
+}
