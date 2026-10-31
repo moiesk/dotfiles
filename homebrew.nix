@@ -29,6 +29,10 @@
         clone_target = "https://github.com/jundot/omlx.git";
         trusted = true;
       }
+      {
+        name = "securitypedant/octomon";
+        trusted = true;
+      }
     ];
 
     brews = [
@@ -50,6 +54,7 @@
       "rust"
       "jundot/omlx/omlx"
       "can1357/tap/omp"
+      "securitypedant/octomon/octomon"
     ];
 
     casks = [

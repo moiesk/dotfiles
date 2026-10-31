@@ -51,7 +51,7 @@ Instead:
 - This document is the disclosure half: the trust is written down, tiered, and
   reviewable rather than implicit.
 
-Rolling third-party exceptions are explicit: oMLX is disclosed
+Rolling third-party exceptions are explicit: oMLX and Octomon are disclosed
 in Tier C, while `firstmate` has a dedicated **accept-as-rolling** section
 because it supervises the agent harnesses. The Neovim upstreams sit outside the
 tiers entirely, under the [disclosed-but-not-pinned stance](#nvim-stance).
@@ -124,6 +124,7 @@ still be retained for a particular manifest, as noted below.
 | [`kunchenguid/lavish-axi`](https://github.com/kunchenguid/lavish-axi) | `lavish-axi-v0.1.90` (flake input + npm `lavish-axi@0.1.90`) | Renders agent responses into reviewable HTML artifacts. Upstream 0.1.60+ automatically adds a Tailscale listener when available unless `LAVISH_AXI_HOST` is explicitly set; this managed configuration sets `LAVISH_AXI_HOST=127.0.0.1`, which disables automatic Tailscale binding and keeps the review server loopback-only by default. The `share` command preserves hosted publishing as an explicit opt-in. | Pinned to an exact release; the managed loopback default prevents automatic network exposure, and hosted sharing remains output-only and explicitly initiated. |
 | [`kunchenguid/tasks-axi`](https://github.com/kunchenguid/tasks-axi) | `tasks-axi-v0.2.6` (flake input + npm `tasks-axi@0.2.6`) | Manages a local, hand-editable `backlog.md` task list. | Pinned to an exact release; operates on a local text backlog, no privileged capability. |
 | [`jundot/omlx`](https://github.com/jundot/omlx) | Homebrew formula (rolling; trusted tap + `autoUpdate` + `upgrade`) | **Local model serving** — when launched, reads local model files, downloads models and resources, writes settings, logs, and disk-backed caches, and exposes OpenAI-compatible and administration endpoints on localhost by default; optional clustering can connect to other Macs. | Owner-approved rolling exception for an open-source, Apache-licensed Apple Silicon inference server. The formula verifies the selected tagged source archive, but the tap, version, and digest advance without a repository pin or cooldown. |
+| [`securitypedant/octomon`](https://github.com/securitypedant/octomon) | Homebrew formula (rolling; trusted `securitypedant/octomon` tap + `autoUpdate` + `upgrade`) | **Network diagnostics** — when launched, probes network paths and external endpoints, observes interface and per-process traffic, and stores network history and configuration locally. Optional alert flags can send notifications, POST to a webhook, or run a user-supplied command. | The upstream's documented macOS installation uses its dedicated Homebrew tap. The tap and formula advance without a repository pin or cooldown; the tap is trusted so Homebrew can install and upgrade it during rebuilds. |
 | [`anomalyco/opencode` (`@opencode-ai/plugin`)](https://github.com/anomalyco/opencode/tree/v1.19.3/packages/plugin) | npm `@opencode-ai/plugin@1.19.3` (exact, in [`home/.config/opencode/package.json`](home/.config/opencode/package.json); locked beside it) | **OpenCode plugin-authoring support.** In this checkout it is installed but not loaded: there is no tracked OpenCode plugin/custom-tool source or import, and its public runtime entry points are schema/identity and TUI helpers while the shell, SDK, auth, permission, and tool-hook surfaces are TypeScript interfaces for plugin authors. The separate package pin therefore has no direct privileged reach today. | The official package is published from the same monorepo and release train as the OpenCode harness. The repository's `npm ci` path disables lifecycle scripts and verifies lock integrity, vulnerabilities, and registry signatures. Tier C reflects its effective configured use; adding a runtime import or local plugin must re-evaluate the tier. The manifest retains its existing seven-day Dependabot delay for routine update proposals, but is not subject to the privileged release checker. The plugin pins `zod@4.1.8` exactly and its pinned `effect` beta declares `toml@^4.1.1`, so the manifest narrowly overrides those transitive dependencies to fixed `zod@4.6.7` (GHSA-mrhx-c7xc-m3w5) and `toml@5.0.1` (GHSA-4qx8-w7c3-pj3p, GHSA-9j65-hcg3-gc64, GHSA-9qmh-m7c6-f92p); remove the overrides once a plugin release depends on fixed versions. |
 
 ### OpenCode package boundary
@@ -169,7 +170,7 @@ the exact pin, lockfile, audit, signature, and PR review controls remain.
 ## firstmate — accept-as-rolling ⚠️
 
 > **Firstmate is an unpinned, continuously trusted third-party supervisor.**
-> Tier C also contains the rolling oMLX Homebrew entry, but
+> Tier C also contains the rolling oMLX and Octomon Homebrew entries, but
 > Firstmate is treated separately because it orchestrates the agent harnesses.
 
 [`kunchenguid/firstmate`](https://github.com/kunchenguid/firstmate) is an agent

@@ -102,8 +102,8 @@ Check the live result:
 Portable command-line tools are normally declared in `home.packages` and pinned
 by the flake lock. Homebrew owns macOS app bundles, fonts, native tools, and
 tools whose chosen distribution is a dedicated tap. OMP is intentionally a
-rolling first-party harness formula, while oMLX is an Apple Silicon-native model
-server distributed from its own tap. The Homebrew list otherwise contains
+rolling first-party harness formula; oMLX and Octomon are distributed from
+their own taps. The Homebrew list otherwise contains
 direct installs; `rust` is the one retained build dependency because oMLX needs
 it and the strict preflight treats installed build-only leaves as undeclared
 unless they are explicit.
