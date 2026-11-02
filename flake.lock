@@ -36,16 +36,16 @@
     "gh-axi": {
       "flake": false,
       "locked": {
-        "lastModified": 1792332282,
-        "narHash": "sha256-xHGr9V5Mhw/RTuA0dz3Crc7DgASQdq92bqCkar/4eCE=",
+        "lastModified": 1792936462,
+        "narHash": "sha256-uRGzQDynPe5k6jfi6l24XbxPvfFr1VFnuSqtrXLL6UE=",
         "owner": "kunchenguid",
         "repo": "gh-axi",
-        "rev": "400b911985dc20a285a049b330d1467947588e97",
+        "rev": "ecd00539af1e44ef936c041f06432adfab316aa6",
         "type": "github"
       },
       "original": {
         "owner": "kunchenguid",
-        "ref": "gh-axi-v0.1.43",
+        "ref": "gh-axi-v0.1.44",
         "repo": "gh-axi",
         "type": "github"
       }
@@ -74,16 +74,16 @@
     "lavish-axi": {
       "flake": false,
       "locked": {
-        "lastModified": 1792765521,
-        "narHash": "sha256-B9QOyoByep25QYnvLXbkG8Q71sI9zFfUrXCIfEGtsiA=",
+        "lastModified": 1792938303,
+        "narHash": "sha256-GH3J78NRg0ApOqjil7/dBrdr0MIJIzGoO8FhRiUY59A=",
         "owner": "kunchenguid",
         "repo": "lavish-axi",
-        "rev": "6c4f682ac9cf23d56176ce67445902158db87149",
+        "rev": "86d14ff50e6e9c0be0b7575226ae214b0fd84035",
         "type": "github"
       },
       "original": {
         "owner": "kunchenguid",
-        "ref": "lavish-axi-v0.1.92",
+        "ref": "lavish-axi-v0.1.93",
         "repo": "lavish-axi",
         "type": "github"
       }
@@ -182,16 +182,16 @@
     "quota-axi": {
       "flake": false,
       "locked": {
-        "lastModified": 1792678764,
-        "narHash": "sha256-WU06YbWQxeEAOI7IHartuI1EXe2/DKGQS4Aajolv1tg=",
+        "lastModified": 1792851129,
+        "narHash": "sha256-iqqBOzRg87O9Dax2Xld9PmXl+ae2+tdUye2bX5PzCkk=",
         "owner": "kunchenguid",
         "repo": "quota-axi",
-        "rev": "a568c710d5321dacc81f799d4e04545906e31dc0",
+        "rev": "704933b81b6bcc519f7e49646129404adfab1e9e",
         "type": "github"
       },
       "original": {
         "owner": "kunchenguid",
-        "ref": "quota-axi-v0.1.66",
+        "ref": "quota-axi-v0.1.67",
         "repo": "quota-axi",
         "type": "github"
       }

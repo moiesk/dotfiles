@@ -3,9 +3,9 @@
   "private": true,
   "dependencies": {
     "chrome-devtools-axi": "0.1.44",
-    "gh-axi": "0.1.43",
-    "lavish-axi": "0.1.92",
-    "quota-axi": "0.1.66",
+    "gh-axi": "0.1.44",
+    "lavish-axi": "0.1.93",
+    "quota-axi": "0.1.67",
     "tasks-axi": "0.2.6"
   },
   "engines": {
@@ -19,8 +19,7 @@
       }
     },
     "quota-axi": {
-      "@toon-format/toon": "2.3.1",
-      "undici": "6.29.1"
+      "@toon-format/toon": "2.3.1"
     }
   }
 }

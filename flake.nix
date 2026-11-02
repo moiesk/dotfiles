@@ -40,17 +40,17 @@
     };
 
     gh-axi = {
-      url = "github:kunchenguid/gh-axi/gh-axi-v0.1.43";
+      url = "github:kunchenguid/gh-axi/gh-axi-v0.1.44";
       flake = false;
     };
 
     lavish-axi = {
-      url = "github:kunchenguid/lavish-axi/lavish-axi-v0.1.92";
+      url = "github:kunchenguid/lavish-axi/lavish-axi-v0.1.93";
       flake = false;
     };
 
     quota-axi = {
-      url = "github:kunchenguid/quota-axi/quota-axi-v0.1.66";
+      url = "github:kunchenguid/quota-axi/quota-axi-v0.1.67";
       flake = false;
     };
 
