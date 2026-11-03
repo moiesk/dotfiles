@@ -35,7 +35,7 @@
     };
 
     chrome-devtools-axi = {
-      url = "github:kunchenguid/chrome-devtools-axi/chrome-devtools-axi-v0.1.44";
+      url = "github:kunchenguid/chrome-devtools-axi/chrome-devtools-axi-v0.1.45";
       flake = false;
     };
 
@@ -50,7 +50,7 @@
     };
 
     quota-axi = {
-      url = "github:kunchenguid/quota-axi/quota-axi-v0.1.67";
+      url = "github:kunchenguid/quota-axi/quota-axi-v0.1.68";
       flake = false;
     };
 
