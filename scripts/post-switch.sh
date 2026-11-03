@@ -95,4 +95,19 @@ say "installing locked OpenCode plugin dependencies"
 "$DOTFILES_DIR/scripts/npm-audit.sh" "$HOME/.config/opencode"
 mise exec -- npm audit signatures --prefix "$HOME/.config/opencode"
 
+# The no-mistakes daemon takes its PATH from a login-shell probe at startup, so
+# it only sees shell changes (such as mise's shims) after a restart. Without
+# --force, restart refuses while pipeline runs are active; never interrupt them.
+if command -v no-mistakes >/dev/null 2>&1; then
+  say "restarting the no-mistakes daemon"
+  if ! restart_output="$(no-mistakes daemon restart 2>&1)"; then
+    if [[ "$restart_output" == *"active pipeline runs are in progress"* ]]; then
+      printf '%s\n' "warning: skipped no-mistakes daemon restart because pipeline runs are active; run 'no-mistakes daemon restart' once they finish" >&2
+    else
+      printf '%s\n' "$restart_output" >&2
+      exit 1
+    fi
+  fi
+fi
+
 say "user-scoped tools are current"
