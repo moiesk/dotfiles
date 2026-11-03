@@ -203,7 +203,12 @@ in
     enable = true;
     enableZshIntegration = true;
     globalConfig = {
-      settings.ruby.compile = false;
+      settings = {
+        ruby.compile = false;
+        # Projects pin Ruby in .ruby-version, which mise reads without trusting
+        # the folder (unlike a project mise.toml).
+        idiomatic_version_file_enable_tools = [ "ruby" ];
+      };
       tools = {
         node = "24.20.0";
         ruby = "4.0.6";
