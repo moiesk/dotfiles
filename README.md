@@ -115,11 +115,19 @@ rebuild. Homebrew cannot uninstall a package after its defining tap is gone.
 ## mise runtimes
 
 Home Manager enables mise, pins Node 24.20.0 and Ruby 4.0.6, and activates mise
-in new Zsh sessions. Runtime installation is serialized and retried once because
+in new Zsh sessions. Interactive shells use mise's directory hook; command-only
+Zsh shells use mise's shims so child commands resolve Ruby from their own working
+directory. Mise reads project `.ruby-version` files without requiring directory
+trust. Runtime installation is serialized and retried once because
 parallel first-run GPG key imports can race. Ruby uses mise's precompiled Apple
 Silicon binaries, falling back to a source build when no binary is available.
 Homebrew provides the native `vips` library used by Rails applications with the
 `ruby-vips` gem.
+
+After a rebuild, `scripts/post-switch.sh` restarts the no-mistakes daemon to
+refresh its PATH. If pipeline runs are active, the restart is skipped; run
+`no-mistakes daemon restart` when they finish.
+
 After rebuilding, open a new shell and run:
 
 ```sh
