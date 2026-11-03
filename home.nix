@@ -177,6 +177,16 @@ in
       save = 50000;
     };
     initContent = ''
+      # A shell that only runs a command (zsh -i -c ..., such as the no-mistakes
+      # daemon's login-shell probe) never reaches a prompt, so mise's per-directory
+      # hook would freeze the PATH it computed at startup into every child process.
+      # Shims resolve the version from each command's own directory instead.
+      if [[ -n ''${ZSH_EXECUTION_STRING-} ]]; then
+        eval "$(${config.programs.mise.package}/bin/mise activate zsh --shims)"
+      else
+        eval "$(${config.programs.mise.package}/bin/mise activate zsh)"
+      fi
+
       eval "$(starship init zsh)"
 
       autoload -Uz compinit && compinit
@@ -201,9 +211,15 @@ in
   # mise owns the pinned language runtimes and activates them in new shells.
   programs.mise = {
     enable = true;
-    enableZshIntegration = true;
+    # Activated by programs.zsh.initContent, which picks shims for non-prompt shells.
+    enableZshIntegration = false;
     globalConfig = {
-      settings.ruby.compile = false;
+      settings = {
+        ruby.compile = false;
+        # Projects pin Ruby in .ruby-version, which mise reads without trusting
+        # the folder (unlike a project mise.toml).
+        idiomatic_version_file_enable_tools = [ "ruby" ];
+      };
       tools = {
         node = "24.20.0";
         ruby = "4.0.6";
