@@ -39,7 +39,7 @@ let
     # Mirrors the upstream package; mkDerivation does not expose it as an attr.
     nativeCheckInputs = [ pkgs.git ];
   };
-  noMistakesVersion = "1.84.0";
+  noMistakesVersion = "1.106.1";
   noMistakes = buildGoModuleGo1_26_10 {
     pname = "no-mistakes";
     version = noMistakesVersion;
