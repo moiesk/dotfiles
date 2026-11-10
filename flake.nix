@@ -40,7 +40,7 @@
     };
 
     gh-axi = {
-      url = "github:kunchenguid/gh-axi/gh-axi-v0.1.44";
+      url = "github:kunchenguid/gh-axi/gh-axi-v0.1.48";
       flake = false;
     };
 
