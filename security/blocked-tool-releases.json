@@ -12,6 +12,12 @@
       "blocked_version": "v3.1.2",
       "pinned_fallback": "v2.2.0",
       "reason": "treehouse v3.1.2 builds and stays within the reviewed capability, but it is a major release with behavior changes held pending captain adoption: its first use migrates the shared worktree pools' state one way to version 4, return --force refuses to reset a worktree with a live foreign writer, the get subshell becomes a login shell, and get/return add exit status 3 for a retained dirty worktree. Firstmate is validated on 2.x, so the pin stays at v2.2.0 until the captain adopts 3.x."
+    },
+    {
+      "dependency": "treehouse",
+      "blocked_version": "v3.1.8",
+      "pinned_fallback": "v2.2.0",
+      "reason": "treehouse v3.1.8 is still on the held 3.x major line (see the v3.1.2 entry). The captain keeps the pin on 2.x until upstream fixes kunchenguid/treehouse#202: since 3.1.0, a missing or wrong state key or a corrupt state file silently frees durable leases and hands them, with the previous holder's ignored files, to the next caller. It is reproduced on v3.1.8. The newer 2.x release v2.2.1 is not adopted either: it adds the return live-writer refusal and changed get exit behavior that Firstmate has not been validated on."
     }
   ]
 }
