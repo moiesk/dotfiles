@@ -1,0 +1,5 @@
+# The ~/firstmate commit accepted as running on this Mac. Firstmate updates
+# itself outside rebuild.sh, so this is a drift tripwire, not a pin: doctor.sh
+# fails whenever ~/firstmate HEAD differs from the SHA below. After an update,
+# review `git -C ~/firstmate log --stat <old-sha>..HEAD`, then replace the SHA.
+64254de47a2989add6412949e98c36e3964b24aa
