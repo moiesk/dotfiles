@@ -401,7 +401,13 @@ grep -Fq "$FIXTURE_NPM_PACKAGE pinned release $FIXTURE_NPM_PINNED is inside cool
   exit 1
 }
 
-if [[ "$(grep -c '^[[:space:]]*interval: daily$' "$DOTFILES_DIR/.github/dependabot.yml")" -ne 1 ]]; then
+if ! ruby -ryaml -e '
+  updates = YAML.safe_load_file(ARGV.fetch(0)).fetch("updates")
+  npm = updates.select do |entry|
+    entry["package-ecosystem"] == "npm" && entry["directory"] == "/agent-tools"
+  end
+  exit(npm.length == 1 && npm.first.dig("schedule", "interval") == "daily" ? 0 : 1)
+' "$DOTFILES_DIR/.github/dependabot.yml"; then
   printf '%s\n' 'error: npm Dependabot checks must run daily so updates are proposed when cooldown expires' >&2
   exit 1
 fi
