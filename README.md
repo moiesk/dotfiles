@@ -116,15 +116,15 @@ rebuild. Homebrew cannot uninstall a package after its defining tap is gone.
 
 Home Manager enables mise, pins Node 24.20.0 and Ruby 4.0.6, and activates mise
 in new Zsh sessions. Interactive shells use mise's directory hook; command-only
-Zsh shells use mise's shims so child commands resolve Ruby and Python from their
-own working directory. Mise reads project `.ruby-version` and
+Zsh shells use mise's shims so child commands resolve installed runtimes from
+their own working directory. Mise reads project `.ruby-version` and
 `.python-version` files without requiring directory trust. Runtime installation
 is serialized and retried once because parallel first-run GPG key imports can
 race. Ruby uses mise's precompiled Apple Silicon binaries, falling back to a
-source build when no binary is available. There is no global Python pin: inside a
-project, mise uses the version its `.python-version` names, from precompiled
-python-build-standalone binaries with source builds disabled; outside such
-projects the default Python applies.
+source build when no binary is available. There is no global Python pin. To use
+a project's `.python-version`, run `mise install` in that project; then mise
+resolves its Python version, including through its shim in command-only shells.
+Until then, the default Python applies, as it does outside those projects.
 Homebrew provides the native `vips` library used by Rails applications with the
 `ruby-vips` gem.
 
