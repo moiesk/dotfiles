@@ -83,21 +83,20 @@ for json_file in \
   jq empty "$json_file"
 done
 
-for npm_project in agent-tools; do
-  if ! jq -e \
-    '(.packages[""].dependencies // {}) == (. as $lock | input.dependencies)' \
-    "$npm_project/package-lock.json" "$npm_project/package.json" >/dev/null; then
-    printf 'error: %s/package.json does not match its lockfile\n' "$npm_project" >&2
-    exit 1
-  fi
+npm_project=agent-tools
+if ! jq -e \
+  '(.packages[""].dependencies // {}) == (. as $lock | input.dependencies)' \
+  "$npm_project/package-lock.json" "$npm_project/package.json" >/dev/null; then
+  printf 'error: %s/package.json does not match its lockfile\n' "$npm_project" >&2
+  exit 1
+fi
 
-  if jq -e \
-    '[.dependencies // {} | to_entries[] | select(.value | test("^[0-9]+\\.[0-9]+\\.[0-9]+$") | not)] | length > 0' \
-    "$npm_project/package.json" >/dev/null; then
-    printf 'error: %s contains a non-exact npm dependency version\n' "$npm_project/package.json" >&2
-    exit 1
-  fi
-done
+if jq -e \
+  '[.dependencies // {} | to_entries[] | select(.value | test("^[0-9]+\\.[0-9]+\\.[0-9]+$") | not)] | length > 0' \
+  "$npm_project/package.json" >/dev/null; then
+  printf 'error: %s contains a non-exact npm dependency version\n' "$npm_project/package.json" >&2
+  exit 1
+fi
 
 if jq -e '.dependencies | has("@earendil-works/pi-coding-agent")' \
   agent-tools/package.json >/dev/null ||
