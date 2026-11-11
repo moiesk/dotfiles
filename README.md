@@ -251,7 +251,9 @@ skill is deliberately excluded.
 Firstmate is different: it is an agent distro whose clone contains mutable
 configuration and state. Bootstrap creates `~/firstmate` once, then leaves that
 clone under Firstmate's own update workflow instead of replacing it on every
-rebuild. Per-project setup remains explicit: run `/setup-matt-pocock-skills` to
+rebuild. `scripts/doctor.sh` fails when that clone moves off the commit
+recorded in `security/firstmate-baseline.txt`, so every self-update gets reviewed
+before the baseline is advanced. Per-project setup remains explicit: run `/setup-matt-pocock-skills` to
 configure Matt's workflow and `no-mistakes init` to add a validation gate.
 
 ### Firstmate dependency-floor preflight
