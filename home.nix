@@ -19,10 +19,11 @@ let
     runtimeInputs = [ pkgs.jq pkgs.coreutils ];
     text = builtins.readFile ./scripts/materialize-agent-configs.sh;
   };
-  # GO-2026-6809 (crypto/x509) and GO-2026-6859 (net/http) are fixed in Go
-  # 1.26.11, but the followed nixpkgs-26.05-darwin channel still ships an older Go. Only the treehouse and
-  # no-mistakes builds use this; drop it and go back to pkgs.buildGoModule (and
-  # the upstream treehouse package) once that channel carries Go >= 1.26.11.
+  # Go 1.26.11 includes fixes for GO-2026-6809 (crypto/x509) and
+  # GO-2026-6859 (net/http). The followed nixpkgs-26.05-darwin channel still
+  # ships an older Go. Only treehouse and no-mistakes use this override; return
+  # to pkgs.buildGoModule and the upstream treehouse package when the channel
+  # carries Go >= 1.26.11.
   go_1_26_11 = pkgs.go_1_26.overrideAttrs (_: {
     version = "1.26.11";
     src = pkgs.fetchurl {
