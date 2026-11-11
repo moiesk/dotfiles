@@ -218,7 +218,6 @@ in
         ruby.compile = false;
         # Projects pin Ruby and Python in .ruby-version and .python-version,
         # which mise reads without trusting the folder (unlike a project mise.toml).
-        # Python has no global pin; install project versions with mise install there.
         idiomatic_version_file_enable_tools = [ "ruby" "python" ];
       };
       tools = {
