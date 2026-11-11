@@ -163,8 +163,6 @@ in
   home.sessionPath = [
     "$HOME/.local/bin"
     "$HOME/.bun/bin"
-    "$HOME/.cache/lm-studio/bin"
-    "$HOME/.antigravity/antigravity/bin"
   ];
 
   programs.zsh = {

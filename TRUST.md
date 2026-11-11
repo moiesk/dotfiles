@@ -192,6 +192,13 @@ orchestrates the agents that wield the Tier A and Tier B tools. An adopter must
 accept that ongoing, rolling trust in the `kunchenguid` account explicitly; the
 pinning + cooldown protections above **do not apply to firstmate.**
 
+The one control that does apply is detection, not prevention:
+`scripts/doctor.sh` fails whenever `~/firstmate` is not at the commit recorded in
+[`security/firstmate-baseline.txt`](security/firstmate-baseline.txt). The
+captain reviews each self-update and advances the baseline deliberately. The
+baseline was seeded from the commit already running on 2026-11-11, so it records
+what was installed, not a source review.
+
 A rolling Firstmate commit can nevertheless declare a hard dependency floor
 above a dotfiles pin. To avoid an availability deadlock without discarding the
 cooldown generally,
