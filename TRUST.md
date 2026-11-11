@@ -266,9 +266,9 @@ broadly reviewed, and outside the `kunchenguid` concentration that is this
 document's concern — but they are named here so those high-level build trust
 decisions are not implicit.
 
-[`home.nix`](home.nix) temporarily pins the Go 1.26.10 toolchain source
-(`go.dev/dl/go1.26.10.src.tar.gz`, by hash) used only to build treehouse and
-no-mistakes, until the followed nixpkgs channel carries Go >= 1.26.10.
+[`home.nix`](home.nix) temporarily pins a security-patched Go toolchain source
+by hash for the treehouse and no-mistakes builds. Its local comment records
+when the override can be removed.
 
 ---
 
