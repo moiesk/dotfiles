@@ -6,7 +6,7 @@ DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 EXCEPTIONS_FILE="$DOTFILES_DIR/security/npm-audit-exceptions.json"
 
 if [[ "$#" -eq 0 ]]; then
-  set -- "$DOTFILES_DIR/agent-tools" "$DOTFILES_DIR/home/.config/opencode"
+  set -- "$DOTFILES_DIR/agent-tools"
 fi
 
 today="$(date -u +%F)"

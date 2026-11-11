@@ -6,8 +6,8 @@ configuration and macOS preferences here are derived from my own machine.
 
 One repository manages:
 
-- Codex, Claude Code, Grok Build, OMP, Pi, and OpenCode with shared tools and
-  portable settings
+- Codex, Claude Code, Grok Build, OMP, and Pi with shared tools and portable
+  settings
 - Ghostty, Herdr, zsh, Starship, fzf, mise, and Neovim/LazyVim
 - Portable CLI tools with Nix, plus native and tap-specific tools with Homebrew
 - Matt Pocock's agent skills plus Treehouse, Firstmate, no-mistakes, and Lavish
@@ -206,17 +206,6 @@ and the preflight below).
 `quota-axi`'s transitive security override and its accepted output-contract and
 execution boundaries are documented in `TRUST.md`.
 
-OpenCode's official `@opencode-ai/plugin` authoring package is a separate npm
-project, exact-pinned in `home/.config/opencode/package.json` with its dependency
-integrity lock beside it. The tracked configuration has no plugin/custom-tool
-source or runtime import, so `TRUST.md` classifies this installed support package
-as Tier C rather than inheriting the shell, SDK, auth, and tool reach that
-actual OpenCode plugins can receive. Its existing Dependabot entry still delays
-routine proposals by seven days and lets security updates bypass the delay, but
-Tier C does not add it to the fail-closed privileged release checker. The normal
-exact-pin, `ignore-scripts`, npm-audit, registry-signature, and PR review controls
-remain in force.
-
 Nix-managed wrappers invoke the exact mise-pinned Node runtime directly, so
 they do not depend on an agent session's inherited shell initialization or Node
 shim state.
@@ -326,7 +315,6 @@ Tool-specific portable preferences remain separate from mutable harness state:
 - Grok Build: nothing is tracked. The harness keeps its own configuration,
   credentials, and state under `~/.grok`, and this repository neither links nor
   materializes any of it.
-- OpenCode: the plugin package manifest remains portable.
 
 `scripts/materialize-agent-configs.sh` performs the migration after Home
 Manager removes legacy links. It accepts missing files, so first bootstrap does

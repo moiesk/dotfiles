@@ -129,7 +129,6 @@ in
     markdownlint-cli2
     neovim
     noMistakes
-    opencode
     p7zip
     pinentry_mac
     ripgrep
@@ -295,10 +294,6 @@ in
     ".config/herdr/config.toml".source = link ".config/herdr/config.toml";
 
     ".claude/hooks/statusline.js".source = link ".claude/hooks/statusline.js";
-
-    ".config/opencode/.npmrc".source = link ".config/opencode/.npmrc";
-    ".config/opencode/package.json".source = link ".config/opencode/package.json";
-    ".config/opencode/package-lock.json".source = link ".config/opencode/package-lock.json";
 
     ".markdownlint-cli2.jsonc".source = link ".markdownlint-cli2.jsonc";
   } // canonicalSkillFiles // harnessSkillFiles;
