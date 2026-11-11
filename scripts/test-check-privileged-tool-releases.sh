@@ -401,7 +401,7 @@ grep -Fq "$FIXTURE_NPM_PACKAGE pinned release $FIXTURE_NPM_PINNED is inside cool
   exit 1
 }
 
-if [[ "$(grep -c '^[[:space:]]*interval: daily$' "$DOTFILES_DIR/.github/dependabot.yml")" -ne 2 ]]; then
+if [[ "$(grep -c '^[[:space:]]*interval: daily$' "$DOTFILES_DIR/.github/dependabot.yml")" -ne 1 ]]; then
   printf '%s\n' 'error: npm Dependabot checks must run daily so updates are proposed when cooldown expires' >&2
   exit 1
 fi

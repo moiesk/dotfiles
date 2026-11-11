@@ -79,13 +79,11 @@ for json_file in \
   agent-tools/package-lock.json \
   security/firstmate-floor-exceptions.json \
   security/blocked-tool-releases.json \
-  home/.claude/settings.portable.json \
-  home/.config/opencode/package.json \
-  home/.config/opencode/package-lock.json; do
+  home/.claude/settings.portable.json; do
   jq empty "$json_file"
 done
 
-for npm_project in agent-tools home/.config/opencode; do
+for npm_project in agent-tools; do
   if ! jq -e \
     '(.packages[""].dependencies // {}) == (. as $lock | input.dependencies)' \
     "$npm_project/package-lock.json" "$npm_project/package.json" >/dev/null; then
@@ -155,7 +153,6 @@ fi
 
 "$DOTFILES_DIR/scripts/check-agent-tool-pins.sh"
 "$DOTFILES_DIR/scripts/check-lavish-trust.sh"
-"$DOTFILES_DIR/scripts/check-opencode-trust.sh"
 
 no_mistakes_version="$(sed -nE \
   's/^[[:space:]]*noMistakesVersion = "([^"]+)";/\1/p' home.nix)"
@@ -196,7 +193,6 @@ done
 "$DOTFILES_DIR/scripts/test-check-homebrew-current.sh"
 "$DOTFILES_DIR/scripts/test-firstmate-floor-exceptions.sh"
 "$DOTFILES_DIR/scripts/test-check-privileged-tool-releases.sh"
-"$DOTFILES_DIR/scripts/test-check-opencode-trust.sh"
 
 "$DOTFILES_DIR/scripts/check-secrets.sh"
 

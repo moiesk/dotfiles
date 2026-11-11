@@ -25,13 +25,11 @@ There is **no vendoring** and no attempt to spread trust across more publishers.
 Instead:
 
 - Third-party source inputs and npm agent tools/support packages are **pinned**
-  to an exact release/commit in [`flake.lock`](flake.lock),
-  [`agent-tools/package.json`](agent-tools/package.json), or the separate
-  [`home/.config/opencode/package.json`](home/.config/opencode/package.json)
-  manifest. Rolling exceptions are called out below. A new upstream release
-  does nothing until the matching pin is moved on purpose. See the
-  first-party harness stance below
-  for harness exceptions.
+  to an exact release/commit in [`flake.lock`](flake.lock) or
+  [`agent-tools/package.json`](agent-tools/package.json). Rolling exceptions are
+  called out below. A new upstream release does nothing until the matching pin
+  is moved on purpose. See the first-party harness stance below for harness
+  exceptions.
   <!-- markdownlint-disable-next-line MD033 -->
 - <a id="nvim-stance"></a>Neovim plugins are **disclosed but not pinned**.
   This bullet is the single authoritative statement of that stance; every other
@@ -116,8 +114,7 @@ is written specifically around these two.
 
 No direct GitHub write, push, browser control, credential access, or arbitrary
 workflow execution in their configured use. Their lower blast radius does not
-require the fail-closed privileged release checker. A narrower update delay may
-still be retained for a particular manifest, as noted below.
+require the fail-closed privileged release checker.
 
 | Upstream | Pinned at | Capability granted | Why it is trusted |
 |---|---|---|---|
@@ -125,47 +122,6 @@ still be retained for a particular manifest, as noted below.
 | [`kunchenguid/tasks-axi`](https://github.com/kunchenguid/tasks-axi) | `tasks-axi-v0.2.6` (flake input + npm `tasks-axi@0.2.6`) | Manages a local, hand-editable `backlog.md` task list. | Pinned to an exact release; operates on a local text backlog, no privileged capability. |
 | [`jundot/omlx`](https://github.com/jundot/omlx) | Homebrew formula (rolling; trusted tap + `autoUpdate` + `upgrade`) | **Local model serving** — when launched, reads local model files, downloads models and resources, writes settings, logs, and disk-backed caches, and exposes OpenAI-compatible and administration endpoints on localhost by default; optional clustering can connect to other Macs. | Owner-approved rolling exception for an open-source, Apache-licensed Apple Silicon inference server. The formula verifies the selected tagged source archive, but the tap, version, and digest advance without a repository pin or cooldown. |
 | [`securitypedant/octomon`](https://github.com/securitypedant/octomon) | Homebrew formula (rolling; trusted `securitypedant/octomon` tap + `autoUpdate` + `upgrade`) | **Network diagnostics** — when launched, probes network paths and external endpoints, observes interface and per-process traffic, and stores network history and configuration locally. Optional alert flags can send notifications, POST to a webhook, or run a user-supplied command. | The upstream's documented macOS installation uses its dedicated Homebrew tap. The tap and formula advance without a repository pin or cooldown; the tap is trusted so Homebrew can install and upgrade it during rebuilds. |
-| [`anomalyco/opencode` (`@opencode-ai/plugin`)](https://github.com/anomalyco/opencode/tree/v1.19.5/packages/plugin) | npm `@opencode-ai/plugin@1.19.5` (exact, in [`home/.config/opencode/package.json`](home/.config/opencode/package.json); locked beside it) | **OpenCode plugin-authoring support.** In this checkout it is installed but not loaded: there is no tracked OpenCode plugin/custom-tool source or import, and its public runtime entry points are schema/identity and TUI helpers while the shell, SDK, auth, permission, and tool-hook surfaces are TypeScript interfaces for plugin authors. The separate package pin therefore has no direct privileged reach today. | The official package is published from the same monorepo and release train as the OpenCode harness. The repository's `npm ci` path disables lifecycle scripts and verifies lock integrity, vulnerabilities, and registry signatures. Tier C reflects its effective configured use; adding a runtime import or local plugin must re-evaluate the tier. The manifest retains its existing seven-day Dependabot delay for routine update proposals, but is not subject to the privileged release checker. The plugin pins `zod@4.1.8` exactly and its pinned `effect` beta declares `toml@^4.1.1`, so the manifest narrowly overrides those transitive dependencies to fixed `zod@4.6.7` (GHSA-mrhx-c7xc-m3w5) and `toml@5.0.1` (GHSA-4qx8-w7c3-pj3p, GHSA-9j65-hcg3-gc64, GHSA-9qmh-m7c6-f92p); remove the overrides once a plugin release depends on fixed versions. |
-
-### OpenCode package boundary
-
-OpenCode's [official plugin documentation](https://github.com/anomalyco/opencode/blob/v1.19.5/packages/web/src/content/docs/plugins.mdx)
-and [config bootstrap](https://github.com/anomalyco/opencode/blob/v1.19.5/packages/opencode/src/config/config.ts)
-explain why the package is present: OpenCode makes the official authoring API
-available in each config directory so local plugins and custom tools can import
-its types and `tool()` helper. The package is not itself a configured plugin.
-At the current pin, its [runtime root](https://github.com/anomalyco/opencode/blob/v1.19.5/packages/plugin/src/index.ts)
-only re-exports the small `tool()` helper; the broad hook context describes what
-*plugin code* can receive from the OpenCode host.
-
-That distinction sets the present boundary. A future local plugin or custom tool
-would execute as the OpenCode user and can be given Bun shell execution, the
-OpenCode SDK client, provider auth callbacks, and permission/tool hooks. Adding
-such code — or importing this package at runtime — therefore changes the granted
-capability and requires reclassification. Until then, the committed OpenCode
-directory contains only the npm manifests and `.npmrc`, whose `ignore-scripts`
-setting also prevents the repository's `npm ci` from creating an install-time
-execution path.
-
-Both halves of that boundary are mechanically enforced by
-[`scripts/check-opencode-trust.sh`](scripts/check-opencode-trust.sh), which
-`./scripts/validate.sh` and the pull-request
-[pin-alignment workflow](.github/workflows/agent-tool-pins.yml) both run: the
-row above and the release permalinks cited in this section must name the
-version that
-[`home/.config/opencode/package.json`](home/.config/opencode/package.json)
-installs, and while that row sits under Tier C the committed OpenCode directory
-must hold nothing but `package.json`, `package-lock.json`, and `.npmrc`. A
-Dependabot bump or a newly tracked plugin/tool file therefore turns the pull
-request red until the inventory is brought back in line, and the checker itself
-fails if that workflow ever stops covering these paths.
-
-Tier C does not require extending
-[`scripts/check-privileged-tool-releases.sh`](scripts/check-privileged-tool-releases.sh),
-which enforces the stronger fail-closed gate only for Tiers A and B. No existing
-control is removed: the separate Dependabot entry for this manifest still delays
-routine proposals by seven days, security updates still bypass that delay, and
-the exact pin, lockfile, audit, signature, and PR review controls remain.
 
 ## firstmate — accept-as-rolling ⚠️
 
@@ -276,7 +232,6 @@ no-mistakes, until the followed nixpkgs channel carries Go >= 1.26.10.
 added, removed, or moved between capability tiers, update the matching table
 here in the same change. Version pins in the tables are illustrative of the
 pinning discipline — the authoritative pins live in [`flake.lock`](flake.lock),
-[`agent-tools/package.json`](agent-tools/package.json),
-[`home/.config/opencode/package.json`](home/.config/opencode/package.json), and
+[`agent-tools/package.json`](agent-tools/package.json), and
 [`home.nix`](home.nix) for the temporary Go toolchain source pin.
 Neovim upstreams have no pin; see the [stance bullet](#nvim-stance).*
