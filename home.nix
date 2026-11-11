@@ -216,9 +216,9 @@ in
     globalConfig = {
       settings = {
         ruby.compile = false;
-        # Projects pin Ruby in .ruby-version, which mise reads without trusting
-        # the folder (unlike a project mise.toml).
-        idiomatic_version_file_enable_tools = [ "ruby" ];
+        # Projects pin Ruby and Python in .ruby-version and .python-version,
+        # which mise reads without trusting the folder (unlike a project mise.toml).
+        idiomatic_version_file_enable_tools = [ "ruby" "python" ];
       };
       tools = {
         node = "24.20.0";
