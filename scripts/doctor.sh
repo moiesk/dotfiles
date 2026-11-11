@@ -47,10 +47,11 @@ if [[ ! -e "$grokbot_settings" ]]; then
   pass "Grok Bot is not configured"
 elif jq -e '(.messagesSendEnabled // false) == false
     and (.messagesReadEnabled // false) == false
-    and (.webauthnProxyEnabled // false) == false' "$grokbot_settings" >/dev/null 2>&1; then
-  pass "Grok Bot messages and WebAuthn proxy are disabled"
+    and (.webauthnProxyEnabled // false) == false
+    and .localToolPermission != "always"' "$grokbot_settings" >/dev/null 2>&1; then
+  pass "Grok Bot messages and WebAuthn proxy are disabled and local tools ask first"
 else
-  fail "Grok Bot has messages or the WebAuthn proxy enabled (or $grokbot_settings is unreadable)"
+  fail "Grok Bot has messages or the WebAuthn proxy enabled, or runs local tools without asking (or $grokbot_settings is unreadable)"
 fi
 
 for skill_name in setup-matt-pocock-skills chrome-devtools-axi gh-axi lavish-axi quota-axi tasks-axi; do
