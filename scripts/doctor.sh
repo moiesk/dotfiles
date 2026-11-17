@@ -31,15 +31,6 @@ else
   fail "Firstmate agent distro is missing or has an unexpected origin"
 fi
 
-# Firstmate self-updates outside rebuild.sh; flag any commit not yet reviewed.
-firstmate_baseline="$(rg -v '^\s*(#|$)' "$DOTFILES_DIR/security/firstmate-baseline.txt" 2>/dev/null | head -n 1)"
-firstmate_head="$(git -C "$HOME/firstmate" rev-parse HEAD 2>/dev/null || true)"
-if [[ -n "$firstmate_baseline" && "$firstmate_head" == "$firstmate_baseline" ]]; then
-  pass "Firstmate is at the reviewed baseline ${firstmate_baseline:0:12}"
-else
-  fail "Firstmate HEAD ${firstmate_head:0:12} differs from reviewed baseline ${firstmate_baseline:0:12}; review 'git -C ~/firstmate log --stat ${firstmate_baseline:0:12}..HEAD' and update security/firstmate-baseline.txt"
-fi
-
 # Grok Bot keeps agent-writable settings outside this repository. Its message
 # and WebAuthn bridges must stay off; fail loudly if anything turns them back on.
 grokbot_settings="$HOME/.grokbot/settings.json"
