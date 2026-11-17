@@ -297,8 +297,9 @@ The command deletes only records whose adopted release has completed the
 ordinary cooldown — those pins now stand on the normal policy and need no
 exception — and leaves the pins themselves untouched.
 
-`scripts/doctor.sh` verifies the commands, skills, and Firstmate clone rather
-than checking only that command names exist.
+`scripts/doctor.sh` verifies commands, skills, and the Firstmate clone, and
+checks that Grok Bot's message and WebAuthn bridges are disabled and its local
+tools require permission.
 
 Tool-specific portable preferences remain separate from mutable harness state:
 
