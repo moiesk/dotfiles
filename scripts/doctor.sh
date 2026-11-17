@@ -31,19 +31,34 @@ else
   fail "Firstmate agent distro is missing or has an unexpected origin"
 fi
 
-# Grok Bot keeps agent-writable settings outside this repository. Its message
-# and WebAuthn bridges must stay off; fail loudly if anything turns them back on.
+# Grok Bot keeps agent-writable settings outside this repository. Trip these
+# switches if they turn on; this does not establish effective permissions.
 grokbot_settings="$HOME/.grokbot/settings.json"
-if [[ ! -e "$grokbot_settings" ]]; then
-  pass "Grok Bot is not configured"
-elif jq -e '(.messagesSendEnabled // false) == false
-    and (.messagesReadEnabled // false) == false
-    and (.webauthnProxyEnabled // false) == false
+if [[ ! -e "$grokbot_settings" && ! -L "$grokbot_settings" ]]; then
+  pass "Grok Bot settings file is absent"
+elif jq -e 'type == "object"
+    and .messagesSendEnabled != true
+    and .messagesReadEnabled != true
+    and .messagesEnabled != true
+    and .macMailSendEnabled != true
+    and .egressTunnelEnabled != true
+    and .webauthnProxyEnabled != true
     and .localToolPermission != "always"' "$grokbot_settings" >/dev/null 2>&1; then
-  pass "Grok Bot messages and WebAuthn proxy are disabled and local tools ask first"
+  pass "Grok Bot monitored settings switches remain off"
 else
-  fail "Grok Bot has messages or the WebAuthn proxy enabled, or runs local tools without asking (or $grokbot_settings is unreadable)"
+  fail "Grok Bot monitored settings switch is on, or $grokbot_settings is malformed or unreadable"
 fi
+
+for grokbot_gate in local-computer-use-gate.json local-computer-use-overlay-gate.json mac-mail-tools-gate.json; do
+  grokbot_gate_path="$HOME/.grokbot/$grokbot_gate"
+  if [[ ! -e "$grokbot_gate_path" && ! -L "$grokbot_gate_path" ]]; then
+    pass "Grok Bot $grokbot_gate is absent"
+  elif jq -e 'type == "object" and .isOn != true' "$grokbot_gate_path" >/dev/null 2>&1; then
+    pass "Grok Bot $grokbot_gate switch remains off"
+  else
+    fail "Grok Bot $grokbot_gate switch is on, or file is malformed or unreadable"
+  fi
+done
 
 for skill_name in setup-matt-pocock-skills chrome-devtools-axi gh-axi lavish-axi quota-axi tasks-axi; do
   skill_path="$HOME/.agents/skills/$skill_name/SKILL.md"
