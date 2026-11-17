@@ -173,7 +173,7 @@ tool outside Firstmate; integrity, signature, vulnerability, exact-pin, and
 review gates remain unchanged.
 
 Why it is nonetheless trusted: it is the intended supervisor for this exact
-setup, its clone/update behavior is verified by `scripts/doctor.sh`, and its
+setup, its clone and origin are checked by `scripts/doctor.sh`, and its
 state is kept separate from the tracked, pinned portable configuration.
 
 ---

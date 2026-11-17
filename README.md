@@ -297,8 +297,12 @@ The command deletes only records whose adopted release has completed the
 ordinary cooldown — those pins now stand on the normal policy and need no
 exception — and leaves the pins themselves untouched.
 
-`scripts/doctor.sh` verifies the commands, skills, and Firstmate clone rather
-than checking only that command names exist.
+`scripts/doctor.sh` verifies commands, skills, and the Firstmate clone. Its
+Grok Bot tripwire fails if the monitored message, Mac Mail send, egress tunnel,
+WebAuthn proxy, or always-allowed local-tool settings turn on, or if the local
+computer-use, overlay, or Mac Mail gate turns on. Absent gate files pass;
+malformed or unreadable files fail. This checks switches, not effective
+permissions.
 
 Tool-specific portable preferences remain separate from mutable harness state:
 
