@@ -90,11 +90,6 @@ if ! uv tool list | rg -q '^interrogate v1\.7\.0$'; then
   uv tool install --force interrogate==1.7.0
 fi
 
-say "installing locked OpenCode plugin dependencies"
-(cd "$HOME/.config/opencode" && mise exec -- npm ci)
-"$DOTFILES_DIR/scripts/npm-audit.sh" "$HOME/.config/opencode"
-mise exec -- npm audit signatures --prefix "$HOME/.config/opencode"
-
 # The no-mistakes daemon takes its PATH from a login-shell probe at startup, so
 # it only sees shell changes (such as mise's shims) after a restart. Without
 # --force, restart refuses while pipeline runs are active; never interrupt them.
