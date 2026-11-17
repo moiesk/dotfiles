@@ -19,20 +19,21 @@ let
     runtimeInputs = [ pkgs.jq pkgs.coreutils ];
     text = builtins.readFile ./scripts/materialize-agent-configs.sh;
   };
-  # GO-2026-6809 (crypto/x509) is fixed in Go 1.26.10, but the followed
-  # nixpkgs-26.05-darwin channel still ships an older Go. Only the treehouse and
-  # no-mistakes builds use this; drop it and go back to pkgs.buildGoModule (and
-  # the upstream treehouse package) once that channel carries Go >= 1.26.10.
-  go_1_26_10 = pkgs.go_1_26.overrideAttrs (_: {
-    version = "1.26.10";
+  # Go 1.26.11 includes fixes for GO-2026-6809 (crypto/x509) and
+  # GO-2026-6859 (net/http). The followed nixpkgs-26.05-darwin channel still
+  # ships an older Go. Only treehouse and no-mistakes use this override; return
+  # to pkgs.buildGoModule and the upstream treehouse package when the channel
+  # carries Go >= 1.26.11.
+  go_1_26_11 = pkgs.go_1_26.overrideAttrs (_: {
+    version = "1.26.11";
     src = pkgs.fetchurl {
-      url = "https://go.dev/dl/go1.26.10.src.tar.gz";
-      hash = "sha256-/WPog7ovK/ypPBZGsx6+9j4rHk0rMXyXidl2po2B828=";
+      url = "https://go.dev/dl/go1.26.11.src.tar.gz";
+      hash = "sha256-1EEBsP8n7SpMda1GwXucdDWSCeLrLKfJ32y0/baOGWk=";
     };
   });
-  buildGoModuleGo1_26_10 = pkgs.buildGoModule.override { go = go_1_26_10; };
+  buildGoModuleGo1_26_11 = pkgs.buildGoModule.override { go = go_1_26_11; };
   upstreamTreehouse = inputs.treehouse.packages.${pkgs.stdenv.hostPlatform.system}.default;
-  treehouse = buildGoModuleGo1_26_10 {
+  treehouse = buildGoModuleGo1_26_11 {
     inherit (upstreamTreehouse) pname version src vendorHash;
     # buildGoModule appends -buildid= itself and warns when it is passed in.
     ldflags = pkgs.lib.remove "-buildid=" upstreamTreehouse.ldflags;
@@ -40,7 +41,7 @@ let
     nativeCheckInputs = [ pkgs.git ];
   };
   noMistakesVersion = "1.106.1";
-  noMistakes = buildGoModuleGo1_26_10 {
+  noMistakes = buildGoModuleGo1_26_11 {
     pname = "no-mistakes";
     version = noMistakesVersion;
     src = inputs.no-mistakes;
