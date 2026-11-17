@@ -11,14 +11,6 @@ refresh_gpg_keybox() {
 }
 export PATH="$HOME/.nix-profile/bin:/etc/profiles/per-user/$USER/bin:$HOME/.local/bin:$HOME/.bun/bin:/opt/homebrew/bin:$PATH"
 
-# Earlier revisions installed OpenCode plugins into this npm-managed directory.
-# Home Manager removes its managed manifest links, but leaves npm's node_modules.
-legacy_opencode_modules="$HOME/.config/opencode/node_modules"
-if [[ -d "$legacy_opencode_modules" && ! -L "$legacy_opencode_modules" ]]; then
-  say "removing legacy OpenCode plugin dependencies"
-  rm -rf -- "$legacy_opencode_modules"
-fi
-
 # nix-darwin's `onActivation.upgrade` runs `brew bundle --upgrade`, which only
 # upgrades declared leaves and casks. Transitive dependencies (e.g. sqlite and
 # pkgconf under vips, fluid-synth under scummvm) are left behind whenever the
